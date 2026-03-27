@@ -654,7 +654,7 @@ const S={
 const Gate={
   _v:'',
   async init(){
-    const code=await await Store.passcode();
+    const code=await Store.passcode();
     if(!code){
       this._showLogin();
     } else {
@@ -674,7 +674,7 @@ const Gate={
     }
   },
   _check(){
-    await Store.passcode().then(code=>{
+    Store.passcode().then(code=>{
       if(this._v===code){
         for(let i=0;i<4;i++)document.getElementById('gd'+i).className='pin-dot ok';
         setTimeout(()=>this._showLogin(),400);
@@ -697,10 +697,10 @@ const Gate={
 // ══════════════════════════════════════════════
 const Login={
   async init(){
-    const roles=await await Store.roles();
+    const roles=await Store.roles();
     const sel=document.getElementById('login-role');
     sel.innerHTML=`<option value="">— Select role —</option>`+roles.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('');
-    const team=await await Store.team();
+    const team=await Store.team();
     document.getElementById('lw-notice').style.display=team.length===0?'':'none';
     document.getElementById('login-err').textContent='';
     document.getElementById('login-name').value='';
@@ -714,7 +714,7 @@ const Login={
     const roleId=document.getElementById('login-role').value;
     if(!name){document.getElementById('login-err').textContent='Please enter your name.';return;}
     if(!roleId){document.getElementById('login-err').textContent='Please select a role.';return;}
-    const roles=await await Store.roles();
+    const roles=await Store.roles();
     const role=roles.find(r=>r.id===roleId);
     if(!role){document.getElementById('login-err').textContent='Role not found. Please refresh.';return;}
     if(role.canSettings){
@@ -722,7 +722,7 @@ const Login={
       Auth.enter(name,role,null);
       return;
     }
-    const team=await await Store.team();
+    const team=await Store.team();
     const match=team.find(m=>m.name.toLowerCase()===name.toLowerCase()&&m.roleId===roleId);
     if(!match){
       document.getElementById('login-err').textContent='Name and role not found. Contact your Project Manager.';
@@ -808,7 +808,7 @@ const Auth={
     ['sb-settings-sec','sb-team','sb-roles','sb-dl','sb-sec-item'].forEach(id=>document.getElementById(id).style.display='none');
     document.getElementById('login-name').value='';
     document.getElementById('login-role').value='';
-    const code=await await Store.passcode();
+    const code=await Store.passcode();
     if(code){
       Gate._v='';Gate._render('gd');
       document.getElementById('gate-err').textContent='';
@@ -1278,6 +1278,8 @@ const V={
 
   async security(){
     const hasCode=!!await Store.passcode();
+    const team=await Store.team();
+    const teamCount=team.length;
     return`<p style="font-size:0.82rem;color:var(--ink-3);margin-bottom:20px;max-width:520px;line-height:1.7">Set a project passcode — the first gate everyone must pass before reaching the sign-in screen. Combine with personal PINs in <strong>Team Members</strong> for full two-layer security.</p>
     <div class="dl-card" style="margin-bottom:20px">
       <div class="dl-head"><span>Project Passcode</span><span style="font-size:0.72rem;font-weight:600;text-transform:none;color:${hasCode?'var(--green)':'var(--red)'}">${hasCode?'● Active':'○ Not set'}</span></div>
@@ -1297,10 +1299,10 @@ const V={
       <div class="dl-head"><span>Security Layers Active</span></div>
       <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
         <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem"><span style="color:${hasCode?'var(--green)':'var(--ink-4)'}">●</span><span><strong>Layer 1 — Project Passcode</strong><span style="color:var(--ink-4);margin-left:8px">${hasCode?'Active':'Not set'}</span></span></div>
-        <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem"><span style="color:${await Store.team().length?'var(--green)':'var(--ink-4)'}">●</span><span><strong>Layer 2 — Personal PINs</strong><span style="color:var(--ink-4);margin-left:8px">${await Store.team().length} member${await Store.team().length!==1?'s':''} registered</span></span></div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem"><span style="color:${teamCount?'var(--green)':'var(--ink-4)'}">●</span><span><strong>Layer 2 — Personal PINs</strong><span style="color:var(--ink-4);margin-left:8px">${teamCount} member${teamCount!==1?'s':''} registered</span></span></div>
       </div>
     </div>
-    <div style="background:var(--amber-soft);border:1px solid #fcd34d;border-radius:var(--r);padding:12px 14px;font-size:0.78rem;color:#92400e;max-width:520px;line-height:1.7;margin-top:4px"><strong>Note:</strong> These are stored in the browser's local storage. Keep the HTML file itself secure and share it only with your team. Passcode activates on next sign-out.</div>`;
+    <div style="background:var(--amber-soft);border:1px solid #fcd34d;border-radius:var(--r);padding:12px 14px;font-size:0.78rem;color:#92400e;max-width:520px;line-height:1.7;margin-top:4px"><strong>Note:</strong> All data is stored in Firebase Firestore. Accessible from any device via your GitHub Pages URL.</div>`;
   }
 };
 
