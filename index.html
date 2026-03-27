@@ -717,20 +717,36 @@ const Login={
     const roles=await Store.roles();
     const role=roles.find(r=>r.id===roleId);
     if(!role){document.getElementById('login-err').textContent='Role not found. Please refresh.';return;}
-    if(role.canSettings){
-      document.getElementById('login-err').textContent='';
-      Auth.enter(name,role,null);
-      return;
-    }
+
     const team=await Store.team();
+
+    // Check if this person is registered in team members
     const match=team.find(m=>m.name.toLowerCase()===name.toLowerCase()&&m.roleId===roleId);
-    if(!match){
-      document.getElementById('login-err').textContent='Name and role not found. Contact your Project Manager.';
+
+    if(match){
+      // Registered member — always require PIN regardless of role
+      document.getElementById('login-err').textContent='';
+      document.getElementById('login-screen').style.display='none';
+      PinStep.start(match,role);
       return;
     }
-    document.getElementById('login-err').textContent='';
-    document.getElementById('login-screen').style.display='none';
-    PinStep.start(match,role);
+
+    // Not registered — only allow if PM role AND no PMs registered yet (first-time setup)
+    if(role.canSettings){
+      const anyPMregistered=team.some(m=>{
+        const r=roles.find(x=>x.id===m.roleId);
+        return r&&r.canSettings;
+      });
+      if(!anyPMregistered){
+        // First time setup — let PM in without PIN
+        document.getElementById('login-err').textContent='';
+        Auth.enter(name,role,null);
+        return;
+      }
+    }
+
+    // Not registered and not a first-time PM
+    document.getElementById('login-err').textContent='Name and role not found. Contact your Project Manager.';
   }
 };
 
