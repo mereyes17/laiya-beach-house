@@ -4,6 +4,62 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Beach House — Lim Residence</title>
+<script type="module">
+// ══ FIREBASE INIT ══
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+import{getFirestore,doc,getDoc,setDoc,collection,getDocs,deleteDoc,runTransaction,onSnapshot}from'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+const firebaseConfig={
+  apiKey:"AIzaSyB7venUZvsg2KYp3pRZMKn4u12pAWT7uAk",
+  authDomain:"laiya-beach-house.firebaseapp.com",
+  projectId:"laiya-beach-house",
+  storageBucket:"laiya-beach-house.firebasestorage.app",
+  messagingSenderId:"876997930675",
+  appId:"1:876997930675:web:99bba513578c25893bcac6"
+};
+const fbApp=initializeApp(firebaseConfig);
+const db=getFirestore(fbApp);
+window._db=db;
+window._fbReady=true;
+
+async function fbGet(key,def){
+  try{const snap=await getDoc(doc(db,'config',key));return snap.exists()?snap.data().v:def;}catch{return def;}
+}
+async function fbSet(key,val){
+  try{await setDoc(doc(db,'config',key),{v:val});}catch(e){console.error('fbSet',e);}
+}
+async function fbGetItems(){
+  try{const snap=await getDocs(collection(db,'items'));return snap.docs.map(d=>d.data());}catch{return [];}
+}
+async function fbSaveItems(arr){
+  try{
+    const snap=await getDocs(collection(db,'items'));
+    const dels=snap.docs.map(d=>deleteDoc(doc(db,'items',String(d.id))));
+    await Promise.all(dels);
+    await Promise.all(arr.map(item=>setDoc(doc(db,'items',String(item.id)),item)));
+  }catch(e){console.error('fbSaveItems',e);}
+}
+async function fbNextId(){
+  const ref=doc(db,'config','ctr');
+  let n=1;
+  await runTransaction(db,async tx=>{
+    const snap=await tx.get(ref);
+    n=(snap.exists()?snap.data().v:0)+1;
+    tx.set(ref,{v:n});
+  });
+  return n;
+}
+
+// Real-time listener — updates item cache when Firestore changes
+function fbListen(onUpdate){
+  return onSnapshot(collection(db,'items'),snap=>{
+    const items=snap.docs.map(d=>d.data());
+    onUpdate(items);
+  });
+}
+
+window._fb={get:fbGet,set:fbSet,getItems:fbGetItems,saveItems:fbSaveItems,nextId:fbNextId,listen:fbListen};
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap');
 :root{
@@ -17,6 +73,11 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5}
 
+/* ── LOADING ── */
+#loading{position:fixed;inset:0;background:var(--white);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9000;gap:16px}
+.loading-mark{width:48px;height:48px;border-radius:14px;background:var(--pink);display:flex;align-items:center;justify-content:center;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.7;transform:scale(0.95)}}
+.loading-text{font-size:0.85rem;color:var(--ink-4);font-family:'DM Sans',sans-serif}
 /* ── GATE (project passcode) ── */
 .gate{position:fixed;inset:0;background:var(--white);display:flex;align-items:center;justify-content:center;z-index:3000}
 .gate-box{width:100%;max-width:340px;padding:0 24px;text-align:center}
@@ -284,6 +345,12 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
 </head>
 <body>
 
+<!-- ══ LOADING ══ -->
+<div id="loading">
+  <div class="loading-mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+  <div class="loading-text">Connecting to Beach House tracker…</div>
+</div>
+
 <!-- ══ STEP 1: Project Passcode Gate ══ -->
 <div class="gate" id="gate">
   <div class="gate-box">
@@ -404,7 +471,7 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
 
 <div class="twrap" id="twrap"></div>
 
-<script>
+<script type="module">
 // ══════════════════════════════════════════════
 //  DEFAULT ROLES
 // ══════════════════════════════════════════════
@@ -416,24 +483,58 @@ const DEFAULT_ROLES=[
 ];
 
 // ══════════════════════════════════════════════
-//  STORAGE
+//  STORE — Firebase Firestore backend
+//  All methods are async. Call with await.
+//  Falls back to localStorage if Firebase unavailable.
 // ══════════════════════════════════════════════
 const Store={
-  get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},
-  set(k,v){localStorage.setItem(k,JSON.stringify(v))},
-  items(){return this.get('bh_items',[])},
-  saveItems(a){this.set('bh_items',a)},
-  nextId(){const n=(this.get('bh_ctr',0))+1;this.set('bh_ctr',n);return n},
-  drops(){return this.get('bh_drops',defaultDrops())},
-  saveDrops(d){this.set('bh_drops',d)},
-  roles(){return this.get('bh_roles',DEFAULT_ROLES)},
-  saveRoles(r){this.set('bh_roles',r)},
-  // Team members: [{name, roleId, pin}]
-  team(){return this.get('bh_team',[])},
-  saveTeam(t){this.set('bh_team',t)},
-  // Project passcode
-  passcode(){return this.get('bh_passcode',null)},
-  savePasscode(p){this.set('bh_passcode',p)},
+  // In-memory cache so sync reads still work after initial load
+  _cache:{},
+  _items:[],
+
+  // ── Config docs (roles, team, passcode, drops) ──
+  async get(k,d){
+    if(k in this._cache)return this._cache[k];
+    const v=await window._fb.get(k,d);
+    this._cache[k]=v??d;
+    return this._cache[k];
+  },
+  async set(k,v){
+    this._cache[k]=v;
+    await window._fb.set(k,v);
+  },
+
+  // ── Items ──
+  items(){return this._items;},  // sync — uses cache loaded at boot
+  saveItems(a){this._items=[...a];window._fb.saveItems(a);},
+
+  async nextId(){return window._fb.nextId();},
+
+  // ── Typed accessors ──
+  async drops(){return await this.get('bh_drops',defaultDrops());},
+  async saveDrops(d){await this.set('bh_drops',d);},
+  async roles(){return await this.get('bh_roles',DEFAULT_ROLES);},
+  async saveRoles(r){await this.set('bh_roles',r);},
+  async team(){return await this.get('bh_team',[]);},
+  async saveTeam(t){await this.set('bh_team',t);},
+  async passcode(){return await this.get('bh_passcode',null);},
+  async savePasscode(p){await this.set('bh_passcode',p);},
+
+  // ── Boot: load everything into cache ──
+  async boot(){
+    const[items,drops,roles,team,passcode]=await Promise.all([
+      window._fb.getItems(),
+      window._fb.get('bh_drops',defaultDrops()),
+      window._fb.get('bh_roles',DEFAULT_ROLES),
+      window._fb.get('bh_team',[]),
+      window._fb.get('bh_passcode',null),
+    ]);
+    this._items=items||[];
+    this._cache['bh_drops']=drops||defaultDrops();
+    this._cache['bh_roles']=roles||DEFAULT_ROLES;
+    this._cache['bh_team']=team||[];
+    this._cache['bh_passcode']=passcode||null;
+  }
 };
 
 function defaultDrops(){return{
@@ -552,10 +653,9 @@ const S={
 // ══════════════════════════════════════════════
 const Gate={
   _v:'',
-  init(){
-    const code=Store.passcode();
+  async init(){
+    const code=await await Store.passcode();
     if(!code){
-      // No passcode set — skip gate
       this._showLogin();
     } else {
       document.getElementById('gate-hint').textContent='Contact your Project Manager if you have forgotten the passcode.';
@@ -574,15 +674,16 @@ const Gate={
     }
   },
   _check(){
-    const code=Store.passcode();
-    if(this._v===code){
-      for(let i=0;i<4;i++)document.getElementById('gd'+i).className='pin-dot ok';
-      setTimeout(()=>this._showLogin(),400);
-    } else {
-      for(let i=0;i<4;i++)document.getElementById('gd'+i).className='pin-dot err';
-      document.getElementById('gate-err').textContent='Incorrect passcode. Please try again.';
-      setTimeout(()=>{this._v='';this._render('gd');},700);
-    }
+    await Store.passcode().then(code=>{
+      if(this._v===code){
+        for(let i=0;i<4;i++)document.getElementById('gd'+i).className='pin-dot ok';
+        setTimeout(()=>this._showLogin(),400);
+      } else {
+        for(let i=0;i<4;i++)document.getElementById('gd'+i).className='pin-dot err';
+        document.getElementById('gate-err').textContent='Incorrect passcode. Please try again.';
+        setTimeout(()=>{this._v='';this._render('gd');},700);
+      }
+    });
   },
   _showLogin(){
     document.getElementById('gate').style.display='none';
@@ -595,11 +696,11 @@ const Gate={
 //  LOGIN
 // ══════════════════════════════════════════════
 const Login={
-  init(){
-    const roles=Store.roles();
+  async init(){
+    const roles=await await Store.roles();
     const sel=document.getElementById('login-role');
     sel.innerHTML=`<option value="">— Select role —</option>`+roles.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('');
-    const team=Store.team();
+    const team=await await Store.team();
     document.getElementById('lw-notice').style.display=team.length===0?'':'none';
     document.getElementById('login-err').textContent='';
     document.getElementById('login-name').value='';
@@ -608,30 +709,25 @@ const Login={
   check(){
     document.getElementById('login-err').textContent='';
   },
-  next(){
+  async next(){
     const name=document.getElementById('login-name').value.trim();
     const roleId=document.getElementById('login-role').value;
     if(!name){document.getElementById('login-err').textContent='Please enter your name.';return;}
     if(!roleId){document.getElementById('login-err').textContent='Please select a role.';return;}
-
-    const roles=Store.roles();
+    const roles=await await Store.roles();
     const role=roles.find(r=>r.id===roleId);
     if(!role){document.getElementById('login-err').textContent='Role not found. Please refresh.';return;}
-
-    // PM (canSettings) — direct entry, no PIN
     if(role.canSettings){
       document.getElementById('login-err').textContent='';
       Auth.enter(name,role,null);
       return;
     }
-
-    const team=Store.team();
+    const team=await await Store.team();
     const match=team.find(m=>m.name.toLowerCase()===name.toLowerCase()&&m.roleId===roleId);
     if(!match){
       document.getElementById('login-err').textContent='Name and role not found. Contact your Project Manager.';
       return;
     }
-
     document.getElementById('login-err').textContent='';
     document.getElementById('login-screen').style.display='none';
     PinStep.start(match,role);
@@ -706,20 +802,19 @@ const Auth={
     }
     Nav.go('dashboard');
   },
-  signOut(){
+  async signOut(){
     S.user=null;S.role=null;
     document.getElementById('app').classList.remove('on');
     ['sb-settings-sec','sb-team','sb-roles','sb-dl','sb-sec-item'].forEach(id=>document.getElementById(id).style.display='none');
-    // Reset login form
     document.getElementById('login-name').value='';
     document.getElementById('login-role').value='';
-    // Go back to gate if passcode set, else login
-    if(Store.passcode()){
+    const code=await await Store.passcode();
+    if(code){
       Gate._v='';Gate._render('gd');
       document.getElementById('gate-err').textContent='';
       document.getElementById('gate').style.display='';
     } else {
-      Login.init();
+      await Login.init();
       document.getElementById('login-screen').style.display='';
     }
   }
@@ -743,7 +838,7 @@ const Nav={
     document.querySelectorAll('.sb-item').forEach(el=>el.classList.toggle('on',el.dataset.v===v));
     this.render();
   },
-  render(){
+  async render(){
     const items=Store.items();
     const oc=items.filter(overdue).length;
     const ob=document.getElementById('ob');ob.style.display=oc?'':'none';ob.textContent=oc;
@@ -758,10 +853,10 @@ const Nav={
     if(v==='dashboard'){title.textContent='Dashboard';c.innerHTML=V.dashboard(items);}
     else if(v==='focus'){title.textContent="Today's Focus";c.innerHTML=V.focus(items);}
     else if(v==='schedule'){title.textContent='Schedule — Look-Ahead';c.innerHTML=V.schedule(items);}
-    else if(v==='team'){title.textContent='Team Members';c.innerHTML=V.team();}
-    else if(v==='roles'){title.textContent='Roles';c.innerHTML=V.roles();}
-    else if(v==='dropdowns'){title.textContent='Dropdown Lists';c.innerHTML=V.dropdowns();}
-    else if(v==='security'){title.textContent='Security';c.innerHTML=V.security();}
+    else if(v==='team'){title.textContent='Team Members';c.innerHTML=await V.team();}
+    else if(v==='roles'){title.textContent='Roles';c.innerHTML=await V.roles();}
+    else if(v==='dropdowns'){title.textContent='Dropdown Lists';c.innerHTML=await V.dropdowns();}
+    else if(v==='security'){title.textContent='Security';c.innerHTML=await V.security();}
     else if(v.startsWith('list-')){
       const type=v.replace('list-','');
       title.textContent=type==='all'?'All Items':(TYPES[type]?.full||'Items');
@@ -1113,8 +1208,8 @@ const V={
     ${item.audit&&item.audit.length?`<div class="dcard"><div class="dchead"><span class="sub" style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4)">Activity Log</span></div><div class="dbody" style="padding:8px 18px">${item.audit.map(a=>`<div class="audit-entry"><div class="audit-dot"></div><div><span class="audit-who">${esc(a.who)}</span><span class="audit-role">${esc(a.role)}</span><div class="audit-action">${esc(a.action)}</div><div class="audit-time">${esc(a.ts)}</div></div></div>`).join('')}</div></div>`:''}`;
   },
 
-  team(){
-    const team=Store.team();const roles=Store.roles();
+  async team(){
+    const team=await Store.team();const roles=await Store.roles();
     const getRoleName=id=>roles.find(r=>r.id===id)?.name||id;
     const initials=n=>n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     return`
@@ -1150,8 +1245,8 @@ const V={
     </div>`;
   },
 
-  roles(){
-    const roles=Store.roles();
+  async roles(){
+    const roles=await Store.roles();
     const pLabel=(r)=>[{k:'canCreate',l:'Create'},{k:'canEditAll',l:'Edit all'},{k:'canDelete',l:'Delete'},{k:'canSettings',l:'Settings'}].map(p=>`<span class="pp ${r[p.k]?'pp-y':'pp-n'}">${p.l}</span>`).join('');
     return`<p style="font-size:0.82rem;color:var(--ink-3);margin-bottom:20px;max-width:540px;line-height:1.7">Configure roles and their permissions. New roles appear on the sign-in screen immediately.</p>
     <div class="dl-card" style="margin-bottom:20px">
@@ -1174,15 +1269,15 @@ const V={
     </div></div>`;
   },
 
-  dropdowns(){
-    const drops=Store.drops();
+  async dropdowns(){
+    const drops=await Store.drops();
     const labels={submitted_by:'Submitted By / Reported By',assigned_to:'Assigned To',responsible_party:'Responsible Party',approved_by:'Approved By',issued_by:'Issued By',location:'Location',dependency_type:'Dependency Type',severity:'Severity',priority:'Priority',decision:'Decision',status:'Status',vo_status:'VO Status',si_status:'SI Status',cb_status:'CB Status'};
     return`<p style="font-size:0.82rem;color:var(--ink-3);margin-bottom:20px;max-width:520px;line-height:1.7">Manage dropdown options so forms fill out faster.</p>
     ${Object.entries(drops).map(([key,values])=>`<div class="dl-card"><div class="dl-head"><span>${labels[key]||key}</span><span style="font-size:0.72rem;color:var(--ink-4);font-weight:400;text-transform:none">${values.length} options</span></div><div class="dl-list">${values.map((v,i)=>`<div class="dl-item"><span class="dl-name">${esc(v)}</span><button class="dl-del" onclick="DL.rm('${key}',${i})"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')}</div><div class="dl-add"><input type="text" id="dli-${key}" placeholder="Add option…" onkeydown="if(event.key==='Enter')DL.add('${key}')"><button onclick="DL.add('${key}')">Add</button></div></div>`).join('')}`;
   },
 
-  security(){
-    const hasCode=!!Store.passcode();
+  async security(){
+    const hasCode=!!await Store.passcode();
     return`<p style="font-size:0.82rem;color:var(--ink-3);margin-bottom:20px;max-width:520px;line-height:1.7">Set a project passcode — the first gate everyone must pass before reaching the sign-in screen. Combine with personal PINs in <strong>Team Members</strong> for full two-layer security.</p>
     <div class="dl-card" style="margin-bottom:20px">
       <div class="dl-head"><span>Project Passcode</span><span style="font-size:0.72rem;font-weight:600;text-transform:none;color:${hasCode?'var(--green)':'var(--red)'}">${hasCode?'● Active':'○ Not set'}</span></div>
@@ -1202,7 +1297,7 @@ const V={
       <div class="dl-head"><span>Security Layers Active</span></div>
       <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
         <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem"><span style="color:${hasCode?'var(--green)':'var(--ink-4)'}">●</span><span><strong>Layer 1 — Project Passcode</strong><span style="color:var(--ink-4);margin-left:8px">${hasCode?'Active':'Not set'}</span></span></div>
-        <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem"><span style="color:${Store.team().length?'var(--green)':'var(--ink-4)'}">●</span><span><strong>Layer 2 — Personal PINs</strong><span style="color:var(--ink-4);margin-left:8px">${Store.team().length} member${Store.team().length!==1?'s':''} registered</span></span></div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem"><span style="color:${await Store.team().length?'var(--green)':'var(--ink-4)'}">●</span><span><strong>Layer 2 — Personal PINs</strong><span style="color:var(--ink-4);margin-left:8px">${await Store.team().length} member${await Store.team().length!==1?'s':''} registered</span></span></div>
       </div>
     </div>
     <div style="background:var(--amber-soft);border:1px solid #fcd34d;border-radius:var(--r);padding:12px 14px;font-size:0.78rem;color:#92400e;max-width:520px;line-height:1.7;margin-top:4px"><strong>Note:</strong> These are stored in the browser's local storage. Keep the HTML file itself secure and share it only with your team. Passcode activates on next sign-out.</div>`;
@@ -1213,7 +1308,7 @@ const V={
 //  TEAM MANAGER
 // ══════════════════════════════════════════════
 const TM={
-  add(){
+  async add(){
     const name=document.getElementById('tm-name').value.trim();
     const roleId=document.getElementById('tm-role').value;
     const pin=document.getElementById('tm-pin').value.trim();
@@ -1221,24 +1316,24 @@ const TM={
     if(!name){err.textContent='Please enter a name.';return;}
     if(!roleId){err.textContent='Please select a role.';return;}
     if(!pin||pin.length!==4||!/^\d{4}$/.test(pin)){err.textContent='PIN must be exactly 4 digits.';return;}
-    const team=Store.team();
+    const team=await Store.team();
     if(team.some(m=>m.name.toLowerCase()===name.toLowerCase()&&m.roleId===roleId)){err.textContent='A member with this name and role already exists.';return;}
     team.push({name,roleId,pin});
-    Store.saveTeam(team);
+    await Store.saveTeam(team);
     err.textContent='';
     T.show(`${name} added`,'ok');
     Nav.render();
     Login.init(); // refresh login role list
   },
-  remove(i){
-    const team=Store.team();team.splice(i,1);Store.saveTeam(team);T.show('Member removed','ok');Nav.render();Login.init();
+  async remove(i){
+    const team=await Store.team();team.splice(i,1);await Store.saveTeam(team);T.show('Member removed','ok');Nav.render();Login.init();
   },
-  edit(i){
-    const team=Store.team();const m=team[i];
+  async edit(i){
+    const team=await Store.team();const m=team[i];
     const newPin=prompt(`Enter new PIN for ${m.name} (4 digits):`,'');
     if(newPin===null)return;
     if(!newPin||newPin.length!==4||!/^\d{4}$/.test(newPin)){T.show('Invalid PIN — must be 4 digits','err');return;}
-    team[i].pin=newPin;Store.saveTeam(team);T.show('PIN updated','ok');Nav.render();
+    team[i].pin=newPin;await Store.saveTeam(team);T.show('PIN updated','ok');Nav.render();
   }
 };
 
@@ -1246,39 +1341,39 @@ const TM={
 //  ROLE MANAGER
 // ══════════════════════════════════════════════
 const RM={
-  add(){
+  async add(){
     const name=document.getElementById('rm-name').value.trim();
     const err=document.getElementById('rm-err');
     if(!name){err.textContent='Please enter a role name.';return;}
-    const roles=Store.roles();
+    const roles=await Store.roles();
     if(roles.some(r=>r.name.toLowerCase()===name.toLowerCase())){err.textContent='Role already exists.';return;}
     roles.push({id:'r_'+Date.now(),name,canCreate:document.getElementById('rm-create').checked,canEditAll:document.getElementById('rm-edit').checked,canDelete:document.getElementById('rm-delete').checked,canSettings:false,pillClass:'other'});
-    Store.saveRoles(roles);err.textContent='';T.show(`Role "${name}" added`,'ok');Nav.render();Login.init();
+    await Store.saveRoles(roles);err.textContent='';T.show(`Role "${name}" added`,'ok');Nav.render();Login.init();
   },
-  remove(i){const roles=Store.roles();roles.splice(i,1);Store.saveRoles(roles);T.show('Role removed','ok');Nav.render();Login.init();}
+  async remove(i){const roles=await Store.roles();roles.splice(i,1);await Store.saveRoles(roles);T.show('Role removed','ok');Nav.render();Login.init();}
 };
 
 // ══════════════════════════════════════════════
 //  DROPDOWN MANAGER
 // ══════════════════════════════════════════════
 const DL={
-  add(key){const inp=document.getElementById(`dli-${key}`);const v=inp.value.trim();if(!v)return;const d=Store.drops();if(d[key].includes(v)){T.show('Already exists','err');return;}d[key].push(v);Store.saveDrops(d);inp.value='';Nav.render();T.show('Added','ok');},
-  rm(key,i){const d=Store.drops();d[key].splice(i,1);Store.saveDrops(d);Nav.render();T.show('Removed','ok');}
+  async add(key){const inp=document.getElementById(`dli-${key}`);const v=inp.value.trim();if(!v)return;const d=await Store.drops();if(d[key].includes(v)){T.show('Already exists','err');return;}d[key].push(v);await Store.saveDrops(d);inp.value='';Nav.render();T.show('Added','ok');},
+  async rm(key,i){const d=await Store.drops();d[key].splice(i,1);await Store.saveDrops(d);Nav.render();T.show('Removed','ok');}
 };
 
 // ══════════════════════════════════════════════
 //  SECURITY
 // ══════════════════════════════════════════════
 const SEC={
-  save(){
+  async save(){
     const c1=document.getElementById('sec-c1').value.trim();
     const c2=document.getElementById('sec-c2').value.trim();
     const err=document.getElementById('sec-err');
     if(!c1||c1.length!==4||!/^\d{4}$/.test(c1)){err.textContent='Must be exactly 4 digits.';return;}
     if(c1!==c2){err.textContent='Passcodes do not match.';return;}
-    Store.savePasscode(c1);err.textContent='';T.show('Passcode saved — active on next sign-out','ok');Nav.render();
+    await Store.savePasscode(c1);err.textContent='';T.show('Passcode saved — active on next sign-out','ok');Nav.render();
   },
-  remove(){Store.savePasscode(null);T.show('Passcode removed','ok');Nav.render();}
+  async remove(){await Store.savePasscode(null);T.show('Passcode removed','ok');Nav.render();}
 };
 
 // ══════════════════════════════════════════════
@@ -1310,8 +1405,8 @@ const M={
   },
   pickType(t){S.addType=t;this.close();this.form(t,null,false);},
 
-  form(type,item,ctr){
-    const td=TYPES[type],drops=Store.drops();
+  async form(type,item,ctr){
+    const td=TYPES[type],drops=await Store.drops();
     const title=item?`Edit ${td.label} #${item.id}`:`New ${td.full}`;
     const existAtts=item?(item.attachments||[]):[];
     const fh=td.fields.map(f=>{
@@ -1341,18 +1436,18 @@ const M={
     <div class="mfoot"><button class="btn btn-ghost" onclick="M.close()">Cancel</button><button class="btn btn-pink" onclick="M.save('${type}',${!!item},${ctr})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>${item?'Save Changes':'Create Item'}</button></div>`);
   },
 
-  save(type,isEdit,ctr){
+  async save(type,isEdit,ctr){
     const td=TYPES[type];let valid=true;
     td.fields.forEach(f=>{const el=document.getElementById(`f_${f.k}`),fe=document.getElementById(`fe_${f.k}`);if(!el||!fe)return;if(f.req&&!el.disabled&&(!el.value||!el.value.trim())){fe.textContent=`${f.l} is required`;el.style.borderColor='var(--red)';valid=false;}else{fe.textContent='';el.style.borderColor='';}});
     if(!valid){const fb=document.getElementById('ffb');fb.style.display='';fb.textContent='Please fill in all required fields.';return;}
-    // Collect attachments from form
     const collectAtts=()=>{if(!td.hasAtts)return null;const rows=document.querySelectorAll('#form-atts .att-row');const out=[];rows.forEach(row=>{const ins=row.querySelectorAll('input');const url=(ins[0]?.value||'').trim(),name=(ins[1]?.value||'').trim();if(url)out.push({url,name:name||url});});return out;};
     const items=Store.items();
     if(isEdit&&S.editItem){
       const idx=items.findIndex(x=>x.id===S.editItem.id);
       if(idx>=0){const changed=[];td.fields.forEach(f=>{const el=document.getElementById(`f_${f.k}`);if(el&&!el.disabled){const old=items[idx][f.k]||'';if(old!==el.value)changed.push(f.l);items[idx][f.k]=el.value;}});const atts=collectAtts();if(atts!==null){if(JSON.stringify(items[idx].attachments||[])!==JSON.stringify(atts))changed.push('Attachments');items[idx].attachments=atts;}items[idx].updated=now();addAudit(items[idx],changed.length?`Updated: ${changed.join(', ')}`:'Edited item');}
     } else {
-      const ni={id:Store.nextId(),type,status:'Open',created:now(),audit:[]};
+      const newId=await Store.nextId();
+      const ni={id:newId,type,status:({si:'Issued',cb:'Issued',vo:'Draft'}[type]||'Open'),created:now(),audit:[]};
       td.fields.forEach(f=>{const el=document.getElementById(`f_${f.k}`);if(el)ni[f.k]=el.value;});
       const atts=collectAtts();if(atts!==null)ni.attachments=atts;
       addAudit(ni,`Created ${td.label}`);items.push(ni);
@@ -1397,7 +1492,34 @@ const T={
 window.Gate=Gate;window.Login=Login;window.PinStep=PinStep;window.Auth=Auth;
 window.Nav=Nav;window.M=M;window.Conf=Conf;window.F=F;
 window.DL=DL;window.TM=TM;window.RM=RM;window.SEC=SEC;window.T=T;window.Store=Store;
-Gate.init();
+
+// Wait for Firebase to be ready, boot the Store, then start the app
+async function boot(){
+  try{
+    // Wait for Firebase module to finish initialising
+    let tries=0;
+    while(!window._fbReady&&tries<50){await new Promise(r=>setTimeout(r,100));tries++;}
+    if(!window._fbReady)throw new Error('Firebase timeout');
+    // Load all data into cache
+    await Store.boot();
+    // Start real-time listener for items — auto-refreshes when another user saves
+    window._fb.listen(items=>{
+      Store._items=items;
+      // Only re-render if app is visible and user is logged in
+      if(window.S&&window.S.user&&document.getElementById('app').classList.contains('on')){
+        Nav.render();
+      }
+    });
+    // Hide loading screen
+    document.getElementById('loading').style.display='none';
+    // Start app
+    await Gate.init();
+  }catch(e){
+    console.error('Boot error:',e);
+    document.getElementById('loading').innerHTML='<div style="text-align:center;padding:40px;color:#ef4444;font-family:sans-serif"><strong>Connection error</strong><br><span style="font-size:0.85rem;color:#71717a">Could not connect to Firebase. Check your internet connection and refresh.</span></div>';
+  }
+}
+boot();
 </script>
 </body>
 </html>
