@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beach House — Lim Residence</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap');
+:root{
+  --pink:#f472b6;--pink-soft:#fce7f3;--pink-mid:#fbcfe8;--pink-deep:#db2777;
+  --ink:#18181b;--ink-2:#3f3f46;--ink-3:#71717a;--ink-4:#a1a1aa;
+  --line:#e4e4e7;--line-soft:#f4f4f5;--white:#ffffff;--bg:#fafafa;
+  --red:#ef4444;--red-soft:#fef2f2;--amber:#f59e0b;--amber-soft:#fffbeb;
+  --green:#22c55e;--green-soft:#f0fdf4;--zinc:#71717a;--zinc-soft:#f4f4f5;
+  --sidebar-w:224px;--r:6px;--r-lg:10px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5}
+
+/* ── GATE (project passcode) ── */
+.gate{position:fixed;inset:0;background:var(--white);display:flex;align-items:center;justify-content:center;z-index:3000}
+.gate-box{width:100%;max-width:340px;padding:0 24px;text-align:center}
+.gate-mark{width:48px;height:48px;border-radius:14px;background:var(--ink);display:flex;align-items:center;justify-content:center;margin:0 auto 22px}
+.gate-proj{font-size:0.72rem;font-weight:700;color:var(--pink-deep);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
+.gate-box h1{font-size:1.25rem;font-weight:600;letter-spacing:-0.03em;margin-bottom:4px}
+.gate-box p{font-size:0.82rem;color:var(--ink-3);margin-bottom:24px}
+.pin-dots{display:flex;justify-content:center;gap:12px;margin-bottom:18px}
+.pin-dot{width:13px;height:13px;border-radius:50%;border:2px solid var(--line);transition:all 0.15s}
+.pin-dot.on{background:var(--ink);border-color:var(--ink)}
+.pin-dot.err{background:var(--red);border-color:var(--red)}
+.pin-dot.ok{background:var(--green);border-color:var(--green)}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;max-width:216px;margin:0 auto 12px}
+.kk{padding:13px;border-radius:var(--r-lg);border:1.5px solid var(--line);background:var(--white);cursor:pointer;font-size:1.05rem;font-weight:500;color:var(--ink);font-family:'DM Mono',monospace;transition:all 0.1s;user-select:none}
+.kk:hover{background:var(--bg);border-color:var(--ink-4)}.kk:active{background:var(--line);transform:scale(0.94)}
+.kk.kdel{font-size:0.82rem;color:var(--ink-3)}
+.gate-err{font-size:0.75rem;color:var(--red);min-height:18px}
+.gate-hint{font-size:0.7rem;color:var(--ink-4);margin-top:14px}
+
+/* ── LOGIN SCREEN ── */
+.login-screen{position:fixed;inset:0;background:var(--white);display:flex;align-items:center;justify-content:center;z-index:2000}
+.lw{width:100%;max-width:400px;padding:0 24px}
+.lw-mark{width:42px;height:42px;border-radius:11px;background:var(--pink);display:flex;align-items:center;justify-content:center;margin-bottom:22px}
+.lw-proj{font-size:0.7rem;font-weight:700;color:var(--pink-deep);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px}
+.lw h1{font-size:1.4rem;font-weight:600;letter-spacing:-0.04em;margin-bottom:4px}
+.lw-sub{font-size:0.83rem;color:var(--ink-3);margin-bottom:24px}
+.lw-field{margin-bottom:14px}
+.lw-field label{font-size:0.7rem;font-weight:700;color:var(--ink-3);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.07em}
+.lw-field input,.lw-field select{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:var(--r-lg);font-size:0.9rem;font-family:inherit;outline:none;transition:border-color 0.12s;background:var(--white);color:var(--ink)}
+.lw-field input:focus,.lw-field select:focus{border-color:var(--pink);box-shadow:0 0 0 3px var(--pink-soft)}
+/* PIN entry row */
+.lw-pin-row{display:flex;gap:8px;margin-bottom:6px}
+.lw-pin-row input{flex:1;text-align:center;font-family:'DM Mono',monospace;letter-spacing:0.25em;font-size:1.1rem;padding:10px 8px}
+.lw-err{font-size:0.75rem;color:var(--red);min-height:18px;margin-top:2px}
+.lw-enter{margin-top:16px;width:100%;padding:13px;background:var(--ink);color:white;border:none;border-radius:var(--r-lg);font-size:0.875rem;font-weight:600;cursor:pointer;font-family:inherit;transition:background 0.15s}
+.lw-enter:hover{background:var(--ink-2)}.lw-enter:disabled{opacity:0.35;cursor:not-allowed}
+.lw-notice{background:var(--amber-soft);border:1px solid #fcd34d;border-radius:var(--r);padding:9px 12px;font-size:0.77rem;color:#92400e;margin-bottom:16px;display:flex;gap:7px;align-items:flex-start;line-height:1.5}
+
+/* ── PIN ENTRY (personal PIN keypad after name selected) ── */
+.pin-screen{position:fixed;inset:0;background:var(--white);display:flex;align-items:center;justify-content:center;z-index:2500}
+.pin-box{width:100%;max-width:320px;padding:0 24px;text-align:center}
+.pin-box h2{font-size:1.1rem;font-weight:600;letter-spacing:-0.03em;margin-bottom:4px}
+.pin-box .pin-who{font-size:0.82rem;color:var(--ink-3);margin-bottom:20px}
+.pin-box .pin-who strong{color:var(--ink)}
+
+/* ── APP ── */
+#app{display:none;height:100vh;overflow:hidden}
+#app.on{display:flex}
+
+/* ── SIDEBAR ── */
+#sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-top{padding:16px 14px 12px;border-bottom:1px solid var(--line-soft)}
+.sb-logo{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.sb-lm{width:28px;height:28px;border-radius:7px;background:var(--pink);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-ln{font-size:0.875rem;font-weight:600;color:var(--ink);letter-spacing:-0.02em}
+.sb-user{font-size:0.8rem;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-rp{display:inline-flex;align-items:center;font-size:0.67rem;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:3px}
+.sb-rp.pm{background:var(--pink-soft);color:var(--pink-deep)}
+.sb-rp.arch{background:#eff6ff;color:#1d4ed8}
+.sb-rp.gc{background:var(--amber-soft);color:#92400e}
+.sb-rp.sub{background:var(--green-soft);color:#15803d}
+.sb-rp.other{background:var(--zinc-soft);color:var(--zinc)}
+.sb-nav{padding:10px 6px;flex:1}
+.sb-sec{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-4);padding:10px 8px 4px}
+.sb-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r);cursor:pointer;font-size:0.82rem;font-weight:400;color:var(--ink-3);transition:all 0.12s;user-select:none}
+.sb-item:hover{background:var(--line-soft);color:var(--ink)}
+.sb-item.on{background:var(--pink-soft);color:var(--pink-deep);font-weight:500}
+.sb-item svg{flex-shrink:0;opacity:0.65}.sb-item.on svg{opacity:1}
+.sb-badge{margin-left:auto;background:var(--pink);color:white;font-size:0.6rem;padding:1px 6px;border-radius:20px;font-weight:700}
+.sb-foot{padding:10px 6px 14px;border-top:1px solid var(--line-soft)}
+.sb-foot-btn{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r);font-size:0.82rem;color:var(--ink-3);cursor:pointer;background:none;border:none;font-family:inherit;transition:all 0.12s;width:100%}
+.sb-foot-btn:hover{background:var(--line-soft);color:var(--ink)}
+
+/* ── TOPBAR ── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#topbar{background:var(--white);border-bottom:1px solid var(--line);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.tb-left{display:flex;align-items:center;gap:10px}
+.tb-title{font-size:0.9rem;font-weight:600;color:var(--ink);letter-spacing:-0.02em}
+.tb-right{display:flex;gap:8px}
+#content{flex:1;overflow-y:auto;padding:26px 26px 40px}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);border:none;cursor:pointer;font-size:0.8rem;font-weight:500;font-family:inherit;transition:all 0.12s;line-height:1;letter-spacing:-0.01em}
+.btn-pink{background:var(--pink);color:white}.btn-pink:hover{background:var(--pink-deep)}
+.btn-ink{background:var(--ink);color:white}.btn-ink:hover{background:var(--ink-2)}
+.btn-ghost{background:transparent;color:var(--ink-3);border:1px solid var(--line)}.btn-ghost:hover{border-color:var(--ink-4);color:var(--ink);background:var(--line-soft)}
+.btn-del{background:transparent;color:var(--red);border:1px solid #fecaca}.btn-del:hover{background:var(--red-soft)}
+.btn-sm{padding:5px 10px;font-size:0.75rem}
+
+/* ── KPI / DASH ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:10px;margin-bottom:24px}
+.kpi{background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:15px 13px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--line)}
+.kpi.c-pink::after{background:var(--pink)}.kpi.c-blue::after{background:#60a5fa}.kpi.c-purple::after{background:#a78bfa}
+.kpi.c-red::after{background:var(--red)}.kpi.c-amber::after{background:var(--amber)}.kpi.c-green::after{background:var(--green)}.kpi.c-zinc::after{background:var(--zinc)}
+.kpi:hover{border-color:var(--pink-mid);transform:translateY(-1px);box-shadow:0 3px 14px rgba(244,114,182,0.1)}
+.kpi-lbl{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);margin-bottom:8px}
+.kpi-num{font-size:1.9rem;font-weight:300;color:var(--ink);letter-spacing:-0.05em;line-height:1;font-family:'DM Mono',monospace}
+.kpi.c-red .kpi-num{color:var(--red)}
+.dash-h{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);margin-bottom:12px}
+.dash-greeting{margin-bottom:22px}
+.dash-greeting .dg-date{font-size:1.05rem;font-weight:600;color:var(--ink);letter-spacing:-0.03em}
+.dash-greeting .dg-sub{font-size:0.8rem;color:var(--ink-4);margin-top:2px}
+.act-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;margin-bottom:24px}
+.act-card{background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px 14px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:11px}
+.act-card:hover{border-color:var(--pink-mid);transform:translateY(-1px);box-shadow:0 3px 14px rgba(244,114,182,0.1)}
+.ac-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ac-icon.red{background:var(--red-soft)}.ac-icon.amber{background:var(--amber-soft)}.ac-icon.pink{background:var(--pink-soft)}.ac-icon.zinc{background:var(--zinc-soft)}
+.ac-num{font-size:1.5rem;font-weight:300;letter-spacing:-0.04em;font-family:'DM Mono',monospace;line-height:1}
+.ac-lbl{font-size:0.67rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-4);margin-top:1px}
+.act-card.urgent .ac-num{color:var(--red)}.act-card.warn .ac-num{color:#92400e}
+.party-table{width:100%;border-collapse:collapse;font-size:0.82rem}
+.party-table td{padding:7px 0;border-bottom:1px solid var(--line-soft)}
+.party-table tr:last-child td{border-bottom:none}
+.party-bar-bg{background:var(--line-soft);border-radius:20px;height:5px;overflow:hidden;min-width:80px}
+.party-bar-fill{height:5px;border-radius:20px;background:var(--pink)}
+
+/* ── TABLE ── */
+.tshell{background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
+.itable{width:100%;border-collapse:collapse;font-size:0.82rem}
+.itable th{padding:9px 14px;text-align:left;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);border-bottom:1px solid var(--line);background:var(--bg);cursor:pointer;white-space:nowrap;user-select:none}
+.itable th:hover{color:var(--ink-2)}.itable th.sorted{color:var(--pink-deep)}
+.itable td{padding:10px 14px;border-bottom:1px solid var(--line-soft);vertical-align:middle;color:var(--ink-2)}
+.itable tr:last-child td{border-bottom:none}.itable tr:hover td{background:var(--bg)}.itable tr.od td{background:#fff5f7!important}
+.ilink{color:var(--ink);font-weight:500;cursor:pointer}.ilink:hover{color:var(--pink-deep)}
+.odot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--red);margin-right:5px;vertical-align:middle}
+.mono{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--ink-4)}
+.empty-td{text-align:center;padding:48px 24px;color:var(--ink-4);font-size:0.82rem}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:0.67rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap}
+.b-open{background:var(--red-soft);color:var(--red)}.b-prog{background:var(--amber-soft);color:#92400e}
+.b-res{background:var(--green-soft);color:#15803d}.b-cls{background:var(--zinc-soft);color:var(--zinc)}
+.b-low{background:var(--green-soft);color:#15803d}.b-med{background:var(--amber-soft);color:#92400e}
+.b-high{background:#fff7ed;color:#c2410c}.b-crit{background:var(--red-soft);color:var(--red)}
+.tpill{display:inline-flex;padding:2px 7px;border-radius:4px;font-size:0.63rem;font-weight:700;letter-spacing:0.04em}
+.tp-rfi{background:#eff6ff;color:#1d4ed8}.tp-rfa{background:#f5f3ff;color:#6d28d9}
+.tp-issue{background:var(--red-soft);color:var(--red)}.tp-dep{background:var(--amber-soft);color:#92400e}.tp-act{background:var(--green-soft);color:#15803d}
+.tp-si{background:#fdf4ff;color:#9333ea}.tp-cb{background:#ecfdf5;color:#065f46}.tp-vo{background:#fff1f2;color:#be123c}
+
+/* ── FILTERS ── */
+.frow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.frow select,.frow input[type=text],.frow input[type=date]{padding:6px 9px;border:1px solid var(--line);border-radius:var(--r);font-size:0.78rem;background:var(--white);color:var(--ink);font-family:inherit;outline:none;transition:border-color 0.12s}
+.frow select:focus,.frow input:focus{border-color:var(--pink)}
+.ibtn{background:none;border:none;cursor:pointer;padding:4px 5px;border-radius:5px;color:var(--ink-4);display:inline-flex;align-items:center;transition:all 0.12s}
+.ibtn:hover{background:var(--line-soft);color:var(--ink)}.ibtn.del:hover{background:var(--red-soft);color:var(--red)}
+
+/* ── MODAL ── */
+.moverlay{position:fixed;inset:0;background:rgba(24,24,27,0.4);display:flex;align-items:flex-start;justify-content:center;z-index:500;padding:44px 16px 24px;overflow-y:auto;backdrop-filter:blur(2px)}
+.mbox{background:var(--white);border-radius:12px;width:100%;max-width:680px;box-shadow:0 8px 40px rgba(0,0,0,0.14);flex-shrink:0}
+.mhead{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line)}
+.mhead h2{font-size:0.9rem;font-weight:600;color:var(--ink);letter-spacing:-0.02em}
+.mclose{background:none;border:none;cursor:pointer;color:var(--ink-4);padding:4px;border-radius:5px;display:flex;transition:all 0.12s}.mclose:hover{background:var(--line-soft);color:var(--ink)}
+.mbody{padding:20px}.mfoot{padding:12px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;background:var(--bg)}
+.tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.topt{padding:13px 8px;border:1.5px solid var(--line);border-radius:var(--r-lg);cursor:pointer;text-align:center;transition:all 0.12s}
+.topt:hover{border-color:var(--pink-mid);background:var(--pink-soft)}.topt.sel{border-color:var(--pink);background:var(--pink-soft)}
+.topt .ti{font-size:1.2rem;margin-bottom:4px}.topt .tl{font-size:0.75rem;font-weight:600;color:var(--ink-2)}.topt .ts{font-size:0.63rem;color:var(--ink-4)}
+
+/* ── FORM ── */
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.fgrid .full{grid-column:1/-1}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:0.72rem;font-weight:500;color:var(--ink-3)}.fg label .ce{color:var(--pink);margin-left:3px}
+.fg input,.fg select,.fg textarea{padding:8px 10px;border:1px solid var(--line);border-radius:var(--r);font-size:0.82rem;background:var(--white);color:var(--ink);font-family:inherit;outline:none;transition:border-color 0.12s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--pink);box-shadow:0 0 0 3px var(--pink-soft)}
+.fg input:disabled,.fg select:disabled,.fg textarea:disabled{background:var(--bg);color:var(--ink-4);cursor:not-allowed}
+.fg textarea{resize:vertical;min-height:70px}
+.fg .cef{border-color:var(--pink-mid)!important;background:#fff9fc!important}.fg .cef:disabled{border-color:var(--line)!important;background:var(--bg)!important}
+.ferr{font-size:0.67rem;color:var(--red)}.ffb{padding:8px 12px;border-radius:var(--r);font-size:0.78rem;margin-bottom:12px;display:none}
+.ffb.err{background:var(--red-soft);color:var(--red);border:1px solid #fecaca}
+.ctr-hint{background:var(--pink-soft);border:1px solid var(--pink-mid);border-radius:var(--r);padding:9px 12px;margin-bottom:14px;font-size:0.78rem;color:var(--pink-deep);display:flex;gap:8px;align-items:flex-start}
+
+/* ── DETAIL ── */
+.dback{display:inline-flex;align-items:center;gap:5px;font-size:0.78rem;color:var(--ink-4);cursor:pointer;margin-bottom:14px;transition:color 0.12s}.dback:hover{color:var(--pink-deep)}
+.dtrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.dtrow h1{font-size:1.2rem;font-weight:600;letter-spacing:-0.03em}
+.dcard{background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px}
+.dchead{padding:13px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:var(--bg)}
+.dchead .sub{font-size:0.82rem;color:var(--ink-3)}.dbody{padding:20px}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px 22px}.dgrid .full{grid-column:1/-1}
+.df label{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);display:block;margin-bottom:4px}
+.df .dv{font-size:0.85rem;color:var(--ink-2)}.df .dv.empty{color:var(--ink-4);font-style:italic;font-size:0.8rem}
+
+/* ── AUDIT ── */
+.audit-entry{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line-soft)}.audit-entry:last-child{border-bottom:none}
+.audit-dot{width:7px;height:7px;border-radius:50%;background:var(--pink-mid);flex-shrink:0;margin-top:5px}
+.audit-who{font-size:0.78rem;font-weight:600;color:var(--ink-2)}
+.audit-role{font-size:0.68rem;color:var(--ink-4);margin-left:5px}
+.audit-action{font-size:0.78rem;color:var(--ink-3);margin-top:1px}
+.audit-time{font-size:0.7rem;color:var(--ink-4);margin-top:2px;font-family:'DM Mono',monospace}
+
+/* ── ATTACHMENTS ── */
+.att-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.att-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r)}
+.att-row input{flex:1;padding:4px 6px;border:1px solid var(--line);border-radius:4px;font-size:0.78rem;font-family:inherit;outline:none;background:var(--white)}
+.att-row input:focus{border-color:var(--pink)}.att-row input.url{flex:2}
+.att-sep{font-size:0.7rem;color:var(--ink-4);flex-shrink:0}
+.att-del{background:none;border:none;cursor:pointer;color:var(--ink-4);padding:2px;border-radius:3px;display:flex;flex-shrink:0}.att-del:hover{color:var(--red)}
+.att-add-btn{display:inline-flex;align-items:center;gap:5px;font-size:0.75rem;color:var(--pink-deep);cursor:pointer;background:none;border:none;font-family:inherit;padding:4px 0;font-weight:500}.att-add-btn:hover{color:var(--pink)}
+.att-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:var(--bg);border:1px solid var(--line);border-radius:20px;font-size:0.75rem;text-decoration:none;color:var(--ink-2);transition:all 0.12s;margin:3px 4px 3px 0}
+.att-chip:hover{border-color:var(--pink);color:var(--pink-deep);background:var(--pink-soft)}
+
+/* ── SETTINGS / DL ── */
+.dl-card{background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;margin-bottom:14px}
+.dl-head{padding:9px 14px;background:var(--bg);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.dl-head span{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-3)}
+.dl-list{padding:6px}.dl-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--r)}.dl-item:hover{background:var(--bg)}
+.dl-name{flex:1;font-size:0.82rem;color:var(--ink-2)}
+.dl-del{background:none;border:none;cursor:pointer;color:var(--ink-4);padding:2px 3px;border-radius:4px;display:flex;transition:all 0.12s}.dl-del:hover{color:var(--red);background:var(--red-soft)}
+.dl-add{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line-soft)}
+.dl-add input{flex:1;padding:6px 9px;border:1px solid var(--line);border-radius:var(--r);font-size:0.8rem;font-family:inherit;outline:none}.dl-add input:focus{border-color:var(--pink)}
+.dl-add button,.dl-add-btn{padding:6px 12px;background:var(--pink);color:white;border:none;border-radius:var(--r);font-size:0.78rem;font-weight:500;cursor:pointer;font-family:inherit}.dl-add button:hover,.dl-add-btn:hover{background:var(--pink-deep)}
+/* team members */
+.tm-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line-soft)}
+.tm-row:last-child{border-bottom:none}
+.tm-av{width:32px;height:32px;border-radius:50%;background:var(--pink-soft);display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:700;color:var(--pink-deep);flex-shrink:0}
+.tm-info{flex:1;min-width:0}
+.tm-name{font-size:0.85rem;font-weight:600;color:var(--ink-2)}
+.tm-meta{font-size:0.72rem;color:var(--ink-4)}
+.tm-pin{font-family:'DM Mono',monospace;font-size:0.72rem;background:var(--line-soft);padding:1px 7px;border-radius:4px;color:var(--ink-3)}
+.tm-del{background:none;border:none;cursor:pointer;color:var(--ink-4);padding:3px;border-radius:4px;display:flex;transition:all 0.12s}.tm-del:hover{color:var(--red);background:var(--red-soft)}
+/* role config */
+.rci{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line-soft)}.rci:last-child{border-bottom:none}
+.rci-name{flex:1;font-size:0.85rem;font-weight:500;color:var(--ink-2)}
+.rci-perms{display:flex;gap:5px;flex-wrap:wrap}
+.pp{font-size:0.62rem;padding:2px 7px;border-radius:20px;font-weight:600}
+.pp-y{background:var(--green-soft);color:#15803d}.pp-n{background:var(--zinc-soft);color:var(--zinc);text-decoration:line-through;opacity:0.65}
+.rci-del{background:none;border:none;cursor:pointer;color:var(--ink-4);padding:3px;border-radius:4px;display:flex}.rci-del:hover{color:var(--red);background:var(--red-soft)}
+
+/* ── FOCUS ── */
+.focus-section{margin-bottom:26px}
+.focus-section-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line-soft)}
+.focus-section-head h3{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4)}
+.fcnt{font-size:0.68rem;padding:1px 7px;border-radius:20px;font-weight:600}
+.fcnt.red{background:var(--red-soft);color:var(--red)}.fcnt.amber{background:var(--amber-soft);color:#92400e}
+.focus-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--line-soft)}.focus-item:last-child{border-bottom:none}
+.fdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6px}
+.fdot.red{background:var(--red)}.fdot.amber{background:var(--amber)}
+.fi-body{flex:1;min-width:0}
+.fi-title{font-size:0.82rem;font-weight:500;color:var(--ink);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fi-title:hover{color:var(--pink-deep)}
+.fi-meta{font-size:0.72rem;color:var(--ink-4);margin-top:2px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.fi-age{color:var(--red);font-weight:500}
+.focus-empty{font-size:0.82rem;color:var(--ink-4);padding:14px 0;font-style:italic}
+
+/* ── CONFIRM / TOAST ── */
+.cov{position:fixed;inset:0;background:rgba(24,24,27,0.4);z-index:600;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(2px)}
+.cbox{background:var(--white);border-radius:var(--r-lg);padding:24px;max-width:340px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.14)}
+.cbox h3{font-size:0.9rem;font-weight:600;margin-bottom:8px}.cbox p{font-size:0.82rem;color:var(--ink-3);margin-bottom:18px;line-height:1.6}
+.cact{display:flex;justify-content:flex-end;gap:8px}
+.twrap{position:fixed;bottom:18px;right:18px;z-index:900;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{padding:9px 14px;border-radius:var(--r-lg);font-size:0.82rem;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,0.1);display:flex;align-items:center;gap:8px;pointer-events:auto;animation:tin .18s ease;border:1px solid transparent}
+.toast.ok{background:var(--white);border-color:#bbf7d0;color:#15803d}.toast.err{background:var(--white);border-color:#fecaca;color:var(--red)}
+@keyframes tin{from{transform:translateY(6px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes tout{from{transform:translateY(0);opacity:1}to{transform:translateY(6px);opacity:0}}
+
+@media(max-width:680px){
+  #sidebar{display:none}
+  #sidebar.mob{display:flex;position:fixed;left:0;top:0;bottom:0;width:224px;z-index:300;box-shadow:4px 0 20px rgba(0,0,0,0.1)}
+  .fgrid,.dgrid{grid-template-columns:1fr}
+  #content{padding:16px}.kpi-grid{grid-template-columns:repeat(2,1fr)}.tgrid{grid-template-columns:repeat(2,1fr)}
+  .mob-menu{display:flex!important}.lw-pin-row input{font-size:1rem}
+}
+.mob-menu{display:none;background:none;border:none;cursor:pointer;color:var(--ink-3);padding:4px}
+</style>
+</head>
+<body>
+
+<!-- ══ STEP 1: Project Passcode Gate ══ -->
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <div class="gate-mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+    <div class="gate-proj">Beach House — Mr. &amp; Mrs. Jose Ma. K. Lim</div>
+    <h1>Project Access</h1>
+    <p>Enter the project passcode to continue.</p>
+    <div class="pin-dots" id="gate-dots">
+      <div class="pin-dot" id="gd0"></div><div class="pin-dot" id="gd1"></div>
+      <div class="pin-dot" id="gd2"></div><div class="pin-dot" id="gd3"></div>
+    </div>
+    <div class="keypad">
+      <button class="kk" onclick="Gate.press('1')">1</button><button class="kk" onclick="Gate.press('2')">2</button><button class="kk" onclick="Gate.press('3')">3</button>
+      <button class="kk" onclick="Gate.press('4')">4</button><button class="kk" onclick="Gate.press('5')">5</button><button class="kk" onclick="Gate.press('6')">6</button>
+      <button class="kk" onclick="Gate.press('7')">7</button><button class="kk" onclick="Gate.press('8')">8</button><button class="kk" onclick="Gate.press('9')">9</button>
+      <div></div><button class="kk" onclick="Gate.press('0')">0</button><button class="kk kdel" onclick="Gate.del()">⌫</button>
+    </div>
+    <div class="gate-err" id="gate-err"></div>
+    <div class="gate-hint" id="gate-hint">Contact your Project Manager if you have forgotten the passcode.</div>
+  </div>
+</div>
+
+<!-- ══ STEP 2: Login (name + role) ══ -->
+<div class="login-screen" id="login-screen" style="display:none">
+  <div class="lw">
+    <div class="lw-mark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+    <div class="lw-proj">Beach House — Mr. &amp; Mrs. Jose Ma. K. Lim</div>
+    <h1>Sign In</h1>
+    <p class="lw-sub">Enter your name and select your role.</p>
+    <div id="lw-notice" class="lw-notice" style="display:none">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>No team members are registered yet. Sign in as <strong>Project Manager</strong> to add your team in Settings → Team Members.</span>
+    </div>
+    <div class="lw-field">
+      <label>Your Full Name</label>
+      <input type="text" id="login-name" placeholder="e.g. Maria Santos" autocomplete="name" oninput="Login.check()" onkeydown="if(event.key==='Enter')Login.next()">
+    </div>
+    <div class="lw-field">
+      <label>Your Role</label>
+      <select id="login-role" onchange="Login.check()" oninput="Login.check()">
+        <option value="">— Select role —</option>
+      </select>
+    </div>
+    <div class="lw-err" id="login-err"></div>
+    <button class="lw-enter" id="login-btn" onclick="Login.next()">Continue →</button>
+  </div>
+</div>
+
+<!-- ══ STEP 3: Personal PIN ══ -->
+<div class="pin-screen" id="pin-screen" style="display:none">
+  <div class="pin-box">
+    <div class="gate-mark" style="margin-bottom:18px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></div>
+    <h2>Enter Your PIN</h2>
+    <p class="pin-who">Welcome, <strong id="pin-name"></strong></p>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="keypad">
+      <button class="kk" onclick="PinStep.press('1')">1</button><button class="kk" onclick="PinStep.press('2')">2</button><button class="kk" onclick="PinStep.press('3')">3</button>
+      <button class="kk" onclick="PinStep.press('4')">4</button><button class="kk" onclick="PinStep.press('5')">5</button><button class="kk" onclick="PinStep.press('6')">6</button>
+      <button class="kk" onclick="PinStep.press('7')">7</button><button class="kk" onclick="PinStep.press('8')">8</button><button class="kk" onclick="PinStep.press('9')">9</button>
+      <div></div><button class="kk" onclick="PinStep.press('0')">0</button><button class="kk kdel" onclick="PinStep.del()">⌫</button>
+    </div>
+    <div class="gate-err" id="pin-err"></div>
+    <button class="btn btn-ghost btn-sm" style="margin-top:14px" onclick="PinStep.back()">← Back</button>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app">
+  <nav id="sidebar">
+    <div class="sb-top">
+      <div class="sb-logo">
+        <div class="sb-lm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+        <span class="sb-ln">Beach House</span>
+      </div>
+      <div id="sb-user" class="sb-user"></div>
+      <div id="sb-rp" class="sb-rp"></div>
+    </div>
+    <div class="sb-nav">
+      <div class="sb-sec">Overview</div>
+      <div class="sb-item" data-v="focus" onclick="Nav.go('focus')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Today's Focus<span class="sb-badge" id="fb" style="display:none"></span></div>
+      <div class="sb-item on" data-v="dashboard" onclick="Nav.go('dashboard')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard<span class="sb-badge" id="ob" style="display:none"></span></div>
+      <div class="sb-item" data-v="schedule" onclick="Nav.go('schedule')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</div>
+      <div class="sb-sec">Items</div>
+      <div class="sb-item" data-v="list-all" onclick="Nav.go('list-all')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>All Items</div>
+      <div class="sb-item" data-v="list-rfi" onclick="Nav.go('list-rfi')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>RFIs</div>
+      <div class="sb-item" data-v="list-rfa" onclick="Nav.go('list-rfa')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>RFAs</div>
+      <div class="sb-item" data-v="list-si" onclick="Nav.go('list-si')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Site Instructions</div>
+      <div class="sb-item" data-v="list-cb" onclick="Nav.go('list-cb')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Construction Bulletins</div>
+      <div class="sb-item" data-v="list-vo" onclick="Nav.go('list-vo')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/><circle cx="12" cy="12" r="10"/></svg>Variation Orders</div>
+      <div class="sb-item" data-v="list-issue" onclick="Nav.go('list-issue')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Issues</div>
+      <div class="sb-item" data-v="list-dependency" onclick="Nav.go('list-dependency')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Schedule Holds</div>
+      <div class="sb-item" data-v="list-action" onclick="Nav.go('list-action')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Action Items</div>
+      <div class="sb-sec" id="sb-settings-sec" style="display:none">Settings</div>
+      <div class="sb-item" data-v="team" onclick="Nav.go('team')" id="sb-team" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Team Members</div>
+      <div class="sb-item" data-v="roles" onclick="Nav.go('roles')" id="sb-roles" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Roles</div>
+      <div class="sb-item" data-v="dropdowns" onclick="Nav.go('dropdowns')" id="sb-dl" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><polyline points="3 6 4 7 6 5"/><polyline points="3 12 4 13 6 11"/><polyline points="3 18 4 19 6 17"/></svg>Dropdown Lists</div>
+      <div class="sb-item" data-v="security" onclick="Nav.go('security')" id="sb-sec-item" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Security</div>
+    </div>
+    <div class="sb-foot">
+      <button class="sb-foot-btn" onclick="Auth.signOut()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>
+    </div>
+  </nav>
+
+  <div id="main">
+    <div id="topbar">
+      <div class="tb-left">
+        <button class="mob-menu" onclick="document.getElementById('sidebar').classList.toggle('mob')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <span class="tb-title" id="tb-title">Dashboard</span>
+      </div>
+      <div class="tb-right" id="tb-right"></div>
+    </div>
+    <div id="content"></div>
+  </div>
+</div>
+
+<div class="twrap" id="twrap"></div>
+
+<script>
+// ══════════════════════════════════════════════
+//  DEFAULT ROLES
+// ══════════════════════════════════════════════
+const DEFAULT_ROLES=[
+  {id:'pm',  name:'Project Manager',    canCreate:true, canEditAll:true, canDelete:true, canSettings:true, pillClass:'pm'},
+  {id:'arch',name:'Architect',          canCreate:true, canEditAll:true, canDelete:false,canSettings:false,pillClass:'arch'},
+  {id:'gc',  name:'General Contractor', canCreate:false,canEditAll:false,canDelete:false,canSettings:false,pillClass:'gc'},
+  {id:'sub', name:'Subcontractor',      canCreate:false,canEditAll:false,canDelete:false,canSettings:false,pillClass:'sub'},
+];
+
+// ══════════════════════════════════════════════
+//  STORAGE
+// ══════════════════════════════════════════════
+const Store={
+  get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},
+  set(k,v){localStorage.setItem(k,JSON.stringify(v))},
+  items(){return this.get('bh_items',[])},
+  saveItems(a){this.set('bh_items',a)},
+  nextId(){const n=(this.get('bh_ctr',0))+1;this.set('bh_ctr',n);return n},
+  drops(){return this.get('bh_drops',defaultDrops())},
+  saveDrops(d){this.set('bh_drops',d)},
+  roles(){return this.get('bh_roles',DEFAULT_ROLES)},
+  saveRoles(r){this.set('bh_roles',r)},
+  // Team members: [{name, roleId, pin}]
+  team(){return this.get('bh_team',[])},
+  saveTeam(t){this.set('bh_team',t)},
+  // Project passcode
+  passcode(){return this.get('bh_passcode',null)},
+  savePasscode(p){this.set('bh_passcode',p)},
+};
+
+function defaultDrops(){return{
+  submitted_by:['Owner','Architect','Engineer','General Contractor','Subcontractor','PM'],
+  assigned_to:['General Contractor','Electrical Sub','Mechanical Sub','Plumbing Sub','Structural Eng','Architect','PM','Owner'],
+  responsible_party:['General Contractor','Subcontractor','Owner','Architect','Engineer','PM'],
+  approved_by:['Architect','Owner','Engineer','PM'],
+  issued_by:['Architect','Owner','Engineer','PM'],
+  location:['Level 1','Level 2','Level 3','Roof','Basement','Exterior','Site','All Areas'],
+  dependency_type:['Finish-to-Start','Start-to-Start','Finish-to-Finish','Start-to-Finish','External Hold'],
+  severity:['Low','Medium','High','Critical'],
+  priority:['Low','Medium','High','Critical'],
+  decision:['Approved','Approved with Comments','Rejected','Revise & Resubmit'],
+  status:['Open','In Progress','Resolved','Closed'],
+  vo_status:['Draft','Submitted','Under Review','Approved','Rejected','Withdrawn'],
+  si_status:['Issued','Acknowledged','In Progress','Completed'],
+  cb_status:['Issued','Under Review','Acknowledged','Superseded'],
+};}
+
+// ══════════════════════════════════════════════
+//  ITEM TYPES
+// ══════════════════════════════════════════════
+const TYPES={
+  rfi:{label:'RFI',full:'Request for Information',hasAtts:true,fields:[
+    {k:'rfi_number',l:'RFI #',t:'text',req:true},{k:'subject',l:'Subject',t:'text',req:true,span:2},
+    {k:'description',l:'Description',t:'area',req:true,span:2},{k:'submitted_by',l:'Submitted By',t:'drop',dk:'submitted_by',req:true},
+    {k:'date_submitted',l:'Date Submitted',t:'date',req:true},{k:'due_date',l:'Due Date',t:'date'},
+    {k:'status',l:'Status',t:'drop',dk:'status',req:true,ce:true},{k:'response',l:'Response',t:'area',span:2,ce:true},
+    {k:'attachments_note',l:'Attachments Note',t:'text',span:2,ce:true}
+  ]},
+  rfa:{label:'RFA',full:'Request for Approval',hasAtts:true,fields:[
+    {k:'rfa_number',l:'RFA #',t:'text',req:true},{k:'subject',l:'Subject',t:'text',req:true,span:2},
+    {k:'description',l:'Description',t:'area',req:true,span:2},{k:'submitted_by',l:'Submitted By',t:'drop',dk:'submitted_by',req:true},
+    {k:'date_submitted',l:'Date Submitted',t:'date',req:true},{k:'due_date',l:'Due Date',t:'date'},
+    {k:'status',l:'Status',t:'drop',dk:'status',req:true,ce:true},{k:'approved_by',l:'Approved By',t:'drop',dk:'approved_by',ce:true},
+    {k:'decision',l:'Decision',t:'drop',dk:'decision',ce:true},{k:'notes',l:'Notes',t:'area',span:2,ce:true}
+  ]},
+  si:{label:'SI',full:'Site Instruction',hasAtts:true,fields:[
+    {k:'si_number',l:'SI #',t:'text',req:true},{k:'subject',l:'Subject',t:'text',req:true,span:2},
+    {k:'description',l:'Description / Instruction',t:'area',req:true,span:2},
+    {k:'issued_by',l:'Issued By',t:'drop',dk:'issued_by',req:true},{k:'date_issued',l:'Date Issued',t:'date',req:true},
+    {k:'location',l:'Location',t:'drop',dk:'location'},{k:'due_date',l:'Comply By Date',t:'date'},
+    {k:'drawings_referenced',l:'Drawings Referenced',t:'text',span:2},
+    {k:'status',l:'Status',t:'drop',dk:'si_status',req:true,ce:true},
+    {k:'acknowledgment',l:'Contractor Acknowledgment',t:'area',span:2,ce:true},
+    {k:'acknowledged_by',l:'Acknowledged By',t:'text',ce:true},{k:'date_acknowledged',l:'Date Acknowledged',t:'date',ce:true},
+  ]},
+  cb:{label:'CB',full:'Construction Bulletin',hasAtts:true,fields:[
+    {k:'cb_number',l:'CB #',t:'text',req:true},{k:'subject',l:'Subject',t:'text',req:true,span:2},
+    {k:'description',l:'Description',t:'area',req:true,span:2},
+    {k:'issued_by',l:'Issued By',t:'drop',dk:'issued_by',req:true},{k:'date_issued',l:'Date Issued',t:'date',req:true},
+    {k:'revision_number',l:'Revision #',t:'text'},{k:'due_date',l:'Response Required By',t:'date'},
+    {k:'affects_drawings',l:'Affects Drawings',t:'text',span:2},
+    {k:'affects_specs',l:'Affects Specs / Sections',t:'text',span:2},
+    {k:'contractor_action',l:'Contractor Action Required',t:'area',span:2},
+    {k:'status',l:'Status',t:'drop',dk:'cb_status',req:true,ce:true},
+    {k:'contractor_response',l:'Contractor Response',t:'area',span:2,ce:true},
+  ]},
+  vo:{label:'VO',full:'Variation Order',hasAtts:true,fields:[
+    {k:'vo_number',l:'VO #',t:'text',req:true},{k:'subject',l:'Subject',t:'text',req:true,span:2},
+    {k:'description',l:'Description / Scope of Work',t:'area',req:true,span:2},
+    {k:'requested_by',l:'Requested By',t:'drop',dk:'submitted_by',req:true},{k:'date_requested',l:'Date Requested',t:'date',req:true},
+    {k:'reason',l:'Reason for Variation',t:'area',span:2},
+    {k:'scope_of_change',l:'Scope of Change',t:'area',span:2},
+    {k:'time_impact',l:'Time Impact (days)',t:'text'},{k:'due_date',l:'Target Completion Date',t:'date'},
+    {k:'status',l:'Status',t:'drop',dk:'vo_status',req:true,ce:true},
+    {k:'approved_by',l:'Approved By',t:'drop',dk:'approved_by',ce:true},{k:'date_approved',l:'Date Approved',t:'date',ce:true},
+    {k:'contractor_notes',l:'Contractor Notes',t:'area',span:2,ce:true},
+    {k:'notes',l:'PM Notes',t:'area',span:2},
+  ]},
+  issue:{label:'Issue',full:'Issue / Deficiency',fields:[
+    {k:'issue_number',l:'Issue #',t:'text',req:true},{k:'location',l:'Location',t:'drop',dk:'location',req:true},
+    {k:'description',l:'Description',t:'area',req:true,span:2},{k:'severity',l:'Severity',t:'drop',dk:'severity',req:true},
+    {k:'reported_by',l:'Reported By',t:'drop',dk:'submitted_by',req:true},{k:'date_reported',l:'Date Reported',t:'date',req:true},
+    {k:'assigned_to',l:'Assigned To',t:'drop',dk:'assigned_to'},{k:'due_date',l:'Target Resolution Date',t:'date'},
+    {k:'status',l:'Status',t:'drop',dk:'status',req:true,ce:true},{k:'resolution_notes',l:'Resolution Notes',t:'area',span:2,ce:true}
+  ]},
+  dependency:{label:'Hold',full:'Time Dependency / Schedule Hold',fields:[
+    {k:'item_number',l:'Item #',t:'text',req:true},{k:'description',l:'Description',t:'area',req:true,span:2},
+    {k:'dependency_type',l:'Dependency Type',t:'drop',dk:'dependency_type',req:true},{k:'blocking_item',l:'Blocking Item',t:'text'},
+    {k:'start_date',l:'Start Date',t:'date'},{k:'due_date',l:'End Date',t:'date'},
+    {k:'responsible_party',l:'Responsible Party',t:'drop',dk:'responsible_party'},
+    {k:'status',l:'Status',t:'drop',dk:'status',req:true,ce:true},{k:'notes',l:'Notes',t:'area',span:2,ce:true}
+  ]},
+  action:{label:'Action',full:'General Action Item',fields:[
+    {k:'item_number',l:'Item #',t:'text',req:true},{k:'description',l:'Description',t:'area',req:true,span:2},
+    {k:'assigned_to',l:'Assigned To',t:'drop',dk:'assigned_to'},{k:'due_date',l:'Due Date',t:'date'},
+    {k:'priority',l:'Priority',t:'drop',dk:'priority'},
+    {k:'status',l:'Status',t:'drop',dk:'status',req:true,ce:true},{k:'notes',l:'Notes',t:'area',span:2,ce:true}
+  ]}
+};
+const TKEYS=Object.keys(TYPES);
+const STATUSES=['Open','In Progress','Resolved','Closed'];
+const TERMINAL_STATUSES=new Set(['Closed','Resolved','Completed','Superseded','Approved','Rejected','Withdrawn']);
+const isTerminal=i=>TERMINAL_STATUSES.has(i.status);
+const now=()=>new Date().toISOString().split('T')[0];
+const nowFull=()=>new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
+const overdue=i=>{if(!i.due_date||isTerminal(i))return false;return i.due_date<now();};
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+// ══════════════════════════════════════════════
+//  SESSION
+// ══════════════════════════════════════════════
+const S={
+  user:null,   // {name, roleId, pin}
+  role:null,   // full role object
+  view:'dashboard',
+  filter:{type:'all',status:'all',assignee:'',df:'',dt:''},
+  sort:{col:'id',dir:'desc'},
+  editItem:null,addType:null,_crit:false,
+  can(p){return !!(this.role&&this.role[p])},
+};
+
+// ══════════════════════════════════════════════
+//  GATE (project passcode)
+// ══════════════════════════════════════════════
+const Gate={
+  _v:'',
+  init(){
+    const code=Store.passcode();
+    if(!code){
+      // No passcode set — skip gate
+      this._showLogin();
+    } else {
+      document.getElementById('gate-hint').textContent='Contact your Project Manager if you have forgotten the passcode.';
+    }
+  },
+  press(d){
+    if(this._v.length>=4)return;
+    this._v+=d;this._render('gd');
+    if(this._v.length===4)setTimeout(()=>this._check(),120);
+  },
+  del(){this._v=this._v.slice(0,-1);this._render('gd');document.getElementById('gate-err').textContent='';},
+  _render(pre){
+    for(let i=0;i<4;i++){
+      const d=document.getElementById(pre+i);
+      if(d)d.className='pin-dot'+(i<this._v.length?' on':'');
+    }
+  },
+  _check(){
+    const code=Store.passcode();
+    if(this._v===code){
+      for(let i=0;i<4;i++)document.getElementById('gd'+i).className='pin-dot ok';
+      setTimeout(()=>this._showLogin(),400);
+    } else {
+      for(let i=0;i<4;i++)document.getElementById('gd'+i).className='pin-dot err';
+      document.getElementById('gate-err').textContent='Incorrect passcode. Please try again.';
+      setTimeout(()=>{this._v='';this._render('gd');},700);
+    }
+  },
+  _showLogin(){
+    document.getElementById('gate').style.display='none';
+    Login.init();
+    document.getElementById('login-screen').style.display='';
+  }
+};
+
+// ══════════════════════════════════════════════
+//  LOGIN
+// ══════════════════════════════════════════════
+const Login={
+  init(){
+    const roles=Store.roles();
+    const sel=document.getElementById('login-role');
+    sel.innerHTML=`<option value="">— Select role —</option>`+roles.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('');
+    const team=Store.team();
+    document.getElementById('lw-notice').style.display=team.length===0?'':'none';
+    document.getElementById('login-err').textContent='';
+    document.getElementById('login-name').value='';
+    sel.value='';
+  },
+  check(){
+    document.getElementById('login-err').textContent='';
+  },
+  next(){
+    const name=document.getElementById('login-name').value.trim();
+    const roleId=document.getElementById('login-role').value;
+    if(!name){document.getElementById('login-err').textContent='Please enter your name.';return;}
+    if(!roleId){document.getElementById('login-err').textContent='Please select a role.';return;}
+
+    const roles=Store.roles();
+    const role=roles.find(r=>r.id===roleId);
+    if(!role){document.getElementById('login-err').textContent='Role not found. Please refresh.';return;}
+
+    // PM (canSettings) — direct entry, no PIN
+    if(role.canSettings){
+      document.getElementById('login-err').textContent='';
+      Auth.enter(name,role,null);
+      return;
+    }
+
+    const team=Store.team();
+    const match=team.find(m=>m.name.toLowerCase()===name.toLowerCase()&&m.roleId===roleId);
+    if(!match){
+      document.getElementById('login-err').textContent='Name and role not found. Contact your Project Manager.';
+      return;
+    }
+
+    document.getElementById('login-err').textContent='';
+    document.getElementById('login-screen').style.display='none';
+    PinStep.start(match,role);
+  }
+};
+
+// ══════════════════════════════════════════════
+//  PIN STEP (personal PIN verification)
+// ══════════════════════════════════════════════
+const PinStep={
+  _v:'',_member:null,_role:null,
+  start(member,role){
+    this._v='';this._member=member;this._role=role;
+    this._render();
+    document.getElementById('pin-name').textContent=member.name;
+    document.getElementById('pin-err').textContent='';
+    document.getElementById('pin-screen').style.display='';
+  },
+  press(d){
+    if(this._v.length>=4)return;
+    this._v+=d;this._render();
+    if(this._v.length===4)setTimeout(()=>this._check(),120);
+  },
+  del(){this._v=this._v.slice(0,-1);this._render();document.getElementById('pin-err').textContent='';},
+  _render(){
+    for(let i=0;i<4;i++){
+      const d=document.getElementById('pd'+i);
+      if(d)d.className='pin-dot'+(i<this._v.length?' on':'');
+    }
+  },
+  _check(){
+    if(this._v===this._member.pin){
+      for(let i=0;i<4;i++)document.getElementById('pd'+i).className='pin-dot ok';
+      setTimeout(()=>{
+        document.getElementById('pin-screen').style.display='none';
+        Auth.enter(this._member.name,this._role,this._member);
+      },350);
+    } else {
+      for(let i=0;i<4;i++)document.getElementById('pd'+i).className='pin-dot err';
+      document.getElementById('pin-err').textContent='Incorrect PIN. Please try again.';
+      setTimeout(()=>{this._v='';this._render();},700);
+    }
+  },
+  back(){
+    document.getElementById('pin-screen').style.display='none';
+    document.getElementById('login-screen').style.display='';
+    document.getElementById('pin-err').textContent='';
+    this._v='';this._render();
+  }
+};
+
+// ══════════════════════════════════════════════
+//  AUTH (enter app / sign out)
+// ══════════════════════════════════════════════
+const Auth={
+  enter(name,role,member){
+    S.user={name,roleId:role.id};S.role=role;
+    // Hide all auth screens
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('gate').style.display='none';
+    const ps=document.getElementById('pin-screen');if(ps)ps.style.display='none';
+    document.getElementById('app').classList.add('on');
+    document.getElementById('sb-user').textContent=name;
+    const rp=document.getElementById('sb-rp');
+    rp.textContent=role.name;rp.className='sb-rp '+(role.pillClass||'other');
+    if(role.canSettings){
+      document.getElementById('sb-settings-sec').style.display='';
+      document.getElementById('sb-team').style.display='';
+      document.getElementById('sb-roles').style.display='';
+      document.getElementById('sb-dl').style.display='';
+      document.getElementById('sb-sec-item').style.display='';
+    }
+    Nav.go('dashboard');
+  },
+  signOut(){
+    S.user=null;S.role=null;
+    document.getElementById('app').classList.remove('on');
+    ['sb-settings-sec','sb-team','sb-roles','sb-dl','sb-sec-item'].forEach(id=>document.getElementById(id).style.display='none');
+    // Reset login form
+    document.getElementById('login-name').value='';
+    document.getElementById('login-role').value='';
+    // Go back to gate if passcode set, else login
+    if(Store.passcode()){
+      Gate._v='';Gate._render('gd');
+      document.getElementById('gate-err').textContent='';
+      document.getElementById('gate').style.display='';
+    } else {
+      Login.init();
+      document.getElementById('login-screen').style.display='';
+    }
+  }
+};
+
+// ══════════════════════════════════════════════
+//  AUDIT
+// ══════════════════════════════════════════════
+function addAudit(item,action){
+  if(!item.audit)item.audit=[];
+  item.audit.unshift({who:S.user?.name||'?',role:S.role?.name||'',action,ts:nowFull()});
+  if(item.audit.length>30)item.audit=item.audit.slice(0,30);
+}
+
+// ══════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════
+const Nav={
+  go(v){
+    S.view=v;
+    document.querySelectorAll('.sb-item').forEach(el=>el.classList.toggle('on',el.dataset.v===v));
+    this.render();
+  },
+  render(){
+    const items=Store.items();
+    const oc=items.filter(overdue).length;
+    const ob=document.getElementById('ob');ob.style.display=oc?'':'none';ob.textContent=oc;
+    const t7=new Date();t7.setDate(t7.getDate()+7);const t7s=t7.toISOString().split('T')[0];
+    const active=items.filter(x=>!isTerminal(x));
+    const fcnt=oc+active.filter(x=>x.due_date&&x.due_date>=now()&&x.due_date<=t7s).length;
+    const fb=document.getElementById('fb');if(fb){fb.style.display=fcnt?'':'none';fb.textContent=fcnt;}
+    const title=document.getElementById('tb-title');
+    const tr=document.getElementById('tb-right');tr.innerHTML='';
+    const c=document.getElementById('content');
+    const v=S.view;
+    if(v==='dashboard'){title.textContent='Dashboard';c.innerHTML=V.dashboard(items);}
+    else if(v==='focus'){title.textContent="Today's Focus";c.innerHTML=V.focus(items);}
+    else if(v==='schedule'){title.textContent='Schedule — Look-Ahead';c.innerHTML=V.schedule(items);}
+    else if(v==='team'){title.textContent='Team Members';c.innerHTML=V.team();}
+    else if(v==='roles'){title.textContent='Roles';c.innerHTML=V.roles();}
+    else if(v==='dropdowns'){title.textContent='Dropdown Lists';c.innerHTML=V.dropdowns();}
+    else if(v==='security'){title.textContent='Security';c.innerHTML=V.security();}
+    else if(v.startsWith('list-')){
+      const type=v.replace('list-','');
+      title.textContent=type==='all'?'All Items':(TYPES[type]?.full||'Items');
+      if(S.can('canCreate')){
+        const b=document.createElement('button');b.className='btn btn-pink';
+        b.innerHTML=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Item`;
+        b.onclick=()=>M.openAdd(type==='all'?null:type);tr.appendChild(b);
+      }
+      c.innerHTML=V.list(type==='all'?null:type,items);
+    } else if(v.startsWith('detail-')){
+      const id=parseInt(v.replace('detail-',''));
+      const item=items.find(x=>x.id===id);
+      if(!item){Nav.go('list-all');return;}
+      title.textContent=`${TYPES[item.type]?.label} #${item.id}`;
+      if(S.can('canEditAll')){
+        const eb=document.createElement('button');eb.className='btn btn-ghost btn-sm';
+        eb.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit`;
+        eb.onclick=()=>M.openEdit(item);tr.appendChild(eb);
+      }
+      if(S.can('canDelete')){
+        const db=document.createElement('button');db.className='btn btn-del btn-sm';
+        db.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg> Delete`;
+        db.onclick=()=>Conf.show(item);tr.appendChild(db);
+      }
+      c.innerHTML=V.detail(item);
+    }
+  }
+};
+
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+function sBadge(s){
+  const m={'Open':'b-open','In Progress':'b-prog','Resolved':'b-res','Closed':'b-cls',
+           'Draft':'b-cls','Submitted':'b-prog','Under Review':'b-prog',
+           'Approved':'b-res','Rejected':'b-open','Withdrawn':'b-cls',
+           'Issued':'b-prog','Acknowledged':'b-res','Completed':'b-res','Superseded':'b-cls'};
+  return`<span class="badge ${m[s]||'b-cls'}">${esc(s||'—')}</span>`;
+}
+function svBadge(v){if(!v)return`<span style="color:var(--ink-4);font-style:italic">—</span>`;const m={'Low':'b-low','Medium':'b-med','High':'b-high','Critical':'b-crit'};return`<span class="badge ${m[v]||''}">${esc(v)}</span>`;}
+function tPill(t){
+  const m={
+    rfi:'tp-rfi',rfa:'tp-rfa',issue:'tp-issue',dependency:'tp-dep',action:'tp-act',
+    si:'tp-si',cb:'tp-cb',vo:'tp-vo'
+  };
+  return`<span class="tpill ${m[t]||''}">${esc(TYPES[t]?.label||t)}</span>`;
+}
+const X={svg:{close:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`}};
+
+// ══════════════════════════════════════════════
+//  VIEWS
+// ══════════════════════════════════════════════
+const V={
+  dashboard(items){
+    const tc={};TKEYS.forEach(t=>tc[t]=items.filter(x=>x.type===t).length);
+    const sc={};STATUSES.forEach(s=>sc[s]=items.filter(x=>x.status===s).length);
+    const ov=items.filter(overdue);
+    const active=items.filter(x=>!isTerminal(x));
+    const t7=new Date();t7.setDate(t7.getDate()+7);const t7s=t7.toISOString().split('T')[0];
+    const dueWk=active.filter(x=>x.due_date&&x.due_date>=now()&&x.due_date<=t7s);
+    const crit=items.filter(x=>(x.severity==='Critical'||x.severity==='High'||x.priority==='Critical'||x.priority==='High')&&!isTerminal(x));
+    const unassigned=active.filter(x=>!x.assigned_to&&!x.responsible_party);
+    const oldestAge=(()=>{const o=active.filter(x=>x.created);if(!o.length)return 0;const old=o.reduce((a,b)=>a.created<b.created?a:b);return Math.floor((new Date()-new Date(old.created))/864e5);})();
+    const partyMap={};active.forEach(x=>{const p=x.assigned_to||x.responsible_party||x.submitted_by;if(p)partyMap[p]=(partyMap[p]||0)+1;});
+    const parties=Object.entries(partyMap).sort((a,b)=>b[1]-a[1]).slice(0,5);const maxP=parties[0]?.[1]||1;
+    const recent=[...items].sort((a,b)=>b.id-a.id).slice(0,5);
+    const dateStr=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    const hr=new Date().getHours();
+    const greet=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
+    return`
+    <div class="dash-greeting">
+      <div class="dg-date">${greet}, ${esc(S.user?.name||'')} — ${dateStr}</div>
+      <div class="dg-sub">${active.length} active item${active.length!==1?'s':''} · Signed in as ${esc(S.role?.name||'')}</div>
+    </div>
+    <div class="dash-h">Action Required</div>
+    <div class="act-strip">
+      <div class="act-card urgent" onclick="F.byOv()"><div class="ac-icon red"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div><div><div class="ac-num">${ov.length}</div><div class="ac-lbl">Overdue</div></div></div>
+      <div class="act-card warn" onclick="Nav.go('focus')"><div class="ac-icon amber"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="ac-num">${dueWk.length}</div><div class="ac-lbl">Due This Week</div></div></div>
+      <div class="act-card ${crit.length?'urgent':''}" onclick="F.byCrit()"><div class="ac-icon ${crit.length?'red':'zinc'}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${crit.length?'var(--red)':'var(--zinc)'}" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div><div class="ac-num">${crit.length}</div><div class="ac-lbl">High/Critical</div></div></div>
+      <div class="act-card" onclick="F.byUnassigned()"><div class="ac-icon zinc"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--zinc)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></div><div><div class="ac-num">${unassigned.length}</div><div class="ac-lbl">Unassigned</div></div></div>
+      <div class="act-card" style="cursor:default"><div class="ac-icon pink"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--pink-deep)" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div><div class="ac-num" style="color:var(--pink-deep)">${oldestAge}</div><div class="ac-lbl">Oldest (days)</div></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px">
+      <div>
+        <div class="dash-h">By Type</div>
+        <div class="tshell" style="padding:2px 0">
+          ${TKEYS.map(t=>{
+            const colors={rfi:'#3b82f6',rfa:'#8b5cf6',si:'#9333ea',cb:'#10b981',vo:'#f43f5e',issue:'var(--red)',dependency:'var(--amber)',action:'var(--green)'};
+            const c=colors[t]||'var(--ink-4)';
+            return`<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;border-bottom:1px solid var(--line-soft)" onclick="Nav.go('list-${t}')">
+              <div style="width:6px;height:6px;border-radius:50%;background:${c};flex-shrink:0"></div>
+              <span style="flex:1;font-size:0.82rem;color:var(--ink-2)">${TYPES[t].full}</span>
+              ${tPill(t)}
+              <span class="mono" style="min-width:22px;text-align:right">${tc[t]}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+      <div>
+        <div class="dash-h">By Status</div>
+        <div class="kpi-grid" style="grid-template-columns:1fr 1fr;margin-bottom:0">
+          <div class="kpi c-red" onclick="F.bySt('Open')"><div class="kpi-lbl">Open</div><div class="kpi-num">${sc['Open']||0}</div></div>
+          <div class="kpi c-amber" onclick="F.bySt('In Progress')"><div class="kpi-lbl">In Progress</div><div class="kpi-num">${sc['In Progress']||0}</div></div>
+          <div class="kpi c-green" onclick="F.bySt('Resolved')"><div class="kpi-lbl">Resolved</div><div class="kpi-num">${sc['Resolved']||0}</div></div>
+          <div class="kpi c-zinc" onclick="F.bySt('Closed')"><div class="kpi-lbl">Closed</div><div class="kpi-num">${sc['Closed']||0}</div></div>
+        </div>
+      </div>
+    </div>
+    ${parties.length?`<div class="dash-h">Open Items by Party</div><div class="tshell" style="padding:8px 14px;margin-bottom:24px"><table class="party-table">${parties.map(([n,c])=>`<tr><td style="font-size:0.82rem;color:var(--ink-2);padding-right:12px;white-space:nowrap">${esc(n)}</td><td style="width:100%"><div class="party-bar-bg"><div class="party-bar-fill" style="width:${Math.round(c/maxP*100)}%"></div></div></td><td style="text-align:right;font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--ink-4);padding-left:10px">${c}</td></tr>`).join('')}</table></div>`:''}
+    ${recent.length?`<div class="dash-h">Recently Added</div><div class="tshell"><table class="itable"><thead><tr><th>ID</th><th>Type</th><th>Description</th><th>Status</th><th>Due</th><th>Files</th></tr></thead><tbody>${recent.map(item=>{const od=overdue(item),desc=item.subject||item.description||'—',atts=(item.attachments||[]).length;return`<tr class="${od?'od':''}"><td class="mono">#${item.id}</td><td>${tPill(item.type)}</td><td><span class="ilink" onclick="Nav.go('detail-${item.id}')">${od?'<span class="odot"></span>':''}${esc(desc.slice(0,50))}${desc.length>50?'…':''}</span></td><td>${sBadge(item.status)}</td><td style="font-size:0.75rem;color:var(--ink-4)">${item.due_date||'—'}</td><td style="font-size:0.75rem;color:var(--ink-4)">${atts?`📎 ${atts}`:''}</td></tr>`;}).join('')}</tbody></table></div>`:
+    `<div style="text-align:center;padding:48px 0;color:var(--ink-4);font-size:0.82rem">No items yet.${S.can('canCreate')?' Click <strong>New Item</strong> to begin.':''}</div>`}
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div>
+        <div class="dash-h" style="margin-bottom:4px">14-Day Look-Ahead</div>
+        <div style="font-size:0.78rem;color:var(--ink-4)">${(()=>{const t14=new Date();t14.setDate(t14.getDate()+14);const t14s=t14.toISOString().split('T')[0];const active2=items.filter(x=>!isTerminal(x));const la=active2.filter(x=>x.due_date&&x.due_date>=now()&&x.due_date<=t14s);const holds=items.filter(x=>x.type==='dependency'&&!isTerminal(x));return`${la.length} item${la.length!==1?'s':''} due · ${holds.length} active hold${holds.length!==1?'s':''}`;})()}</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="Nav.go('schedule')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Open Schedule</button>
+    </div>`;
+  },
+
+  schedule(items){
+    // Build week buckets: this week, next week, week 3, week 4, beyond
+    const addDays=(d,n)=>{const r=new Date(d);r.setDate(r.getDate()+n);return r.toISOString().split('T')[0];};
+    const startOfWeek=()=>{const d=new Date();d.setDate(d.getDate()-d.getDay());return d.toISOString().split('T')[0];};
+    const sw=startOfWeek();
+    const weeks=[
+      {label:'This Week',        from:sw,            to:addDays(sw,6),   color:'var(--pink)'},
+      {label:'Next Week',        from:addDays(sw,7), to:addDays(sw,13),  color:'var(--amber)'},
+      {label:'Week 3',           from:addDays(sw,14),to:addDays(sw,20),  color:'#60a5fa'},
+      {label:'Week 4',           from:addDays(sw,21),to:addDays(sw,27),  color:'#a78bfa'},
+    ];
+    const active=items.filter(x=>!isTerminal(x));
+    const overdueBucket=active.filter(overdue);
+    const holds=active.filter(x=>x.type==='dependency');
+
+    // Items with no due date — currently active
+    const noDue=active.filter(x=>!x.due_date&&x.type!=='dependency');
+
+    const weekItems=weeks.map(w=>({
+      ...w,
+      items: active.filter(x=>x.due_date&&x.due_date>=w.from&&x.due_date<=w.to)
+    }));
+    const beyond=active.filter(x=>x.due_date&&x.due_date>addDays(sw,27));
+
+    const itemRow=(item)=>{
+      const desc=item.subject||item.description||'—';
+      const party=item.assigned_to||item.responsible_party||item.submitted_by||'';
+      return`<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-soft)">
+        <div style="flex:1;min-width:0">
+          <div class="ilink" onclick="Nav.go('detail-${item.id}')" style="font-size:0.82rem;font-weight:500;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(desc.slice(0,60))}${desc.length>60?'…':''}</div>
+          <div style="font-size:0.72rem;color:var(--ink-4);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap">${tPill(item.type)}${party?`<span>${esc(party)}</span>`:''}${item.due_date?`<span>Due ${item.due_date}</span>`:''}</div>
+        </div>
+        ${sBadge(item.status)}
+      </div>`;
+    };
+
+    const holdRow=(item)=>{
+      const desc=item.description||'—';
+      const end=item.due_date?`→ ${item.due_date}`:'no end date';
+      const blocking=item.blocking_item?`Blocks: ${item.blocking_item}`:'';
+      return`<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-soft)">
+        <div style="width:8px;height:8px;border-radius:2px;background:var(--amber);flex-shrink:0;margin-top:5px"></div>
+        <div style="flex:1;min-width:0">
+          <div class="ilink" onclick="Nav.go('detail-${item.id}')" style="font-size:0.82rem;font-weight:500">${esc(desc.slice(0,60))}${desc.length>60?'…':''}</div>
+          <div style="font-size:0.72rem;color:var(--ink-4);margin-top:2px">${esc(item.dependency_type||'Hold')} ${end}${blocking?' · '+esc(blocking):''}</div>
+        </div>
+        ${sBadge(item.status)}
+      </div>`;
+    };
+
+    const dateRangeStr=w=>{
+      const fmt=d=>new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      return`${fmt(w.from)} – ${fmt(w.to)}`;
+    };
+
+    return`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:1rem;font-weight:600;color:var(--ink);letter-spacing:-0.02em">Schedule Look-Ahead</div>
+        <div style="font-size:0.8rem;color:var(--ink-4);margin-top:2px">Active items and holds across the next 4 weeks</div>
+      </div>
+    </div>
+
+    ${overdueBucket.length?`
+    <div style="background:var(--red-soft);border:1px solid #fecaca;border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
+        <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--red)">Overdue — ${overdueBucket.length} item${overdueBucket.length!==1?'s':''}</span>
+      </div>
+      ${overdueBucket.map(itemRow).join('')}
+    </div>`:''}
+
+    ${holds.length?`
+    <div style="background:var(--amber-soft);border:1px solid #fcd34d;border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <div style="width:10px;height:10px;border-radius:2px;background:var(--amber);flex-shrink:0"></div>
+        <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#92400e">Active Schedule Holds — ${holds.length}</span>
+      </div>
+      ${holds.map(holdRow).join('')}
+    </div>`:''}
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:16px">
+      ${weekItems.map(w=>`
+      <div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden">
+        <div style="padding:11px 14px;border-bottom:1px solid var(--line);background:var(--bg);display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:8px;height:8px;border-radius:50%;background:${w.color};flex-shrink:0"></div>
+            <span style="font-size:0.75rem;font-weight:700;color:var(--ink-2)">${w.label}</span>
+          </div>
+          <span style="font-size:0.68rem;color:var(--ink-4)">${dateRangeStr(w)}</span>
+        </div>
+        <div style="padding:4px 14px">
+          ${w.items.length?w.items.map(itemRow).join(''):`<div style="padding:16px 0;font-size:0.78rem;color:var(--ink-4);font-style:italic">Nothing due this week.</div>`}
+        </div>
+        <div style="padding:8px 14px;border-top:1px solid var(--line-soft);background:var(--bg)">
+          <span style="font-size:0.7rem;color:var(--ink-4)">${w.items.length} item${w.items.length!==1?'s':''}</span>
+        </div>
+      </div>`).join('')}
+    </div>
+
+    ${beyond.length?`
+    <div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px">
+      <div style="padding:11px 14px;border-bottom:1px solid var(--line);background:var(--bg);display:flex;align-items:center;gap:8px">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--zinc);flex-shrink:0"></div>
+        <span style="font-size:0.75rem;font-weight:700;color:var(--ink-2)">Beyond 4 Weeks</span>
+        <span style="font-size:0.68rem;color:var(--ink-4);margin-left:auto">${beyond.length} item${beyond.length!==1?'s':''}</span>
+      </div>
+      <div style="padding:4px 14px">${beyond.map(itemRow).join('')}</div>
+    </div>`:''}
+
+    ${noDue.length?`
+    <div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden">
+      <div style="padding:11px 14px;border-bottom:1px solid var(--line);background:var(--bg);display:flex;align-items:center;gap:8px">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--ink-4);flex-shrink:0"></div>
+        <span style="font-size:0.75rem;font-weight:700;color:var(--ink-2)">Active — No Due Date</span>
+        <span style="font-size:0.68rem;color:var(--ink-4);margin-left:auto">${noDue.length} item${noDue.length!==1?'s':''} · no schedule assigned</span>
+      </div>
+      <div style="padding:4px 14px">${noDue.map(itemRow).join('')}</div>
+    </div>`:''}`;
+  },
+
+  focus(items){
+    const active=items.filter(x=>!isTerminal(x));
+    const odItems=[...active.filter(overdue)].sort((a,b)=>(a.due_date||'').localeCompare(b.due_date||''));
+    const t7=new Date();t7.setDate(t7.getDate()+7);const t7s=t7.toISOString().split('T')[0];
+    const thisWk=active.filter(x=>x.due_date&&x.due_date>=now()&&x.due_date<=t7s).sort((a,b)=>a.due_date.localeCompare(b.due_date));
+    const critItems=active.filter(x=>x.severity==='Critical'||x.severity==='High'||x.priority==='Critical'||x.priority==='High');
+    const dayAge=d=>Math.floor((new Date()-new Date(d))/864e5);
+    const row=(item,dot)=>{const desc=item.subject||item.description||'—',party=item.assigned_to||item.responsible_party||item.submitted_by||'';const age=item.created?dayAge(item.created):null;return`<div class="focus-item"><div class="fdot ${dot}"></div><div class="fi-body"><div class="fi-title" onclick="Nav.go('detail-${item.id}')">${esc(desc.slice(0,70))}${desc.length>70?'…':''}</div><div class="fi-meta">${tPill(item.type)}${party?`<span>${esc(party)}</span>`:''}${item.due_date?`<span style="color:${overdue(item)?'var(--red)':'var(--ink-4)'}">Due ${item.due_date}</span>`:''}${age!==null&&age>14?`<span class="fi-age">${age}d old</span>`:''}</div></div>${sBadge(item.status)}</div>`;};
+    const ds=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    return`<div style="margin-bottom:20px"><div style="font-size:1rem;font-weight:600;color:var(--ink);letter-spacing:-0.02em">${ds}</div><div style="font-size:0.8rem;color:var(--ink-4);margin-top:2px">${active.length} active · ${odItems.length} overdue</div></div>
+    <div class="focus-section"><div class="focus-section-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg><h3>Overdue</h3><span class="fcnt red">${odItems.length}</span></div>${odItems.length?odItems.map(i=>row(i,'red')).join(''):`<div class="focus-empty">No overdue items.</div>`}</div>
+    <div class="focus-section"><div class="focus-section-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><h3>Due This Week</h3><span class="fcnt amber">${thisWk.length}</span></div>${thisWk.length?thisWk.map(i=>row(i,'amber')).join(''):`<div class="focus-empty">Nothing due in 7 days.</div>`}</div>
+    <div class="focus-section"><div class="focus-section-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><h3>High / Critical</h3><span class="fcnt red">${critItems.length}</span></div>${critItems.length?critItems.map(i=>row(i,'red')).join(''):`<div class="focus-empty">No high-priority open items.</div>`}</div>`;
+  },
+
+  list(ft,all){
+    let items=[...all];const f=S.filter;
+    if(ft)items=items.filter(x=>x.type===ft);
+    else if(f.type!=='all')items=items.filter(x=>x.type===f.type);
+    if(f.status!=='all')items=items.filter(x=>x.status===f.status);
+    if(f.assignee==='__unassigned__')items=items.filter(x=>!x.assigned_to&&!x.responsible_party&&!isTerminal(x));
+    else if(f.assignee){const q=f.assignee.toLowerCase();items=items.filter(x=>(x.assigned_to||x.responsible_party||x.submitted_by||x.requested_by||'').toLowerCase().includes(q));}
+    if(S._crit){items=items.filter(x=>x.severity==='Critical'||x.severity==='High'||x.priority==='Critical'||x.priority==='High');S._crit=false;}
+    if(f.df)items=items.filter(x=>(x.due_date||'')>=f.df);
+    if(f.dt)items=items.filter(x=>(x.due_date||'')<=f.dt);
+    const {col,dir}=S.sort;
+    items.sort((a,b)=>{let av=col==='id'?a.id:(a[col]||''),bv=col==='id'?b.id:(b[col]||'');const r=av<bv?-1:av>bv?1:0;return dir==='asc'?r:-r;});
+    const si=c=>`<span style="opacity:${S.sort.col===c?1:0.3}">${S.sort.col===c?(S.sort.dir==='asc'?'↑':'↓'):'↕'}</span>`;
+
+    // VO summary strip when viewing VOs
+    const allVOs=ft==='vo'?all.filter(x=>x.type==='vo'):[];
+    const voSummary=ft==='vo'&&allVOs.length?`
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:14px">
+      ${['Draft','Submitted','Under Review','Approved','Rejected','Withdrawn'].map(s=>{
+        const cnt=allVOs.filter(x=>x.status===s).length;
+        return cnt?`<div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:10px 12px;text-align:center;cursor:pointer" onclick="F.set('status','${s}')">
+          <div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-4);margin-bottom:4px">${s}</div>
+          <div style="font-size:1.4rem;font-weight:300;font-family:'DM Mono',monospace;color:var(--ink)">${cnt}</div>
+        </div>`:''}).join('')}
+    </div>
+    <div style="font-size:0.72rem;color:var(--ink-4);margin-bottom:12px">${allVOs.length} total variation orders · ${allVOs.filter(x=>x.status==='Approved').length} approved · ${allVOs.filter(x=>x.status==='Under Review').length} pending review</div>`:'';
+
+    // SI summary strip
+    const allSIs=ft==='si'?all.filter(x=>x.type==='si'):[];
+    const siSummary=ft==='si'&&allSIs.length?`
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:14px">
+      ${['Issued','Acknowledged','In Progress','Completed'].map(s=>{const cnt=allSIs.filter(x=>x.status===s).length;return cnt?`<div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:10px 12px;text-align:center"><div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-4);margin-bottom:4px">${s}</div><div style="font-size:1.4rem;font-weight:300;font-family:'DM Mono',monospace">${cnt}</div></div>`:''}).join('')}
+    </div>`:'';
+
+    // CB summary strip
+    const allCBs=ft==='cb'?all.filter(x=>x.type==='cb'):[];
+    const cbSummary=ft==='cb'&&allCBs.length?`
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:14px">
+      ${['Issued','Under Review','Acknowledged','Superseded'].map(s=>{const cnt=allCBs.filter(x=>x.status===s).length;return cnt?`<div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:10px 12px;text-align:center"><div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-4);margin-bottom:4px">${s}</div><div style="font-size:1.4rem;font-weight:300;font-family:'DM Mono',monospace">${cnt}</div></div>`:''}).join('')}
+    </div>`:'';
+
+    // Build dynamic status options based on type
+    const statusOptions=(()=>{
+      const typeStatuses={si:['Issued','Acknowledged','In Progress','Completed'],cb:['Issued','Under Review','Acknowledged','Superseded'],vo:['Draft','Submitted','Under Review','Approved','Rejected','Withdrawn']};
+      const opts=ft&&typeStatuses[ft]?typeStatuses[ft]:['Open','In Progress','Resolved','Closed'];
+      return opts.map(s=>`<option value="${s}" ${f.status===s?'selected':''}>${s}</option>`).join('');
+    })();
+
+    return`${voSummary}${siSummary}${cbSummary}<div class="frow">
+      ${!ft?`<select onchange="F.set('type',this.value)"><option value="all" ${f.type==='all'?'selected':''}>All Types</option>${TKEYS.map(t=>`<option value="${t}" ${f.type===t?'selected':''}>${TYPES[t].label}</option>`).join('')}</select>`:''}
+      <select onchange="F.set('status',this.value)"><option value="all" ${f.status==='all'?'selected':''}>All Statuses</option>${statusOptions}</select>
+      <input type="text" placeholder="Requested / assigned…" value="${esc(f.assignee==='__unassigned__'?'':f.assignee)}" oninput="F.set('assignee',this.value)" style="min-width:130px">
+      <input type="date" value="${f.df}" onchange="F.set('df',this.value)"><input type="date" value="${f.dt}" onchange="F.set('dt',this.value)">
+      <button class="btn btn-ghost btn-sm" onclick="F.clear()">Clear</button>
+      <span style="margin-left:auto;font-size:0.72rem;color:var(--ink-4)">${items.length} item${items.length!==1?'s':''}</span>
+    </div>
+    <div class="tshell"><table class="itable"><thead><tr>
+      <th onclick="F.sort('id')" class="${S.sort.col==='id'?'sorted':''}">ID ${si('id')}</th>
+      ${!ft?`<th>Type</th>`:''}
+      <th onclick="F.sort('subject')" class="${S.sort.col==='subject'?'sorted':''}">Subject / Description ${si('subject')}</th>
+      <th>Issued / Requested By</th>
+      <th onclick="F.sort('status')" class="${S.sort.col==='status'?'sorted':''}">Status ${si('status')}</th>
+      <th onclick="F.sort('due_date')" class="${S.sort.col==='due_date'?'sorted':''}">Due ${si('due_date')}</th>
+      ${S.can('canEditAll')?`<th></th>`:''}
+    </tr></thead><tbody>
+    ${items.length===0?`<tr><td colspan="8" class="empty-td">No items match your filters.</td></tr>`:
+    items.map(item=>{const od=overdue(item),desc=item.subject||item.description||'—',party=item.issued_by||item.requested_by||item.assigned_to||item.responsible_party||item.submitted_by||'—';
+    return`<tr class="${od?'od':''}"><td class="mono">#${item.id}</td>${!ft?`<td>${tPill(item.type)}</td>`:''}<td><span class="ilink" onclick="Nav.go('detail-${item.id}')">${od?'<span class="odot"></span>':''}${esc(desc.slice(0,52))}${desc.length>52?'…':''}</span></td><td style="font-size:0.78rem;color:var(--ink-3)">${esc(String(party).slice(0,26))}</td><td>${sBadge(item.status)}</td><td style="font-size:0.75rem;color:var(--ink-4)">${item.due_date||item.date_issued||item.date_requested||'—'}</td>
+    ${S.can('canEditAll')?`<td><div style="display:flex;gap:3px"><button class="ibtn" onclick="M.openEdit(Store.items().find(x=>x.id===${item.id}))"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>${S.can('canDelete')?`<button class="ibtn del" onclick="Conf.show(Store.items().find(x=>x.id===${item.id}))"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:''}</div></td>`:''}
+    </tr>`;}).join('')}
+    </tbody></table></div>`;
+  },
+
+  detail(item){
+    const td=TYPES[item.type],od=overdue(item),cef=td.fields.filter(f=>f.ce);
+    const attHtml=(item.attachments&&item.attachments.length)?`<div style="display:flex;flex-wrap:wrap;margin-bottom:${S.can('canEditAll')?'10':'0'}px">${item.attachments.map(a=>`<a href="${esc(a.url)}" target="_blank" rel="noopener" class="att-chip"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>${esc(a.name||a.url)}</a>`).join('')}</div>`:
+    `<div style="font-size:0.8rem;color:var(--ink-4);font-style:italic;margin-bottom:${S.can('canEditAll')?'10':'0'}px">No attachments.</div>`;
+    return`
+    <div class="dback" onclick="Nav.go('list-${item.type}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Back to ${td.full}</div>
+    <div class="dtrow"><h1>${td.label} #${item.id}</h1>${tPill(item.type)}${sBadge(item.status)}${od?`<span class="badge b-open">⚠ Overdue</span>`:''}</div>
+    <div class="dcard">
+      <div class="dchead"><span class="sub">${esc(item.subject||item.description||td.full)}</span>${item.due_date?`<span style="font-size:0.75rem;color:${od?'var(--red)':'var(--ink-4)'}">Due ${item.due_date}</span>`:''}</div>
+      <div class="dbody">
+        <div class="dgrid">${td.fields.map(f=>{const val=item[f.k],empty=!val||val==='';return`<div class="df ${f.span===2?'full':''}"><label>${f.l}${f.ce?` <span style="color:var(--pink);font-size:0.65rem">✎</span>`:''}</label><div class="dv ${empty?'empty':''}">${f.k==='status'?sBadge(val||'Open'):(f.k==='severity'||f.k==='priority')?svBadge(val):empty?'Not provided':esc(String(val))}</div></div>`;}).join('')}</div>
+        ${!S.can('canEditAll')&&cef.length?`<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line-soft)"><div class="ctr-hint"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>As ${esc(S.role?.name||'')}, you can update: ${cef.map(f=>f.l).join(', ')}.</div><button class="btn btn-pink" onclick="M.openCtr(${item.id})">Update Response</button></div>`:''}
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line-soft)">
+          <div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);margin-bottom:10px">Attachments</div>
+          ${attHtml}
+          ${S.can('canEditAll')?`<button class="btn btn-ghost btn-sm" onclick="M.openAttachments(${item.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Manage Attachments</button>`:''}
+        </div>
+      </div>
+    </div>
+    ${item.audit&&item.audit.length?`<div class="dcard"><div class="dchead"><span class="sub" style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4)">Activity Log</span></div><div class="dbody" style="padding:8px 18px">${item.audit.map(a=>`<div class="audit-entry"><div class="audit-dot"></div><div><span class="audit-who">${esc(a.who)}</span><span class="audit-role">${esc(a.role)}</span><div class="audit-action">${esc(a.action)}</div><div class="audit-time">${esc(a.ts)}</div></div></div>`).join('')}</div></div>`:''}`;
+  },
+
+  team(){
+    const team=Store.team();const roles=Store.roles();
+    const getRoleName=id=>roles.find(r=>r.id===id)?.name||id;
+    const initials=n=>n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    return`
+    <p style="font-size:0.82rem;color:var(--ink-3);margin-bottom:20px;max-width:540px;line-height:1.7">Register each person who should have access. They must enter their <strong>exact name</strong>, select their role, then enter their personal PIN to sign in.</p>
+    <div class="dl-card" style="margin-bottom:20px">
+      <div class="dl-head"><span>Registered Members</span><span style="font-size:0.72rem;color:var(--ink-4);font-weight:400;text-transform:none">${team.length} member${team.length!==1?'s':''}</span></div>
+      ${team.length===0?`<div style="padding:16px 14px;font-size:0.82rem;color:var(--ink-4);font-style:italic">No members registered yet.</div>`:''}
+      ${team.map((m,i)=>`<div class="tm-row">
+        <div class="tm-av">${initials(m.name)}</div>
+        <div class="tm-info">
+          <div class="tm-name">${esc(m.name)}</div>
+          <div class="tm-meta">${esc(getRoleName(m.roleId))} · PIN: <span class="tm-pin">${'●'.repeat(m.pin.length)}</span></div>
+        </div>
+        <button class="tm-del" onclick="TM.edit(${i})" title="Edit PIN"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="tm-del" onclick="TM.remove(${i})" title="Remove"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>`).join('')}
+    </div>
+    <div class="dl-card">
+      <div class="dl-head"><span>Add Team Member</span></div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="fg"><label>Full Name *</label><input type="text" id="tm-name" placeholder="e.g. Maria Santos"></div>
+          <div class="fg"><label>Role *</label><select id="tm-role"><option value="">— Select —</option>${roles.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('')}</select></div>
+        </div>
+        <div class="fg" style="max-width:200px">
+          <label>Personal PIN (4 digits) *</label>
+          <input type="password" id="tm-pin" maxlength="4" placeholder="e.g. 1234" inputmode="numeric" pattern="[0-9]*" style="font-family:'DM Mono',monospace;letter-spacing:0.2em;font-size:1rem" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)">
+          <span style="font-size:0.68rem;color:var(--ink-4);margin-top:3px">This person will use this PIN to sign in. Keep it private.</span>
+        </div>
+        <div><button class="btn btn-pink btn-sm" onclick="TM.add()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Member</button></div>
+        <div class="ferr" id="tm-err"></div>
+      </div>
+    </div>`;
+  },
+
+  roles(){
+    const roles=Store.roles();
+    const pLabel=(r)=>[{k:'canCreate',l:'Create'},{k:'canEditAll',l:'Edit all'},{k:'canDelete',l:'Delete'},{k:'canSettings',l:'Settings'}].map(p=>`<span class="pp ${r[p.k]?'pp-y':'pp-n'}">${p.l}</span>`).join('');
+    return`<p style="font-size:0.82rem;color:var(--ink-3);margin-bottom:20px;max-width:540px;line-height:1.7">Configure roles and their permissions. New roles appear on the sign-in screen immediately.</p>
+    <div class="dl-card" style="margin-bottom:20px">
+      <div class="dl-head"><span>Roles</span></div>
+      ${roles.map((r,i)=>`<div class="rci"><div class="rci-name">${esc(r.name)}</div><div class="rci-perms">${pLabel(r)}</div>${!r.canSettings&&roles.length>1?`<button class="rci-del" onclick="RM.remove(${i})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:'<div style="width:19px"></div>'}</div>`).join('')}
+    </div>
+    <div class="dl-card"><div class="dl-head"><span>Add Role</span></div>
+    <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+      <div class="fg"><label>Role Name *</label><input type="text" id="rm-name" placeholder="e.g. MEP Subcontractor, Interior Designer…"></div>
+      <div><div style="font-size:0.72rem;font-weight:600;color:var(--ink-3);margin-bottom:8px">Permissions</div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer"><input type="checkbox" id="rm-create"> Create items</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer"><input type="checkbox" id="rm-edit"> Edit all fields</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer"><input type="checkbox" id="rm-delete"> Delete items</label>
+        </div>
+        <div style="font-size:0.7rem;color:var(--ink-4);margin-top:6px">All roles can view items and update response/notes fields (✎).</div>
+      </div>
+      <div><button class="btn btn-pink btn-sm" onclick="RM.add()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Role</button></div>
+      <div class="ferr" id="rm-err"></div>
+    </div></div>`;
+  },
+
+  dropdowns(){
+    const drops=Store.drops();
+    const labels={submitted_by:'Submitted By / Reported By',assigned_to:'Assigned To',responsible_party:'Responsible Party',approved_by:'Approved By',issued_by:'Issued By',location:'Location',dependency_type:'Dependency Type',severity:'Severity',priority:'Priority',decision:'Decision',status:'Status',vo_status:'VO Status',si_status:'SI Status',cb_status:'CB Status'};
+    return`<p style="font-size:0.82rem;color:var(--ink-3);margin-bottom:20px;max-width:520px;line-height:1.7">Manage dropdown options so forms fill out faster.</p>
+    ${Object.entries(drops).map(([key,values])=>`<div class="dl-card"><div class="dl-head"><span>${labels[key]||key}</span><span style="font-size:0.72rem;color:var(--ink-4);font-weight:400;text-transform:none">${values.length} options</span></div><div class="dl-list">${values.map((v,i)=>`<div class="dl-item"><span class="dl-name">${esc(v)}</span><button class="dl-del" onclick="DL.rm('${key}',${i})"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')}</div><div class="dl-add"><input type="text" id="dli-${key}" placeholder="Add option…" onkeydown="if(event.key==='Enter')DL.add('${key}')"><button onclick="DL.add('${key}')">Add</button></div></div>`).join('')}`;
+  },
+
+  security(){
+    const hasCode=!!Store.passcode();
+    return`<p style="font-size:0.82rem;color:var(--ink-3);margin-bottom:20px;max-width:520px;line-height:1.7">Set a project passcode — the first gate everyone must pass before reaching the sign-in screen. Combine with personal PINs in <strong>Team Members</strong> for full two-layer security.</p>
+    <div class="dl-card" style="margin-bottom:20px">
+      <div class="dl-head"><span>Project Passcode</span><span style="font-size:0.72rem;font-weight:600;text-transform:none;color:${hasCode?'var(--green)':'var(--red)'}">${hasCode?'● Active':'○ Not set'}</span></div>
+      <div style="padding:16px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+          <div class="fg" style="flex:1;min-width:140px"><label>${hasCode?'New Passcode':'Passcode'} (4 digits) *</label><input type="password" id="sec-c1" maxlength="4" placeholder="e.g. 2580" inputmode="numeric" style="font-family:'DM Mono',monospace;letter-spacing:0.2em;font-size:1rem" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)"></div>
+          <div class="fg" style="flex:1;min-width:140px"><label>Confirm *</label><input type="password" id="sec-c2" maxlength="4" placeholder="Repeat" inputmode="numeric" style="font-family:'DM Mono',monospace;letter-spacing:0.2em;font-size:1rem" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)" onkeydown="if(event.key==='Enter')SEC.save()"></div>
+        </div>
+        <div class="ferr" id="sec-err" style="margin-top:6px"></div>
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+          <button class="btn btn-pink btn-sm" onclick="SEC.save()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>${hasCode?'Update':'Activate'} Passcode</button>
+          ${hasCode?`<button class="btn btn-del btn-sm" onclick="SEC.remove()">Remove Passcode</button>`:''}
+        </div>
+      </div>
+    </div>
+    <div class="dl-card">
+      <div class="dl-head"><span>Security Layers Active</span></div>
+      <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem"><span style="color:${hasCode?'var(--green)':'var(--ink-4)'}">●</span><span><strong>Layer 1 — Project Passcode</strong><span style="color:var(--ink-4);margin-left:8px">${hasCode?'Active':'Not set'}</span></span></div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem"><span style="color:${Store.team().length?'var(--green)':'var(--ink-4)'}">●</span><span><strong>Layer 2 — Personal PINs</strong><span style="color:var(--ink-4);margin-left:8px">${Store.team().length} member${Store.team().length!==1?'s':''} registered</span></span></div>
+      </div>
+    </div>
+    <div style="background:var(--amber-soft);border:1px solid #fcd34d;border-radius:var(--r);padding:12px 14px;font-size:0.78rem;color:#92400e;max-width:520px;line-height:1.7;margin-top:4px"><strong>Note:</strong> These are stored in the browser's local storage. Keep the HTML file itself secure and share it only with your team. Passcode activates on next sign-out.</div>`;
+  }
+};
+
+// ══════════════════════════════════════════════
+//  TEAM MANAGER
+// ══════════════════════════════════════════════
+const TM={
+  add(){
+    const name=document.getElementById('tm-name').value.trim();
+    const roleId=document.getElementById('tm-role').value;
+    const pin=document.getElementById('tm-pin').value.trim();
+    const err=document.getElementById('tm-err');
+    if(!name){err.textContent='Please enter a name.';return;}
+    if(!roleId){err.textContent='Please select a role.';return;}
+    if(!pin||pin.length!==4||!/^\d{4}$/.test(pin)){err.textContent='PIN must be exactly 4 digits.';return;}
+    const team=Store.team();
+    if(team.some(m=>m.name.toLowerCase()===name.toLowerCase()&&m.roleId===roleId)){err.textContent='A member with this name and role already exists.';return;}
+    team.push({name,roleId,pin});
+    Store.saveTeam(team);
+    err.textContent='';
+    T.show(`${name} added`,'ok');
+    Nav.render();
+    Login.init(); // refresh login role list
+  },
+  remove(i){
+    const team=Store.team();team.splice(i,1);Store.saveTeam(team);T.show('Member removed','ok');Nav.render();Login.init();
+  },
+  edit(i){
+    const team=Store.team();const m=team[i];
+    const newPin=prompt(`Enter new PIN for ${m.name} (4 digits):`,'');
+    if(newPin===null)return;
+    if(!newPin||newPin.length!==4||!/^\d{4}$/.test(newPin)){T.show('Invalid PIN — must be 4 digits','err');return;}
+    team[i].pin=newPin;Store.saveTeam(team);T.show('PIN updated','ok');Nav.render();
+  }
+};
+
+// ══════════════════════════════════════════════
+//  ROLE MANAGER
+// ══════════════════════════════════════════════
+const RM={
+  add(){
+    const name=document.getElementById('rm-name').value.trim();
+    const err=document.getElementById('rm-err');
+    if(!name){err.textContent='Please enter a role name.';return;}
+    const roles=Store.roles();
+    if(roles.some(r=>r.name.toLowerCase()===name.toLowerCase())){err.textContent='Role already exists.';return;}
+    roles.push({id:'r_'+Date.now(),name,canCreate:document.getElementById('rm-create').checked,canEditAll:document.getElementById('rm-edit').checked,canDelete:document.getElementById('rm-delete').checked,canSettings:false,pillClass:'other'});
+    Store.saveRoles(roles);err.textContent='';T.show(`Role "${name}" added`,'ok');Nav.render();Login.init();
+  },
+  remove(i){const roles=Store.roles();roles.splice(i,1);Store.saveRoles(roles);T.show('Role removed','ok');Nav.render();Login.init();}
+};
+
+// ══════════════════════════════════════════════
+//  DROPDOWN MANAGER
+// ══════════════════════════════════════════════
+const DL={
+  add(key){const inp=document.getElementById(`dli-${key}`);const v=inp.value.trim();if(!v)return;const d=Store.drops();if(d[key].includes(v)){T.show('Already exists','err');return;}d[key].push(v);Store.saveDrops(d);inp.value='';Nav.render();T.show('Added','ok');},
+  rm(key,i){const d=Store.drops();d[key].splice(i,1);Store.saveDrops(d);Nav.render();T.show('Removed','ok');}
+};
+
+// ══════════════════════════════════════════════
+//  SECURITY
+// ══════════════════════════════════════════════
+const SEC={
+  save(){
+    const c1=document.getElementById('sec-c1').value.trim();
+    const c2=document.getElementById('sec-c2').value.trim();
+    const err=document.getElementById('sec-err');
+    if(!c1||c1.length!==4||!/^\d{4}$/.test(c1)){err.textContent='Must be exactly 4 digits.';return;}
+    if(c1!==c2){err.textContent='Passcodes do not match.';return;}
+    Store.savePasscode(c1);err.textContent='';T.show('Passcode saved — active on next sign-out','ok');Nav.render();
+  },
+  remove(){Store.savePasscode(null);T.show('Passcode removed','ok');Nav.render();}
+};
+
+// ══════════════════════════════════════════════
+//  FILTERS
+// ══════════════════════════════════════════════
+const F={
+  set(k,v){S.filter[k]=v;Nav.render();},
+  clear(){S.filter={type:'all',status:'all',assignee:'',df:'',dt:''};Nav.render();},
+  sort(col){if(S.sort.col===col)S.sort.dir=S.sort.dir==='asc'?'desc':'asc';else{S.sort.col=col;S.sort.dir='asc';}Nav.render();},
+  bySt(s){S.filter.status=s;S.filter.type='all';Nav.go('list-all');},
+  byOv(){S.filter={type:'all',status:'all',assignee:'',df:'',dt:now()};Nav.go('list-all');},
+  byCrit(){S.filter={type:'all',status:'all',assignee:'',df:'',dt:''};S._crit=true;Nav.go('list-all');},
+  byUnassigned(){S.filter={type:'all',status:'all',assignee:'__unassigned__',df:'',dt:''};Nav.go('list-all');}
+};
+
+// ══════════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════════
+const M={
+  open(html){const o=document.createElement('div');o.className='moverlay';o.id='modal';o.onclick=e=>{if(e.target===o)this.close();};o.innerHTML=`<div class="mbox">${html}</div>`;document.body.appendChild(o);},
+  close(){document.getElementById('modal')?.remove();},
+  openAdd(pt){S.addType=pt;S.editItem=null;pt?this.form(pt,null,false):this.typeSelect();},
+  openEdit(item){S.editItem=item;S.addType=item.type;this.form(item.type,item,false);},
+  openCtr(id){const item=Store.items().find(x=>x.id===id);S.editItem=item;S.addType=item.type;this.form(item.type,item,true);},
+
+  typeSelect(){
+    const icons={rfi:'ℹ️',rfa:'✅',si:'📋',cb:'📣',vo:'🔄',issue:'⚠️',dependency:'⏸️',action:'☑️'};
+    this.open(`<div class="mhead"><h2>New Item — Select Type</h2><button class="mclose" onclick="M.close()">${X.svg.close}</button></div><div class="mbody"><div class="tgrid" style="grid-template-columns:repeat(4,1fr)">${TKEYS.map(t=>`<div class="topt" onclick="M.pickType('${t}')"><div class="ti">${icons[t]||'📄'}</div><div class="tl">${TYPES[t].label}</div><div class="ts">${TYPES[t].full}</div></div>`).join('')}</div></div><div class="mfoot"><button class="btn btn-ghost" onclick="M.close()">Cancel</button></div>`);
+  },
+  pickType(t){S.addType=t;this.close();this.form(t,null,false);},
+
+  form(type,item,ctr){
+    const td=TYPES[type],drops=Store.drops();
+    const title=item?`Edit ${td.label} #${item.id}`:`New ${td.full}`;
+    const existAtts=item?(item.attachments||[]):[];
+    const fh=td.fields.map(f=>{
+      const dis=ctr&&!f.ce;
+      const defaultStatus={si:'Issued',cb:'Issued',vo:'Draft'}[type]||'Open';
+      const val=item?(item[f.k]||''):(f.k==='status'?defaultStatus:(f.t==='date'&&(f.k==='date_submitted'||f.k==='date_reported'||f.k==='date_issued'||f.k==='date_requested')?now():''));
+      const ce=f.ce?'cef':'';
+      let inp='';
+      if(f.t==='drop'){const opts=f.dk?(drops[f.dk]||[]):[];inp=`<select id="f_${f.k}" class="${ce}" ${dis?'disabled':''}>${f.req?'':'<option value="">— Select —</option>'}${opts.map(o=>`<option value="${esc(o)}" ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;}
+      else if(f.t==='area'){inp=`<textarea id="f_${f.k}" rows="3" class="${ce}" ${dis?'disabled':''}>${esc(val)}</textarea>`;}
+      else{inp=`<input type="${f.t}" id="f_${f.k}" value="${esc(String(val))}" class="${ce}" ${dis?'disabled':''}>`;} 
+      return`<div class="fg ${f.span===2?'full':''}"><label for="f_${f.k}">${f.l}${f.req?' *':''}${f.ce?`<span class="ce">✎</span>`:''}</label>${inp}<div class="ferr" id="fe_${f.k}"></div></div>`;
+    }).join('');
+
+    // Inline attachment builder for RFI/RFA
+    const attSection=td.hasAtts?`<div class="full">
+      <div style="font-size:0.72rem;font-weight:600;color:var(--ink-3);margin-bottom:8px;display:flex;align-items:center;gap:10px">Attached File Links
+        <a href="https://drive.google.com" target="_blank" rel="noopener" style="font-size:0.68rem;color:var(--pink-deep);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:3px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Open Google Drive</a>
+      </div>
+      <div class="att-list" id="form-atts">${existAtts.map((a,i)=>`<div class="att-row"><input class="url" type="url" placeholder="https://drive.google.com/…" value="${esc(a.url)}"><span class="att-sep">as</span><input type="text" placeholder="Display name" value="${esc(a.name)}" style="flex:1.2"><button class="att-del" onclick="this.closest('.att-row').remove()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')}</div>
+      <button class="att-add-btn" onclick="(()=>{const l=document.getElementById('form-atts');const r=document.createElement('div');r.className='att-row';r.innerHTML='<input class=\\'url\\' type=\\'url\\' placeholder=\\'https://drive.google.com/…\\'><span class=\\'att-sep\\'>as</span><input type=\\'text\\' placeholder=\\'Display name\\' style=\\'flex:1.2\\'><button class=\\'att-del\\' onclick=\\'this.closest(\\\\\'.att-row\\\\\').remove()\\'><svg width=\\'13\\' height=\\'13\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\' stroke-linecap=\\'round\\'><line x1=\\'18\\' y1=\\'6\\' x2=\\'6\\' y2=\\'18\\'/><line x1=\\'6\\' y1=\\'6\\' x2=\\'18\\' y2=\\'18\\'/></svg></button>';l.appendChild(r);r.querySelector('input').focus();})()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add file link</button>
+    </div>`:'';
+
+    this.open(`<div class="mhead"><h2>${title}</h2><button class="mclose" onclick="M.close()">${X.svg.close}</button></div>
+    <div class="mbody">${ctr?`<div class="ctr-hint"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Fields marked ✎ are editable by your role.</div>`:''}
+    <div class="ffb err" id="ffb"></div><div class="fgrid">${fh}${attSection}</div></div>
+    <div class="mfoot"><button class="btn btn-ghost" onclick="M.close()">Cancel</button><button class="btn btn-pink" onclick="M.save('${type}',${!!item},${ctr})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>${item?'Save Changes':'Create Item'}</button></div>`);
+  },
+
+  save(type,isEdit,ctr){
+    const td=TYPES[type];let valid=true;
+    td.fields.forEach(f=>{const el=document.getElementById(`f_${f.k}`),fe=document.getElementById(`fe_${f.k}`);if(!el||!fe)return;if(f.req&&!el.disabled&&(!el.value||!el.value.trim())){fe.textContent=`${f.l} is required`;el.style.borderColor='var(--red)';valid=false;}else{fe.textContent='';el.style.borderColor='';}});
+    if(!valid){const fb=document.getElementById('ffb');fb.style.display='';fb.textContent='Please fill in all required fields.';return;}
+    // Collect attachments from form
+    const collectAtts=()=>{if(!td.hasAtts)return null;const rows=document.querySelectorAll('#form-atts .att-row');const out=[];rows.forEach(row=>{const ins=row.querySelectorAll('input');const url=(ins[0]?.value||'').trim(),name=(ins[1]?.value||'').trim();if(url)out.push({url,name:name||url});});return out;};
+    const items=Store.items();
+    if(isEdit&&S.editItem){
+      const idx=items.findIndex(x=>x.id===S.editItem.id);
+      if(idx>=0){const changed=[];td.fields.forEach(f=>{const el=document.getElementById(`f_${f.k}`);if(el&&!el.disabled){const old=items[idx][f.k]||'';if(old!==el.value)changed.push(f.l);items[idx][f.k]=el.value;}});const atts=collectAtts();if(atts!==null){if(JSON.stringify(items[idx].attachments||[])!==JSON.stringify(atts))changed.push('Attachments');items[idx].attachments=atts;}items[idx].updated=now();addAudit(items[idx],changed.length?`Updated: ${changed.join(', ')}`:'Edited item');}
+    } else {
+      const ni={id:Store.nextId(),type,status:'Open',created:now(),audit:[]};
+      td.fields.forEach(f=>{const el=document.getElementById(`f_${f.k}`);if(el)ni[f.k]=el.value;});
+      const atts=collectAtts();if(atts!==null)ni.attachments=atts;
+      addAudit(ni,`Created ${td.label}`);items.push(ni);
+    }
+    Store.saveItems(items);this.close();T.show(isEdit?'Item updated':'Item created','ok');Nav.render();
+  },
+
+  openAttachments(id){
+    const item=Store.items().find(x=>x.id===id);
+    const atts=JSON.parse(JSON.stringify(item.attachments||[]));
+    const rows=()=>document.getElementById('att-rows');
+    const render=()=>{rows().innerHTML=atts.map((a,i)=>`<div class="att-row"><input class="url" type="url" placeholder="https://drive.google.com/…" value="${esc(a.url)}" oninput="MATT[${i}].url=this.value"><span class="att-sep">as</span><input type="text" placeholder="Display name" value="${esc(a.name)}" oninput="MATT[${i}].name=this.value" style="flex:1.2"><button class="att-del" onclick="MATTR(${i})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('');window.MATT=atts;};
+    window.MATTR=i=>{atts.splice(i,1);render();};
+    window.MATTADD=()=>{atts.push({url:'',name:''});render();setTimeout(()=>{const inp=rows().querySelector('.att-row:last-child input');if(inp)inp.focus();},30);};
+    window.MATTSAVE=()=>{
+      const allRows=rows().querySelectorAll('.att-row');const saved=[];
+      allRows.forEach(row=>{const ins=row.querySelectorAll('input');const url=(ins[0]?.value||'').trim(),name=(ins[1]?.value||'').trim();if(url)saved.push({url,name:name||url});});
+      const items2=Store.items();const idx=items2.findIndex(x=>x.id===id);
+      if(idx>=0){items2[idx].attachments=saved;addAudit(items2[idx],`Updated attachments (${saved.length} file${saved.length!==1?'s':''})`);Store.saveItems(items2);this.close();T.show('Attachments saved','ok');Nav.render();}
+    };
+    this.open(`<div class="mhead"><h2>Attachments — #${id}</h2><button class="mclose" onclick="M.close()">${X.svg.close}</button></div>
+    <div class="mbody"><p style="font-size:0.8rem;color:var(--ink-3);margin-bottom:14px;line-height:1.6">Paste any shareable link (Google Drive, Dropbox, OneDrive, SharePoint) and give it a display name. Visible to all roles.</p>
+    <div class="att-list" id="att-rows"></div>
+    <button class="att-add-btn" onclick="MATTADD()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add link</button></div>
+    <div class="mfoot"><button class="btn btn-ghost" onclick="M.close()">Cancel</button><button class="btn btn-pink" onclick="MATTSAVE()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Save</button></div>`);
+    render();
+  }
+};
+
+// ══════════════════════════════════════════════
+//  CONFIRM / TOAST
+// ══════════════════════════════════════════════
+const Conf={
+  show(item){const o=document.createElement('div');o.className='cov';o.id='cv';o.innerHTML=`<div class="cbox"><h3>Delete ${TYPES[item.type]?.label||'Item'} #${item.id}?</h3><p>Permanently removes this item. Cannot be undone.</p><div class="cact"><button class="btn btn-ghost" onclick="document.getElementById('cv').remove()">Cancel</button><button class="btn btn-del" onclick="Conf.del(${item.id})">Delete</button></div></div>`;document.body.appendChild(o);},
+  del(id){document.getElementById('cv')?.remove();Store.saveItems(Store.items().filter(x=>x.id!==id));T.show('Deleted','ok');if(S.view===`detail-${id}`)Nav.go('list-all');else Nav.render();}
+};
+const T={
+  show(msg,type='ok'){const w=document.getElementById('twrap'),t=document.createElement('div');t.className=`toast ${type}`;const ic=type==='ok'?`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`:`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg>`;t.innerHTML=ic+esc(msg);w.appendChild(t);setTimeout(()=>{t.style.animation='tout .18s ease forwards';setTimeout(()=>t.remove(),200);},2800);}
+};
+
+// ══ BOOT ══
+window.Gate=Gate;window.Login=Login;window.PinStep=PinStep;window.Auth=Auth;
+window.Nav=Nav;window.M=M;window.Conf=Conf;window.F=F;
+window.DL=DL;window.TM=TM;window.RM=RM;window.SEC=SEC;window.T=T;window.Store=Store;
+Gate.init();
+</script>
+</body>
+</html>
