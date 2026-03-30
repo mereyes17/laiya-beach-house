@@ -678,6 +678,20 @@ function renderDots(containerId,count,filled,state){
   el.innerHTML=Array.from({length:count},(_,i)=>`<div class="pin-dot${i<filled?(state?' '+state:' on'):''}"></div>`).join('');
 }
 
+// ── Global keyboard handler for keypads ──
+document.addEventListener('keydown',e=>{
+  const gateVisible=document.getElementById('gate')?.style.display!=='none';
+  const pinVisible=document.getElementById('pin-screen')?.style.display!=='none';
+  if(!gateVisible&&!pinVisible)return;
+  if(e.key>='0'&&e.key<='9'){
+    if(gateVisible)Gate.press(e.key);
+    else if(pinVisible)PinStep.press(e.key);
+  } else if(e.key==='Backspace'||e.key==='Delete'){
+    if(gateVisible)Gate.del();
+    else if(pinVisible)PinStep.del();
+  }
+});
+
 // ══════════════════════════════════════════════
 //  GATE (project passcode — 6 digits)
 // ══════════════════════════════════════════════
@@ -975,52 +989,74 @@ const V={
       <div class="dg-date">${greet}, ${esc(S.user?.name||'')} — ${dateStr}</div>
       <div class="dg-sub">${active.length} active item${active.length!==1?'s':''} · Signed in as ${esc(S.role?.name||'')}</div>
     </div>
+
+    <a href="https://drive.google.com/drive/folders/1YdDZdRCG2UkpIWetUmkXkNQzvNcGd9_K?usp=drive_link" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--white);border:1.5px solid var(--pink-mid);border-radius:var(--r-lg);text-decoration:none;margin-bottom:20px;transition:all 0.15s" onmouseover="this.style.borderColor='var(--pink)';this.style.boxShadow='0 3px 14px rgba(244,114,182,0.12)'" onmouseout="this.style.borderColor='var(--pink-mid)';this.style.boxShadow=''">
+      <div style="width:36px;height:36px;border-radius:9px;background:var(--pink-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--pink-deep)" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:0.85rem;font-weight:600;color:var(--pink-deep);letter-spacing:-0.01em">📁 Project Plans &amp; Drawings</div>
+        <div style="font-size:0.71rem;color:var(--ink-4);margin-top:1px">Tap to open Google Drive folder →</div>
+      </div>
+    </a>
+
     <div class="dash-h">Action Required</div>
-    <div class="act-strip">
-      <div class="act-card urgent" onclick="F.byOv()"><div class="ac-icon red"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div><div><div class="ac-num">${ov.length}</div><div class="ac-lbl">Overdue</div></div></div>
-      <div class="act-card warn" onclick="Nav.go('focus')"><div class="ac-icon amber"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="ac-num">${dueWk.length}</div><div class="ac-lbl">Due This Week</div></div></div>
-      <div class="act-card ${crit.length?'urgent':''}" onclick="F.byCrit()"><div class="ac-icon ${crit.length?'red':'zinc'}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${crit.length?'var(--red)':'var(--zinc)'}" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div><div class="ac-num">${crit.length}</div><div class="ac-lbl">High/Critical</div></div></div>
-      <div class="act-card" onclick="F.byUnassigned()"><div class="ac-icon zinc"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--zinc)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></div><div><div class="ac-num">${unassigned.length}</div><div class="ac-lbl">Unassigned</div></div></div>
-      <div class="act-card" style="cursor:default"><div class="ac-icon pink"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--pink-deep)" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div><div class="ac-num" style="color:var(--pink-deep)">${oldestAge}</div><div class="ac-lbl">Oldest (days)</div></div></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:24px">
+      ${[
+        {label:'RFI',type:'rfi',color:'#3b82f6',bg:'#eff6ff'},
+        {label:'RFA',type:'rfa',color:'#8b5cf6',bg:'#f5f3ff'},
+        {label:'Site Instruction',type:'si',color:'#9333ea',bg:'#fdf4ff'},
+        {label:'Const. Bulletin',type:'cb',color:'#10b981',bg:'#ecfdf5'},
+        {label:'Variation Order',type:'vo',color:'#f43f5e',bg:'#fff1f2'},
+        {label:'Issue',type:'issue',color:'var(--red)',bg:'var(--red-soft)'},
+      ].map(({label,type,color,bg})=>{
+        const open=items.filter(x=>x.type===type&&!isTerminal(x)).length;
+        const total=items.filter(x=>x.type===type).length;
+        return`<div onclick="Nav.go('list-${type}')" style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px 14px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden" onmouseover="this.style.borderColor='${color}';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='var(--line)';this.style.transform=''">
+          <div style="position:absolute;top:0;left:0;right:0;height:2.5px;background:${color}"></div>
+          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:${color};margin-bottom:6px">${label}</div>
+          <div style="font-size:1.7rem;font-weight:300;font-family:'DM Mono',monospace;color:${open>0?color:'var(--ink-3)'};line-height:1;letter-spacing:-0.04em">${open}</div>
+          <div style="font-size:0.68rem;color:var(--ink-4);margin-top:4px">open · ${total} total</div>
+        </div>`;
+      }).join('')}
     </div>
+
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px">
       <div>
-        <div class="dash-h">By Type — Active / Total</div>
-        <div class="tshell" style="padding:2px 0">
-          ${['rfi','rfa','si','cb','vo','issue'].map(t=>{
-            const colors={rfi:'#3b82f6',rfa:'#8b5cf6',si:'#9333ea',cb:'#10b981',vo:'#f43f5e',issue:'var(--red)'};
-            const c=colors[t]||'var(--ink-4)';
-            const total=items.filter(x=>x.type===t).length;
-            const pending=items.filter(x=>x.type===t&&!isTerminal(x)).length;
-            return`<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;border-bottom:1px solid var(--line-soft)" onclick="Nav.go('list-${t}')">
-              <div style="width:6px;height:6px;border-radius:50%;background:${c};flex-shrink:0"></div>
-              <span style="flex:1;font-size:0.82rem;color:var(--ink-2)">${TYPES[t].full}</span>
-              ${tPill(t)}
-              <span style="font-size:0.75rem;font-family:'DM Mono',monospace;color:${pending>0?'var(--red)':'var(--ink-4)'};">${pending} pending</span>
-              <span style="font-size:0.7rem;color:var(--ink-4);min-width:28px;text-align:right">${total} total</span>
-            </div>`;
-          }).join('')}
+        <div class="dash-h">By Type — Open / Total</div>
+        <div class="tshell" style="overflow:hidden">
+          <table style="width:100%;border-collapse:collapse;font-size:0.8rem">
+            <thead><tr style="background:var(--bg)">
+              <th style="padding:6px 12px;text-align:left;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);border-bottom:1px solid var(--line)">Type</th>
+              <th style="padding:6px 12px;text-align:center;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);border-bottom:1px solid var(--line)">Open</th>
+              <th style="padding:6px 12px;text-align:right;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);border-bottom:1px solid var(--line)">Total</th>
+            </tr></thead>
+            <tbody>
+            ${['rfi','rfa','si','cb','vo','issue'].map(t=>{
+              const colors={rfi:'#3b82f6',rfa:'#8b5cf6',si:'#9333ea',cb:'#10b981',vo:'#f43f5e',issue:'var(--red)'};
+              const total=items.filter(x=>x.type===t).length;
+              const open=items.filter(x=>x.type===t&&!isTerminal(x)).length;
+              return`<tr style="border-bottom:1px solid var(--line-soft);cursor:pointer" onclick="Nav.go('list-${t}')" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+                <td style="padding:7px 12px;display:flex;align-items:center;gap:7px"><div style="width:5px;height:5px;border-radius:50%;background:${colors[t]};flex-shrink:0"></div>${tPill(t)}</td>
+                <td style="padding:7px 12px;text-align:center;font-family:'DM Mono',monospace;font-weight:600;color:${open>0?colors[t]:'var(--ink-4)'}">${open}</td>
+                <td style="padding:7px 12px;text-align:right;font-family:'DM Mono',monospace;color:var(--ink-4)">${total}</td>
+              </tr>`;
+            }).join('')}
+            </tbody>
+          </table>
         </div>
       </div>
       <div>
         <div class="dash-h">By Status</div>
-        <div class="kpi-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
-          <div class="kpi c-red" onclick="F.bySt('Open')"><div class="kpi-lbl">Open</div><div class="kpi-num">${sc['Open']||0}</div></div>
-          <div class="kpi c-amber" onclick="F.bySt('In Progress')"><div class="kpi-lbl">In Progress</div><div class="kpi-num">${sc['In Progress']||0}</div></div>
-          <div class="kpi c-green" onclick="F.bySt('Resolved')"><div class="kpi-lbl">Resolved</div><div class="kpi-num">${sc['Resolved']||0}</div></div>
-          <div class="kpi c-zinc" onclick="F.bySt('Closed')"><div class="kpi-lbl">Closed</div><div class="kpi-num">${sc['Closed']||0}</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="kpi c-red" onclick="F.bySt('Open')" style="padding:12px"><div class="kpi-lbl">Open</div><div class="kpi-num">${sc['Open']||0}</div></div>
+          <div class="kpi c-amber" onclick="F.bySt('In Progress')" style="padding:12px"><div class="kpi-lbl">In Progress</div><div class="kpi-num">${sc['In Progress']||0}</div></div>
+          <div class="kpi c-green" onclick="F.bySt('Resolved')" style="padding:12px"><div class="kpi-lbl">Resolved</div><div class="kpi-num">${sc['Resolved']||0}</div></div>
+          <div class="kpi c-zinc" onclick="F.bySt('Closed')" style="padding:12px"><div class="kpi-lbl">Closed</div><div class="kpi-num">${sc['Closed']||0}</div></div>
         </div>
-        <a href="https://drive.google.com/drive/folders/1YdDZdRCG2UkpIWetUmkXkNQzvNcGd9_K?usp=drive_link" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:14px;background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);text-decoration:none;transition:all 0.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--pink)'" onmouseout="this.style.borderColor='var(--line)'">
-          <div style="width:36px;height:36px;border-radius:9px;background:var(--pink-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--pink-deep)" stroke-width="2" stroke-linecap="round"><path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-          </div>
-          <div>
-            <div style="font-size:0.85rem;font-weight:600;color:var(--ink);letter-spacing:-0.02em">📁 Project Plans & Drawings</div>
-            <div style="font-size:0.72rem;color:var(--ink-4);margin-top:2px">Open Google Drive folder →</div>
-          </div>
-        </a>
       </div>
     </div>
+
     ${parties.length?`<div class="dash-h">Open Items by Party</div><div class="tshell" style="padding:8px 14px;margin-bottom:24px"><table class="party-table">${parties.map(([n,c])=>`<tr><td style="font-size:0.82rem;color:var(--ink-2);padding-right:12px;white-space:nowrap">${esc(n)}</td><td style="width:100%"><div class="party-bar-bg"><div class="party-bar-fill" style="width:${Math.round(c/maxP*100)}%"></div></div></td><td style="text-align:right;font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--ink-4);padding-left:10px">${c}</td></tr>`).join('')}</table></div>`:''}
     ${recent.length?`<div class="dash-h">Recently Added</div><div class="tshell"><table class="itable"><thead><tr><th>ID</th><th>Type</th><th>Description</th><th>Status</th><th>Due</th><th>Files</th></tr></thead><tbody>${recent.map(item=>{const od=overdue(item),desc=item.subject||item.description||'—',atts=(item.attachments||[]).length;return`<tr class="${od?'od':''}"><td class="mono">#${item.id}</td><td>${tPill(item.type)}</td><td><span class="ilink" onclick="Nav.go('detail-${item.id}')">${od?'<span class="odot"></span>':''}${esc(desc.slice(0,50))}${desc.length>50?'…':''}</span></td><td>${sBadge(item.status)}</td><td style="font-size:0.75rem;color:var(--ink-4)">${item.due_date||'—'}</td><td style="font-size:0.75rem;color:var(--ink-4)">${atts?`📎 ${atts}`:''}</td></tr>`;}).join('')}</tbody></table></div>`:
     `<div style="text-align:center;padding:48px 0;color:var(--ink-4);font-size:0.82rem">No items yet.${S.can('canCreate')?' Click <strong>New Item</strong> to begin.':''}</div>`}
@@ -1183,41 +1219,55 @@ const V={
     items.sort((a,b)=>{let av=col==='id'?a.id:(a[col]||''),bv=col==='id'?b.id:(b[col]||'');const r=av<bv?-1:av>bv?1:0;return dir==='asc'?r:-r;});
     const si=c=>`<span style="opacity:${S.sort.col===c?1:0.3}">${S.sort.col===c?(S.sort.dir==='asc'?'↑':'↓'):'↕'}</span>`;
 
-    // VO summary strip when viewing VOs
-    const allVOs=ft==='vo'?all.filter(x=>x.type==='vo'):[];
-    const voSummary=ft==='vo'&&allVOs.length?`
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:14px">
-      ${['Draft','Submitted','Under Review','Approved','Rejected','Withdrawn'].map(s=>{
-        const cnt=allVOs.filter(x=>x.status===s).length;
-        return cnt?`<div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:10px 12px;text-align:center;cursor:pointer" onclick="F.set('status','${s}')">
-          <div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-4);margin-bottom:4px">${s}</div>
-          <div style="font-size:1.4rem;font-weight:300;font-family:'DM Mono',monospace;color:var(--ink)">${cnt}</div>
-        </div>`:''}).join('')}
-    </div>
-    <div style="font-size:0.72rem;color:var(--ink-4);margin-bottom:12px">${allVOs.length} total variation orders · ${allVOs.filter(x=>x.status==='Approved').length} approved · ${allVOs.filter(x=>x.status==='Under Review').length} pending review</div>`:'';
-
-    // SI summary strip
-    const allSIs=ft==='si'?all.filter(x=>x.type==='si'):[];
-    const siSummary=ft==='si'&&allSIs.length?`
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:14px">
-      ${['Issued','Acknowledged','In Progress','Completed'].map(s=>{const cnt=allSIs.filter(x=>x.status===s).length;return cnt?`<div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:10px 12px;text-align:center"><div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-4);margin-bottom:4px">${s}</div><div style="font-size:1.4rem;font-weight:300;font-family:'DM Mono',monospace">${cnt}</div></div>`:''}).join('')}
-    </div>`:'';
-
-    // CB summary strip
-    const allCBs=ft==='cb'?all.filter(x=>x.type==='cb'):[];
-    const cbSummary=ft==='cb'&&allCBs.length?`
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:14px">
-      ${['Issued','Under Review','Acknowledged','Superseded'].map(s=>{const cnt=allCBs.filter(x=>x.status===s).length;return cnt?`<div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:10px 12px;text-align:center"><div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-4);margin-bottom:4px">${s}</div><div style="font-size:1.4rem;font-weight:300;font-family:'DM Mono',monospace">${cnt}</div></div>`:''}).join('')}
-    </div>`:'';
+    // Universal summary strip for all typed list pages
+    const typeStatuses={
+      rfi:['Open','In Progress','Resolved','Closed'],
+      rfa:['Open','In Progress','Resolved','Closed'],
+      si:['Issued','Acknowledged','In Progress','Completed'],
+      cb:['Issued','Under Review','Acknowledged','Superseded'],
+      vo:['Draft','Submitted','Under Review','Approved','Rejected','Withdrawn'],
+      issue:['Open','In Progress','Resolved','Closed'],
+    };
+    const typeColors={
+      rfi:'#3b82f6',rfa:'#8b5cf6',si:'#9333ea',cb:'#10b981',vo:'#f43f5e',issue:'var(--red)'
+    };
+    const summaryStrip=ft&&typeStatuses[ft]?(()=>{
+      const allOfType=all.filter(x=>x.type===ft);
+      const total=allOfType.length;
+      const open=allOfType.filter(x=>!isTerminal(x)).length;
+      const color=typeColors[ft]||'var(--pink)';
+      const statuses=typeStatuses[ft];
+      return`<div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:120px">
+            <div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);margin-bottom:2px">${TYPES[ft].full}</div>
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <span style="font-size:1.6rem;font-weight:300;font-family:'DM Mono',monospace;color:${color}">${open}</span>
+              <span style="font-size:0.75rem;color:var(--ink-4)">open of ${total} total</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${statuses.map(s=>{
+              const cnt=allOfType.filter(x=>x.status===s).length;
+              const isOpen=!isTerminal({status:s});
+              return`<div onclick="F.set('status','${s}')" style="text-align:center;padding:8px 14px;border-radius:var(--r);border:1px solid ${f.status===s?color:'var(--line)'};background:${f.status===s?'var(--bg)':'var(--white)'};cursor:pointer;min-width:70px;transition:all 0.12s" onmouseover="this.style.borderColor='${color}'" onmouseout="this.style.borderColor='${f.status===s?color:'var(--line)'}'">
+                <div style="font-size:1.2rem;font-weight:300;font-family:'DM Mono',monospace;color:${isOpen&&cnt>0?color:'var(--ink-3)'}">${cnt}</div>
+                <div style="font-size:0.62rem;font-weight:600;color:var(--ink-4);margin-top:2px;white-space:nowrap">${s}</div>
+              </div>`;
+            }).join('')}
+            ${f.status!=='all'?`<div onclick="F.set('status','all')" style="text-align:center;padding:8px 10px;border-radius:var(--r);border:1px solid var(--line);background:var(--white);cursor:pointer;min-width:50px" title="Show all"><div style="font-size:0.75rem;color:var(--ink-4)">All</div><div style="font-size:0.62rem;color:var(--ink-4);margin-top:2px">×</div></div>`:''}
+          </div>
+        </div>
+      </div>`;
+    })():'';
 
     // Build dynamic status options based on type
     const statusOptions=(()=>{
-      const typeStatuses={si:['Issued','Acknowledged','In Progress','Completed'],cb:['Issued','Under Review','Acknowledged','Superseded'],vo:['Draft','Submitted','Under Review','Approved','Rejected','Withdrawn']};
       const opts=ft&&typeStatuses[ft]?typeStatuses[ft]:['Open','In Progress','Resolved','Closed'];
       return opts.map(s=>`<option value="${s}" ${f.status===s?'selected':''}>${s}</option>`).join('');
     })();
 
-    return`${voSummary}${siSummary}${cbSummary}<div class="frow">
+    return`${summaryStrip}<div class="frow">
       ${!ft?`<select onchange="F.set('type',this.value)"><option value="all" ${f.type==='all'?'selected':''}>All Types</option>${TKEYS.map(t=>`<option value="${t}" ${f.type===t?'selected':''}>${TYPES[t].label}</option>`).join('')}</select>`:''}
       <select onchange="F.set('status',this.value)"><option value="all" ${f.status==='all'?'selected':''}>All Statuses</option>${statusOptions}</select>
       <input type="text" placeholder="Requested / assigned…" value="${esc(f.assignee==='__unassigned__'?'':f.assignee)}" oninput="F.set('assignee',this.value)" style="min-width:130px">
