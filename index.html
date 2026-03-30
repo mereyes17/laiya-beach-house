@@ -357,17 +357,9 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
     <div class="gate-mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
     <div class="gate-proj">Beach House — Mr. &amp; Mrs. Jose Ma. K. Lim</div>
     <h1>Project Access</h1>
-    <p>Enter the project passcode to continue.</p>
-    <div class="pin-dots" id="gate-dots">
-      <div class="pin-dot" id="gd0"></div><div class="pin-dot" id="gd1"></div>
-      <div class="pin-dot" id="gd2"></div><div class="pin-dot" id="gd3"></div>
-    </div>
-    <div class="keypad">
-      <button class="kk" onclick="Gate.press('1')">1</button><button class="kk" onclick="Gate.press('2')">2</button><button class="kk" onclick="Gate.press('3')">3</button>
-      <button class="kk" onclick="Gate.press('4')">4</button><button class="kk" onclick="Gate.press('5')">5</button><button class="kk" onclick="Gate.press('6')">6</button>
-      <button class="kk" onclick="Gate.press('7')">7</button><button class="kk" onclick="Gate.press('8')">8</button><button class="kk" onclick="Gate.press('9')">9</button>
-      <div></div><button class="kk" onclick="Gate.press('0')">0</button><button class="kk kdel" onclick="Gate.del()">⌫</button>
-    </div>
+    <p>Enter the 6-digit project passcode.</p>
+    <div class="pin-dots" id="gate-dots"></div>
+    <div class="keypad" id="gate-keypad"></div>
     <div class="gate-err" id="gate-err"></div>
     <div class="gate-hint" id="gate-hint">Contact your Project Manager if you have forgotten the passcode.</div>
   </div>
@@ -405,16 +397,8 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
     <div class="gate-mark" style="margin-bottom:18px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></div>
     <h2>Enter Your PIN</h2>
     <p class="pin-who">Welcome, <strong id="pin-name"></strong></p>
-    <div class="pin-dots" id="pin-dots">
-      <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
-      <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
-    </div>
-    <div class="keypad">
-      <button class="kk" onclick="PinStep.press('1')">1</button><button class="kk" onclick="PinStep.press('2')">2</button><button class="kk" onclick="PinStep.press('3')">3</button>
-      <button class="kk" onclick="PinStep.press('4')">4</button><button class="kk" onclick="PinStep.press('5')">5</button><button class="kk" onclick="PinStep.press('6')">6</button>
-      <button class="kk" onclick="PinStep.press('7')">7</button><button class="kk" onclick="PinStep.press('8')">8</button><button class="kk" onclick="PinStep.press('9')">9</button>
-      <div></div><button class="kk" onclick="PinStep.press('0')">0</button><button class="kk kdel" onclick="PinStep.del()">⌫</button>
-    </div>
+    <div class="pin-dots" id="pin-dots"></div>
+    <div class="keypad" id="pin-keypad"></div>
     <div class="gate-err" id="pin-err"></div>
     <button class="btn btn-ghost btn-sm" style="margin-top:14px" onclick="PinStep.back()">← Back</button>
   </div>
@@ -436,7 +420,8 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
       <div class="sb-item" data-v="focus" onclick="Nav.go('focus')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Today's Focus<span class="sb-badge" id="fb" style="display:none"></span></div>
       <div class="sb-item on" data-v="dashboard" onclick="Nav.go('dashboard')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard<span class="sb-badge" id="ob" style="display:none"></span></div>
       <div class="sb-item" data-v="schedule" onclick="Nav.go('schedule')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</div>
-      <div class="sb-sec">Items</div>
+      <div class="sb-item" data-v="directory" onclick="Nav.go('directory')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Directory</div>
+      <div class="sb-sec">Documents</div>
       <div class="sb-item" data-v="list-all" onclick="Nav.go('list-all')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>All Items</div>
       <div class="sb-item" data-v="list-rfi" onclick="Nav.go('list-rfi')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>RFIs</div>
       <div class="sb-item" data-v="list-rfa" onclick="Nav.go('list-rfa')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>RFAs</div>
@@ -444,8 +429,6 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
       <div class="sb-item" data-v="list-cb" onclick="Nav.go('list-cb')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Construction Bulletins</div>
       <div class="sb-item" data-v="list-vo" onclick="Nav.go('list-vo')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/><circle cx="12" cy="12" r="10"/></svg>Variation Orders</div>
       <div class="sb-item" data-v="list-issue" onclick="Nav.go('list-issue')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Issues</div>
-      <div class="sb-item" data-v="list-dependency" onclick="Nav.go('list-dependency')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Schedule Holds</div>
-      <div class="sb-item" data-v="list-action" onclick="Nav.go('list-action')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Action Items</div>
       <div class="sb-sec" id="sb-settings-sec" style="display:none">Settings</div>
       <div class="sb-item" data-v="team" onclick="Nav.go('team')" id="sb-team" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Team Members</div>
       <div class="sb-item" data-v="roles" onclick="Nav.go('roles')" id="sb-roles" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Roles</div>
@@ -519,21 +502,25 @@ const Store={
   async saveTeam(t){await this.set('bh_team',t);},
   async passcode(){return await this.get('bh_passcode',null);},
   async savePasscode(p){await this.set('bh_passcode',p);},
+  async directory(){return await this.get('bh_directory',{contacts:[],documents:[]});},
+  async saveDirectory(d){await this.set('bh_directory',d);},
 
   // ── Boot: load everything into cache ──
   async boot(){
-    const[items,drops,roles,team,passcode]=await Promise.all([
+    const[items,drops,roles,team,passcode,directory]=await Promise.all([
       window._fb.getItems(),
       window._fb.get('bh_drops',defaultDrops()),
       window._fb.get('bh_roles',DEFAULT_ROLES),
       window._fb.get('bh_team',[]),
       window._fb.get('bh_passcode',null),
+      window._fb.get('bh_directory',{contacts:[],documents:[]}),
     ]);
     this._items=items||[];
     this._cache['bh_drops']=drops||defaultDrops();
     this._cache['bh_roles']=roles||DEFAULT_ROLES;
     this._cache['bh_team']=team||[];
     this._cache['bh_passcode']=passcode||null;
+    this._cache['bh_directory']=directory||{contacts:[],documents:[]};
   }
 };
 
@@ -649,39 +636,56 @@ const S={
 };
 
 // ══════════════════════════════════════════════
-//  GATE (project passcode)
+//  KEYPAD HELPER — shuffles digits on every show
+// ══════════════════════════════════════════════
+function shuffleKeypad(containerId,pressFn,delFn){
+  const nums=['1','2','3','4','5','6','7','8','9','0'];
+  // Fisher-Yates shuffle
+  for(let i=nums.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[nums[i],nums[j]]=[nums[j],nums[i]];}
+  // Build 3x4 grid: 9 digits + empty + 0 + del  → but since we shuffled all 10, layout: 9 in rows of 3, then [empty, last, del]
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  const first9=nums.slice(0,9);
+  const last=nums[9];
+  el.innerHTML=
+    first9.map(d=>`<button class="kk" onclick="${pressFn}('${d}')">${d}</button>`).join('')+
+    `<div></div><button class="kk" onclick="${pressFn}('${last}')">${last}</button><button class="kk kdel" onclick="${delFn}()">⌫</button>`;
+}
+
+function renderDots(containerId,count,filled,state){
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  el.innerHTML=Array.from({length:count},(_,i)=>`<div class="pin-dot${i<filled?(state?' '+state:' on'):''}"></div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+//  GATE (project passcode — 6 digits)
 // ══════════════════════════════════════════════
 const Gate={
-  _v:'',
+  _v:'',_len:6,
   async init(){
+    this._v='';
+    shuffleKeypad('gate-keypad','Gate.press','Gate.del');
+    renderDots('gate-dots',this._len,0,'');
     const code=await Store.passcode();
-    if(!code){
-      this._showLogin();
-    } else {
-      document.getElementById('gate-hint').textContent='Contact your Project Manager if you have forgotten the passcode.';
-    }
+    if(!code){this._showLogin();}
+    else{document.getElementById('gate-hint').textContent='Contact your Project Manager if you have forgotten the passcode.';}
   },
   press(d){
-    if(this._v.length>=4)return;
-    this._v+=d;this._render('gd');
-    if(this._v.length===4)setTimeout(()=>this._check(),120);
+    if(this._v.length>=this._len)return;
+    this._v+=d;renderDots('gate-dots',this._len,this._v.length,'');
+    if(this._v.length===this._len)setTimeout(()=>this._check(),120);
   },
-  del(){this._v=this._v.slice(0,-1);this._render('gd');document.getElementById('gate-err').textContent='';},
-  _render(pre){
-    for(let i=0;i<4;i++){
-      const d=document.getElementById(pre+i);
-      if(d)d.className='pin-dot'+(i<this._v.length?' on':'');
-    }
-  },
+  del(){this._v=this._v.slice(0,-1);renderDots('gate-dots',this._len,this._v.length,'');document.getElementById('gate-err').textContent='';},
   _check(){
     Store.passcode().then(code=>{
       if(this._v===code){
-        for(let i=0;i<4;i++)document.getElementById('gd'+i).className='pin-dot ok';
+        renderDots('gate-dots',this._len,this._len,'ok');
         setTimeout(()=>this._showLogin(),400);
       } else {
-        for(let i=0;i<4;i++)document.getElementById('gd'+i).className='pin-dot err';
+        renderDots('gate-dots',this._len,this._len,'err');
         document.getElementById('gate-err').textContent='Incorrect passcode. Please try again.';
-        setTimeout(()=>{this._v='';this._render('gd');},700);
+        setTimeout(()=>{this._v='';renderDots('gate-dots',this._len,0,'');shuffleKeypad('gate-keypad','Gate.press','Gate.del');},700);
       }
     });
   },
@@ -754,44 +758,39 @@ const Login={
 //  PIN STEP (personal PIN verification)
 // ══════════════════════════════════════════════
 const PinStep={
-  _v:'',_member:null,_role:null,
+  _v:'',_member:null,_role:null,_len:4,
   start(member,role){
     this._v='';this._member=member;this._role=role;
-    this._render();
-    document.getElementById('pin-name').textContent=member.name;
+    shuffleKeypad('pin-keypad','PinStep.press','PinStep.del');
+    renderDots('pin-dots',this._len,0,'');
+    document.getElementById('pin-name').textContent=member.name+(member.company?' / '+member.company:'');
     document.getElementById('pin-err').textContent='';
     document.getElementById('pin-screen').style.display='';
   },
   press(d){
-    if(this._v.length>=4)return;
-    this._v+=d;this._render();
-    if(this._v.length===4)setTimeout(()=>this._check(),120);
+    if(this._v.length>=this._len)return;
+    this._v+=d;renderDots('pin-dots',this._len,this._v.length,'');
+    if(this._v.length===this._len)setTimeout(()=>this._check(),120);
   },
-  del(){this._v=this._v.slice(0,-1);this._render();document.getElementById('pin-err').textContent='';},
-  _render(){
-    for(let i=0;i<4;i++){
-      const d=document.getElementById('pd'+i);
-      if(d)d.className='pin-dot'+(i<this._v.length?' on':'');
-    }
-  },
+  del(){this._v=this._v.slice(0,-1);renderDots('pin-dots',this._len,this._v.length,'');document.getElementById('pin-err').textContent='';},
   _check(){
     if(this._v===this._member.pin){
-      for(let i=0;i<4;i++)document.getElementById('pd'+i).className='pin-dot ok';
+      renderDots('pin-dots',this._len,this._len,'ok');
       setTimeout(()=>{
         document.getElementById('pin-screen').style.display='none';
         Auth.enter(this._member.name,this._role,this._member);
       },350);
     } else {
-      for(let i=0;i<4;i++)document.getElementById('pd'+i).className='pin-dot err';
+      renderDots('pin-dots',this._len,this._len,'err');
       document.getElementById('pin-err').textContent='Incorrect PIN. Please try again.';
-      setTimeout(()=>{this._v='';this._render();},700);
+      setTimeout(()=>{this._v='';renderDots('pin-dots',this._len,0,'');shuffleKeypad('pin-keypad','PinStep.press','PinStep.del');},700);
     }
   },
   back(){
     document.getElementById('pin-screen').style.display='none';
     document.getElementById('login-screen').style.display='';
     document.getElementById('pin-err').textContent='';
-    this._v='';this._render();
+    this._v='';
   }
 };
 
@@ -870,6 +869,7 @@ const Nav={
     else if(v==='focus'){title.textContent="Today's Focus";c.innerHTML=V.focus(items);}
     else if(v==='schedule'){title.textContent='Schedule — Look-Ahead';c.innerHTML=V.schedule(items);}
     else if(v==='team'){title.textContent='Team Members';c.innerHTML=await V.team();}
+    else if(v==='directory'){title.textContent='Project Directory';if(S.can('canSettings')){const b=document.createElement('button');b.className='btn btn-pink btn-sm';b.innerHTML=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Entry`;b.onclick=()=>DIR.openAdd();tr.appendChild(b);}c.innerHTML=await V.directory();}
     else if(v==='roles'){title.textContent='Roles';c.innerHTML=await V.roles();}
     else if(v==='dropdowns'){title.textContent='Dropdown Lists';c.innerHTML=await V.dropdowns();}
     else if(v==='security'){title.textContent='Security';c.innerHTML=await V.security();}
@@ -957,28 +957,40 @@ const V={
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px">
       <div>
-        <div class="dash-h">By Type</div>
+        <div class="dash-h">By Type — Active / Total</div>
         <div class="tshell" style="padding:2px 0">
-          ${TKEYS.map(t=>{
-            const colors={rfi:'#3b82f6',rfa:'#8b5cf6',si:'#9333ea',cb:'#10b981',vo:'#f43f5e',issue:'var(--red)',dependency:'var(--amber)',action:'var(--green)'};
+          ${['rfi','rfa','si','cb','vo','issue'].map(t=>{
+            const colors={rfi:'#3b82f6',rfa:'#8b5cf6',si:'#9333ea',cb:'#10b981',vo:'#f43f5e',issue:'var(--red)'};
             const c=colors[t]||'var(--ink-4)';
+            const total=items.filter(x=>x.type===t).length;
+            const pending=items.filter(x=>x.type===t&&!isTerminal(x)).length;
             return`<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;border-bottom:1px solid var(--line-soft)" onclick="Nav.go('list-${t}')">
               <div style="width:6px;height:6px;border-radius:50%;background:${c};flex-shrink:0"></div>
               <span style="flex:1;font-size:0.82rem;color:var(--ink-2)">${TYPES[t].full}</span>
               ${tPill(t)}
-              <span class="mono" style="min-width:22px;text-align:right">${tc[t]}</span>
+              <span style="font-size:0.75rem;font-family:'DM Mono',monospace;color:${pending>0?'var(--red)':'var(--ink-4)'};">${pending} pending</span>
+              <span style="font-size:0.7rem;color:var(--ink-4);min-width:28px;text-align:right">${total} total</span>
             </div>`;
           }).join('')}
         </div>
       </div>
       <div>
         <div class="dash-h">By Status</div>
-        <div class="kpi-grid" style="grid-template-columns:1fr 1fr;margin-bottom:0">
+        <div class="kpi-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
           <div class="kpi c-red" onclick="F.bySt('Open')"><div class="kpi-lbl">Open</div><div class="kpi-num">${sc['Open']||0}</div></div>
           <div class="kpi c-amber" onclick="F.bySt('In Progress')"><div class="kpi-lbl">In Progress</div><div class="kpi-num">${sc['In Progress']||0}</div></div>
           <div class="kpi c-green" onclick="F.bySt('Resolved')"><div class="kpi-lbl">Resolved</div><div class="kpi-num">${sc['Resolved']||0}</div></div>
           <div class="kpi c-zinc" onclick="F.bySt('Closed')"><div class="kpi-lbl">Closed</div><div class="kpi-num">${sc['Closed']||0}</div></div>
         </div>
+        <a href="https://drive.google.com/drive/folders/1YdDZdRCG2UkpIWetUmkXkNQzvNcGd9_K?usp=drive_link" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:14px;background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);text-decoration:none;transition:all 0.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--pink)'" onmouseout="this.style.borderColor='var(--line)'">
+          <div style="width:36px;height:36px;border-radius:9px;background:var(--pink-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--pink-deep)" stroke-width="2" stroke-linecap="round"><path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+          </div>
+          <div>
+            <div style="font-size:0.85rem;font-weight:600;color:var(--ink);letter-spacing:-0.02em">📁 Project Plans & Drawings</div>
+            <div style="font-size:0.72rem;color:var(--ink-4);margin-top:2px">Open Google Drive folder →</div>
+          </div>
+        </a>
       </div>
     </div>
     ${parties.length?`<div class="dash-h">Open Items by Party</div><div class="tshell" style="padding:8px 14px;margin-bottom:24px"><table class="party-table">${parties.map(([n,c])=>`<tr><td style="font-size:0.82rem;color:var(--ink-2);padding-right:12px;white-space:nowrap">${esc(n)}</td><td style="width:100%"><div class="party-bar-bg"><div class="party-bar-fill" style="width:${Math.round(c/maxP*100)}%"></div></div></td><td style="text-align:right;font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--ink-4);padding-left:10px">${c}</td></tr>`).join('')}</table></div>`:''}
@@ -1236,7 +1248,7 @@ const V={
       ${team.map((m,i)=>`<div class="tm-row">
         <div class="tm-av">${initials(m.name)}</div>
         <div class="tm-info">
-          <div class="tm-name">${esc(m.name)}</div>
+          <div class="tm-name">${esc(m.name)}${m.company?` <span style="font-weight:400;color:var(--ink-4)">/ ${esc(m.company)}</span>`:''}</div>
           <div class="tm-meta">${esc(getRoleName(m.roleId))} · PIN: <span class="tm-pin">${'●'.repeat(m.pin.length)}</span></div>
         </div>
         <button class="tm-del" onclick="TM.edit(${i})" title="Edit PIN"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
@@ -1248,7 +1260,11 @@ const V={
       <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div class="fg"><label>Full Name *</label><input type="text" id="tm-name" placeholder="e.g. Maria Santos"></div>
-          <div class="fg"><label>Role *</label><select id="tm-role"><option value="">— Select —</option>${roles.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('')}</select></div>
+          <div class="fg"><label>Company / Organization</label><input type="text" id="tm-company" placeholder="e.g. ALPA Exponential Builders"></div>
+        </div>
+        <div class="fg">
+          <label>Role *</label>
+          <select id="tm-role"><option value="">— Select —</option>${roles.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('')}</select>
         </div>
         <div class="fg" style="max-width:200px">
           <label>Personal PIN (4 digits) *</label>
@@ -1301,8 +1317,8 @@ const V={
       <div class="dl-head"><span>Project Passcode</span><span style="font-size:0.72rem;font-weight:600;text-transform:none;color:${hasCode?'var(--green)':'var(--red)'}">${hasCode?'● Active':'○ Not set'}</span></div>
       <div style="padding:16px">
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
-          <div class="fg" style="flex:1;min-width:140px"><label>${hasCode?'New Passcode':'Passcode'} (4 digits) *</label><input type="password" id="sec-c1" maxlength="4" placeholder="e.g. 2580" inputmode="numeric" style="font-family:'DM Mono',monospace;letter-spacing:0.2em;font-size:1rem" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)"></div>
-          <div class="fg" style="flex:1;min-width:140px"><label>Confirm *</label><input type="password" id="sec-c2" maxlength="4" placeholder="Repeat" inputmode="numeric" style="font-family:'DM Mono',monospace;letter-spacing:0.2em;font-size:1rem" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)" onkeydown="if(event.key==='Enter')SEC.save()"></div>
+          <div class="fg" style="flex:1;min-width:140px"><label>${hasCode?'New Passcode':'Passcode'} (6 digits) *</label><input type="password" id="sec-c1" maxlength="6" placeholder="e.g. 258013" inputmode="numeric" style="font-family:'DM Mono',monospace;letter-spacing:0.2em;font-size:1rem" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)"></div>
+          <div class="fg" style="flex:1;min-width:140px"><label>Confirm *</label><input type="password" id="sec-c2" maxlength="6" placeholder="Repeat (6 digits)" inputmode="numeric" style="font-family:'DM Mono',monospace;letter-spacing:0.2em;font-size:1rem" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)" onkeydown="if(event.key==='Enter')SEC.save()"></div>
         </div>
         <div class="ferr" id="sec-err" style="margin-top:6px"></div>
         <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
@@ -1328,6 +1344,7 @@ const V={
 const TM={
   async add(){
     const name=document.getElementById('tm-name').value.trim();
+    const company=(document.getElementById('tm-company')?.value||'').trim();
     const roleId=document.getElementById('tm-role').value;
     const pin=document.getElementById('tm-pin').value.trim();
     const err=document.getElementById('tm-err');
@@ -1336,12 +1353,12 @@ const TM={
     if(!pin||pin.length!==4||!/^\d{4}$/.test(pin)){err.textContent='PIN must be exactly 4 digits.';return;}
     const team=await Store.team();
     if(team.some(m=>m.name.toLowerCase()===name.toLowerCase()&&m.roleId===roleId)){err.textContent='A member with this name and role already exists.';return;}
-    team.push({name,roleId,pin});
+    team.push({name,company,roleId,pin});
     await Store.saveTeam(team);
     err.textContent='';
     T.show(`${name} added`,'ok');
     Nav.render();
-    Login.init(); // refresh login role list
+    Login.init();
   },
   async remove(i){
     const team=await Store.team();team.splice(i,1);await Store.saveTeam(team);T.show('Member removed','ok');Nav.render();Login.init();
@@ -1387,7 +1404,7 @@ const SEC={
     const c1=document.getElementById('sec-c1').value.trim();
     const c2=document.getElementById('sec-c2').value.trim();
     const err=document.getElementById('sec-err');
-    if(!c1||c1.length!==4||!/^\d{4}$/.test(c1)){err.textContent='Must be exactly 4 digits.';return;}
+    if(!c1||c1.length!==6||!/^\d{6}$/.test(c1)){err.textContent='Must be exactly 6 digits.';return;}
     if(c1!==c2){err.textContent='Passcodes do not match.';return;}
     await Store.savePasscode(c1);err.textContent='';T.show('Passcode saved — active on next sign-out','ok');Nav.render();
   },
@@ -1506,7 +1523,118 @@ const T={
   show(msg,type='ok'){const w=document.getElementById('twrap'),t=document.createElement('div');t.className=`toast ${type}`;const ic=type==='ok'?`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`:`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg>`;t.innerHTML=ic+esc(msg);w.appendChild(t);setTimeout(()=>{t.style.animation='tout .18s ease forwards';setTimeout(()=>t.remove(),200);},2800);}
 };
 
-// ══ BOOT ══
+// ══════════════════════════════════════════════
+//  DIRECTORY MANAGER
+// ══════════════════════════════════════════════
+const DIR={
+  async openAdd(){
+    M.open(`<div class="mhead"><h2>Add Directory Entry</h2><button class="mclose" onclick="M.close()">${X.svg.close}</button></div>
+    <div class="mbody">
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button class="btn btn-ghost btn-sm" id="dir-tab-c" onclick="DIR.tab('contact')" style="background:var(--pink-soft);color:var(--pink-deep);border-color:var(--pink)">👤 Contact</button>
+        <button class="btn btn-ghost btn-sm" id="dir-tab-d" onclick="DIR.tab('document')">📄 Document</button>
+      </div>
+      <div id="dir-contact-form" class="fgrid">
+        <div class="fg full"><label>Full Name *</label><input type="text" id="dc-name" placeholder="e.g. Engr. Khimme Caponpon"></div>
+        <div class="fg"><label>Company / Organization</label><input type="text" id="dc-company" placeholder="e.g. ALPA Exponential Builders"></div>
+        <div class="fg"><label>Role / Designation</label><input type="text" id="dc-role" placeholder="e.g. Site Engineer"></div>
+        <div class="fg"><label>Phone</label><input type="tel" id="dc-phone" placeholder="e.g. 0917 123 4567"></div>
+        <div class="fg"><label>Email</label><input type="email" id="dc-email" placeholder="e.g. name@email.com"></div>
+        <div class="fg full"><label>Notes</label><textarea id="dc-notes" rows="2"></textarea></div>
+      </div>
+      <div id="dir-doc-form" class="fgrid" style="display:none">
+        <div class="fg full"><label>Document Title *</label><input type="text" id="dd-title" placeholder="e.g. Architectural Plans Rev 3"></div>
+        <div class="fg"><label>Type</label><input type="text" id="dd-type" placeholder="e.g. Architectural, Structural, MEP…"></div>
+        <div class="fg"><label>Revision</label><input type="text" id="dd-rev" placeholder="e.g. Rev 3"></div>
+        <div class="fg"><label>Date</label><input type="date" id="dd-date"></div>
+        <div class="fg"><label>Issued By</label><input type="text" id="dd-issued" placeholder="e.g. Architect"></div>
+        <div class="fg full"><label>Google Drive Link</label><input type="url" id="dd-link" placeholder="https://drive.google.com/…"></div>
+        <div class="fg full"><label>Notes</label><textarea id="dd-notes" rows="2"></textarea></div>
+      </div>
+      <div class="ferr" id="dir-err" style="margin-top:8px"></div>
+    </div>
+    <div class="mfoot"><button class="btn btn-ghost" onclick="M.close()">Cancel</button><button class="btn btn-pink" onclick="DIR.save()">Save Entry</button></div>`);
+    window._dirTab='contact';
+  },
+  tab(t){
+    window._dirTab=t;
+    document.getElementById('dir-contact-form').style.display=t==='contact'?'':'none';
+    document.getElementById('dir-doc-form').style.display=t==='document'?'':'none';
+    document.getElementById('dir-tab-c').style.cssText=t==='contact'?'background:var(--pink-soft);color:var(--pink-deep);border-color:var(--pink)':'';
+    document.getElementById('dir-tab-d').style.cssText=t==='document'?'background:var(--pink-soft);color:var(--pink-deep);border-color:var(--pink)':'';
+  },
+  async save(){
+    const err=document.getElementById('dir-err');
+    const dir=await Store.directory();
+    if(window._dirTab==='contact'){
+      const name=document.getElementById('dc-name').value.trim();
+      if(!name){err.textContent='Name is required.';return;}
+      dir.contacts.push({id:Date.now(),name,company:document.getElementById('dc-company').value.trim(),role:document.getElementById('dc-role').value.trim(),phone:document.getElementById('dc-phone').value.trim(),email:document.getElementById('dc-email').value.trim(),notes:document.getElementById('dc-notes').value.trim()});
+    } else {
+      const title=document.getElementById('dd-title').value.trim();
+      if(!title){err.textContent='Document title is required.';return;}
+      dir.documents.push({id:Date.now(),title,type:document.getElementById('dd-type').value.trim(),revision:document.getElementById('dd-rev').value.trim(),date:document.getElementById('dd-date').value,issued_by:document.getElementById('dd-issued').value.trim(),link:document.getElementById('dd-link').value.trim(),notes:document.getElementById('dd-notes').value.trim()});
+    }
+    await Store.saveDirectory(dir);
+    M.close();T.show('Entry saved','ok');Nav.render();
+  },
+  async removeContact(id){const dir=await Store.directory();dir.contacts=dir.contacts.filter(c=>c.id!==id);await Store.saveDirectory(dir);T.show('Removed','ok');Nav.render();},
+  async removeDoc(id){const dir=await Store.directory();dir.documents=dir.documents.filter(d=>d.id!==id);await Store.saveDirectory(dir);T.show('Removed','ok');Nav.render();},
+};
+window.DIR=DIR;
+
+// ══ Add to V ══
+V.directory=async function(){
+  const dir=await Store.directory();
+  const contacts=dir.contacts||[];
+  const docs=dir.documents||[];
+  const canEdit=S.can('canSettings');
+  return`
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+    <div>
+      <div style="font-size:1rem;font-weight:600;color:var(--ink);letter-spacing:-0.02em">Project Directory</div>
+      <div style="font-size:0.8rem;color:var(--ink-4);margin-top:2px">${contacts.length} contact${contacts.length!==1?'s':''} · ${docs.length} document${docs.length!==1?'s':''}</div>
+    </div>
+  </div>
+
+  <div class="dash-h">Contacts</div>
+  <div class="tshell" style="margin-bottom:20px">
+    ${contacts.length===0?`<div style="padding:20px;text-align:center;font-size:0.82rem;color:var(--ink-4);font-style:italic">No contacts yet.${canEdit?' Use "Add Entry" to add team members and parties.':''}</div>`:''}
+    ${contacts.map(c=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line-soft)">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--pink-soft);display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:700;color:var(--pink-deep);flex-shrink:0">${c.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.85rem;font-weight:600;color:var(--ink-2)">${esc(c.name)}${c.company?` <span style="font-weight:400;color:var(--ink-4);font-size:0.78rem">/ ${esc(c.company)}</span>`:''}</div>
+        <div style="font-size:0.72rem;color:var(--ink-4);margin-top:2px;display:flex;gap:10px;flex-wrap:wrap">
+          ${c.role?`<span>${esc(c.role)}</span>`:''}
+          ${c.phone?`<a href="tel:${esc(c.phone)}" style="color:var(--ink-3);text-decoration:none">📞 ${esc(c.phone)}</a>`:''}
+          ${c.email?`<a href="mailto:${esc(c.email)}" style="color:var(--ink-3);text-decoration:none">✉️ ${esc(c.email)}</a>`:''}
+        </div>
+        ${c.notes?`<div style="font-size:0.72rem;color:var(--ink-4);margin-top:3px;font-style:italic">${esc(c.notes)}</div>`:''}
+      </div>
+      ${canEdit?`<button class="ibtn del" onclick="DIR.removeContact(${c.id})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:''}
+    </div>`).join('')}
+  </div>
+
+  <div class="dash-h">Document Register</div>
+  <div class="tshell">
+    ${docs.length===0?`<div style="padding:20px;text-align:center;font-size:0.82rem;color:var(--ink-4);font-style:italic">No documents registered yet.${canEdit?' Use "Add Entry" to register drawings, specs, and submittals.':''}</div>`:''}
+    <table class="itable" ${docs.length===0?'style="display:none"':''}>
+      <thead><tr><th>Title</th><th>Type</th><th>Rev</th><th>Date</th><th>Issued By</th><th>Link</th>${canEdit?'<th></th>':''}</tr></thead>
+      <tbody>
+        ${docs.map(d=>`<tr>
+          <td style="font-size:0.82rem;font-weight:500;color:var(--ink-2)">${esc(d.title)}</td>
+          <td style="font-size:0.75rem;color:var(--ink-3)">${esc(d.type||'—')}</td>
+          <td style="font-size:0.75rem;font-family:'DM Mono',monospace;color:var(--ink-4)">${esc(d.revision||'—')}</td>
+          <td style="font-size:0.75rem;color:var(--ink-4)">${d.date||'—'}</td>
+          <td style="font-size:0.75rem;color:var(--ink-3)">${esc(d.issued_by||'—')}</td>
+          <td>${d.link?`<a href="${esc(d.link)}" target="_blank" rel="noopener" class="att-chip" style="margin:0"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Open</a>`:'—'}</td>
+          ${canEdit?`<td><button class="ibtn del" onclick="DIR.removeDoc(${d.id})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></td>`:''}
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+};
 window.Gate=Gate;window.Login=Login;window.PinStep=PinStep;window.Auth=Auth;
 window.Nav=Nav;window.M=M;window.Conf=Conf;window.F=F;
 window.DL=DL;window.TM=TM;window.RM=RM;window.SEC=SEC;window.T=T;window.Store=Store;
