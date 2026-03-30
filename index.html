@@ -1002,135 +1002,47 @@ const V={
 
     <div class="dash-h">Action Required</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:24px">
-
       ${[
-        {label:'RFI',type:'rfi',color:'#3b82f6'},
-        {label:'RFA',type:'rfa',color:'#8b5cf6'},
-      ].map(({label,type,color})=>{
-        const open=items.filter(x=>x.type===type&&!isTerminal(x)).length;
-        const total=items.filter(x=>x.type===type).length;
-        return`<div onclick="Nav.go('list-${type}')" style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px 14px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden" onmouseover="this.style.borderColor='${color}';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='var(--line)';this.style.transform=''">
+        {label:'RFI',type:'rfi',color:'#3b82f6',numKey:null},
+        {label:'RFA',type:'rfa',color:'#8b5cf6',numKey:null},
+        {label:'Site Instruction',type:'si',color:'#9333ea',numKey:'si_number'},
+        {label:'Const. Bulletin',type:'cb',color:'#10b981',numKey:'cb_number'},
+        {label:'Variation Order',type:'vo',color:'#f43f5e',numKey:'vo_number'},
+        {label:'Issue',type:'issue',color:'var(--red)',numKey:'issue_number'},
+      ].map(({label,type,color,numKey})=>{
+        const allOfType=[...items.filter(x=>x.type===type)].sort((a,b)=>b.id-a.id);
+        const open=allOfType.filter(x=>!isTerminal(x)).length;
+        const total=allOfType.length;
+        const latest=allOfType[0];
+        const num=latest&&numKey?latest[numKey]:'';
+        const subj=latest?(latest.subject||latest.description||''):'';
+        return`<div onclick="Nav.go('list-${type}')" style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px 14px;cursor:pointer;position:relative;overflow:hidden;min-height:90px" onmouseover="this.style.borderColor='${color}'" onmouseout="this.style.borderColor='var(--line)'">
           <div style="position:absolute;top:0;left:0;right:0;height:2.5px;background:${color}"></div>
-          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:${color};margin-bottom:6px">${label}</div>
-          <div style="font-size:1.7rem;font-weight:300;font-family:'DM Mono',monospace;color:${open>0?color:'var(--ink-3)'};line-height:1;letter-spacing:-0.04em">${open}</div>
-          <div style="font-size:0.68rem;color:var(--ink-4);margin-top:4px">open · ${total} total</div>
+          <div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:${color};margin-bottom:6px">${label}</div>
+          ${total===0
+            ? `<div style="font-size:2rem;font-weight:300;font-family:'DM Mono',monospace;color:var(--ink-4);line-height:1">0</div><div style="font-size:0.65rem;color:var(--ink-4);margin-top:4px">none issued</div>`
+            : `${num?`<div style="font-size:0.78rem;font-family:'DM Mono',monospace;font-weight:600;color:${color};margin-bottom:2px">${esc(num)}</div>`:`<div style="font-size:2rem;font-weight:300;font-family:'DM Mono',monospace;color:${open>0?color:'var(--ink-3)'};line-height:1;letter-spacing:-0.04em">${open}</div>`}
+            <div style="font-size:0.75rem;color:var(--ink-2);margin-top:2px;white-space:normal;line-height:1.4">${esc(subj.slice(0,40))}${subj.length>40?'…':''}</div>
+            <div style="font-size:0.65rem;color:var(--ink-4);margin-top:6px">${open} open · ${total} total</div>`
+          }
         </div>`;
       }).join('')}
-
-      ${(()=>{
-        // SI — show latest issued SI
-        const color='#9333ea';
-        const allSI=[...items.filter(x=>x.type==='si')].sort((a,b)=>b.id-a.id);
-        const latest=allSI[0];
-        const open=items.filter(x=>x.type==='si'&&!isTerminal(x)).length;
-        const total=allSI.length;
-        return`<div onclick="Nav.go('list-si')" style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px 14px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden" onmouseover="this.style.borderColor='${color}';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='var(--line)';this.style.transform=''">
-          <div style="position:absolute;top:0;left:0;right:0;height:2.5px;background:${color}"></div>
-          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:${color};margin-bottom:6px">Site Instruction</div>
-          ${latest?`
-          <div style="font-size:0.72rem;font-family:'DM Mono',monospace;font-weight:600;color:${color}">${esc(latest.si_number||'SI-'+latest.id)}</div>
-          <div style="font-size:0.75rem;color:var(--ink-2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((latest.subject||'').slice(0,28))}</div>
-          <div style="font-size:0.65rem;color:var(--ink-4);margin-top:4px">${open} open · ${total} total</div>
-          `:`<div style="font-size:1.7rem;font-weight:300;font-family:'DM Mono',monospace;color:var(--ink-3);line-height:1">0</div><div style="font-size:0.68rem;color:var(--ink-4);margin-top:4px">none issued</div>`}
-        </div>`;
-      })()}
-
-      ${(()=>{
-        // CB — show latest issued CB
-        const color='#10b981';
-        const allCB=[...items.filter(x=>x.type==='cb')].sort((a,b)=>b.id-a.id);
-        const latest=allCB[0];
-        const open=items.filter(x=>x.type==='cb'&&!isTerminal(x)).length;
-        const total=allCB.length;
-        return`<div onclick="Nav.go('list-cb')" style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px 14px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden" onmouseover="this.style.borderColor='${color}';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='var(--line)';this.style.transform=''">
-          <div style="position:absolute;top:0;left:0;right:0;height:2.5px;background:${color}"></div>
-          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:${color};margin-bottom:6px">Const. Bulletin</div>
-          ${latest?`
-          <div style="font-size:0.72rem;font-family:'DM Mono',monospace;font-weight:600;color:${color}">${esc(latest.cb_number||'CB-'+latest.id)}</div>
-          <div style="font-size:0.75rem;color:var(--ink-2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((latest.subject||'').slice(0,28))}</div>
-          <div style="font-size:0.65rem;color:var(--ink-4);margin-top:4px">${open} open · ${total} total</div>
-          `:`<div style="font-size:1.7rem;font-weight:300;font-family:'DM Mono',monospace;color:var(--ink-3);line-height:1">0</div><div style="font-size:0.68rem;color:var(--ink-4);margin-top:4px">none issued</div>`}
-        </div>`;
-      })()}
-
-      ${(()=>{
-        // VO — open count
-        const color='#f43f5e';
-        const open=items.filter(x=>x.type==='vo'&&!isTerminal(x)).length;
-        const total=items.filter(x=>x.type==='vo').length;
-        return`<div onclick="Nav.go('list-vo')" style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px 14px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden" onmouseover="this.style.borderColor='${color}';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='var(--line)';this.style.transform=''">
-          <div style="position:absolute;top:0;left:0;right:0;height:2.5px;background:${color}"></div>
-          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:${color};margin-bottom:6px">Variation Order</div>
-          <div style="font-size:1.7rem;font-weight:300;font-family:'DM Mono',monospace;color:${open>0?color:'var(--ink-3)'};line-height:1;letter-spacing:-0.04em">${open}</div>
-          <div style="font-size:0.68rem;color:var(--ink-4);margin-top:4px">open · ${total} total</div>
-        </div>`;
-      })()}
-
-      ${(()=>{
-        // Issue — High / Medium / Low breakdown
-        const color='var(--red)';
-        const active=items.filter(x=>x.type==='issue'&&!isTerminal(x));
-        const high=active.filter(x=>x.severity==='High'||x.severity==='Critical').length;
-        const med=active.filter(x=>x.severity==='Medium').length;
-        const low=active.filter(x=>x.severity==='Low').length;
-        const total=items.filter(x=>x.type==='issue').length;
-        return`<div onclick="Nav.go('list-issue')" style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px 14px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden" onmouseover="this.style.borderColor='var(--red)';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='var(--line)';this.style.transform=''">
-          <div style="position:absolute;top:0;left:0;right:0;height:2.5px;background:var(--red)"></div>
-          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--red);margin-bottom:8px">Issue</div>
-          <div style="display:flex;gap:8px;align-items:flex-end">
-            <div style="text-align:center">
-              <div style="font-size:1.3rem;font-weight:300;font-family:'DM Mono',monospace;color:${high>0?'var(--red)':'var(--ink-4)'};line-height:1">${high}</div>
-              <div style="font-size:0.58rem;font-weight:700;color:var(--red);margin-top:2px">HIGH</div>
-            </div>
-            <div style="text-align:center">
-              <div style="font-size:1.3rem;font-weight:300;font-family:'DM Mono',monospace;color:${med>0?'#92400e':'var(--ink-4)'};line-height:1">${med}</div>
-              <div style="font-size:0.58rem;font-weight:700;color:#92400e;margin-top:2px">MED</div>
-            </div>
-            <div style="text-align:center">
-              <div style="font-size:1.3rem;font-weight:300;font-family:'DM Mono',monospace;color:${low>0?'#15803d':'var(--ink-4)'};line-height:1">${low}</div>
-              <div style="font-size:0.58rem;font-weight:700;color:#15803d;margin-top:2px">LOW</div>
-            </div>
-          </div>
-          <div style="font-size:0.65rem;color:var(--ink-4);margin-top:6px">${active.length} open · ${total} total</div>
-        </div>`;
-      })()}
-
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px">
-      <div>
-        <div class="dash-h">By Type — Open / Total</div>
-        <div class="tshell" style="overflow:hidden">
-          <table style="width:100%;border-collapse:collapse;font-size:0.8rem">
-            <thead><tr style="background:var(--bg)">
-              <th style="padding:6px 12px;text-align:left;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);border-bottom:1px solid var(--line)">Type</th>
-              <th style="padding:6px 12px;text-align:center;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);border-bottom:1px solid var(--line)">Open</th>
-              <th style="padding:6px 12px;text-align:right;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);border-bottom:1px solid var(--line)">Total</th>
-            </tr></thead>
-            <tbody>
-            ${['rfi','rfa','si','cb','vo','issue'].map(t=>{
-              const colors={rfi:'#3b82f6',rfa:'#8b5cf6',si:'#9333ea',cb:'#10b981',vo:'#f43f5e',issue:'var(--red)'};
-              const total=items.filter(x=>x.type===t).length;
-              const open=items.filter(x=>x.type===t&&!isTerminal(x)).length;
-              return`<tr style="border-bottom:1px solid var(--line-soft);cursor:pointer" onclick="Nav.go('list-${t}')" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
-                <td style="padding:7px 12px;display:flex;align-items:center;gap:7px"><div style="width:5px;height:5px;border-radius:50%;background:${colors[t]};flex-shrink:0"></div>${tPill(t)}</td>
-                <td style="padding:7px 12px;text-align:center;font-family:'DM Mono',monospace;font-weight:600;color:${open>0?colors[t]:'var(--ink-4)'}">${open}</td>
-                <td style="padding:7px 12px;text-align:right;font-family:'DM Mono',monospace;color:var(--ink-4)">${total}</td>
-              </tr>`;
-            }).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div>
-        <div class="dash-h">By Status</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div class="kpi c-red" onclick="F.bySt('Open')" style="padding:12px"><div class="kpi-lbl">Open</div><div class="kpi-num">${sc['Open']||0}</div></div>
-          <div class="kpi c-amber" onclick="F.bySt('In Progress')" style="padding:12px"><div class="kpi-lbl">In Progress</div><div class="kpi-num">${sc['In Progress']||0}</div></div>
-          <div class="kpi c-green" onclick="F.bySt('Resolved')" style="padding:12px"><div class="kpi-lbl">Resolved</div><div class="kpi-num">${sc['Resolved']||0}</div></div>
-          <div class="kpi c-zinc" onclick="F.bySt('Closed')" style="padding:12px"><div class="kpi-lbl">Closed</div><div class="kpi-num">${sc['Closed']||0}</div></div>
-        </div>
-      </div>
+    <div class="dash-h">By Type — Open / Total</div>
+    <div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;margin-bottom:24px">
+      ${['rfi','rfa','si','cb','vo','issue'].map((t,i)=>{
+        const colors={rfi:'#3b82f6',rfa:'#8b5cf6',si:'#9333ea',cb:'#10b981',vo:'#f43f5e',issue:'var(--red)'};
+        const total=items.filter(x=>x.type===t).length;
+        const open=items.filter(x=>x.type===t&&!isTerminal(x)).length;
+        return`<div onclick="Nav.go('list-${t}')" style="display:flex;align-items:center;gap:10px;padding:6px 14px;border-bottom:${i<5?'1px solid var(--line-soft)':'none'};cursor:pointer" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+          <div style="width:5px;height:5px;border-radius:50%;background:${colors[t]};flex-shrink:0"></div>
+          ${tPill(t)}
+          <span style="flex:1;font-size:0.78rem;color:var(--ink-3)">${TYPES[t].label}</span>
+          <span style="font-size:0.75rem;font-family:'DM Mono',monospace;color:${open>0?colors[t]:'var(--ink-4)'};min-width:20px;text-align:right">${open}</span>
+          <span style="font-size:0.7rem;color:var(--ink-4);margin-left:4px">/ ${total}</span>
+        </div>`;
+      }).join('')}
     </div>
 
     ${parties.length?`<div class="dash-h">Open Items by Party</div><div class="tshell" style="padding:8px 14px;margin-bottom:24px"><table class="party-table">${parties.map(([n,c])=>`<tr><td style="font-size:0.82rem;color:var(--ink-2);padding-right:12px;white-space:nowrap">${esc(n)}</td><td style="width:100%"><div class="party-bar-bg"><div class="party-bar-fill" style="width:${Math.round(c/maxP*100)}%"></div></div></td><td style="text-align:right;font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--ink-4);padding-left:10px">${c}</td></tr>`).join('')}</table></div>`:''}
