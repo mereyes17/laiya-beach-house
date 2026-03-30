@@ -8,6 +8,7 @@
 // ══ FIREBASE INIT ══
 import{initializeApp}from'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
 import{getFirestore,doc,getDoc,setDoc,collection,getDocs,deleteDoc,runTransaction,onSnapshot}from'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+import{getAuth,signInAnonymously}from'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 
 const firebaseConfig={
   apiKey:"AIzaSyB7venUZvsg2KYp3pRZMKn4u12pAWT7uAk",
@@ -19,8 +20,19 @@ const firebaseConfig={
 };
 const fbApp=initializeApp(firebaseConfig);
 const db=getFirestore(fbApp);
+const auth=getAuth(fbApp);
+
+// Sign in anonymously — gives each browser session a valid auth token
+// Firestore rules will require request.auth != null
+signInAnonymously(auth).then(()=>{
+  window._fbReady=true;
+}).catch(e=>{
+  console.error('Firebase auth error:',e);
+  // Fall back to ready anyway — rules may still allow if misconfigured
+  window._fbReady=true;
+});
+
 window._db=db;
-window._fbReady=true;
 
 async function fbGet(key,def){
   try{const snap=await getDoc(doc(db,'config',key));return snap.exists()?snap.data().v:def;}catch{return def;}
@@ -49,15 +61,12 @@ async function fbNextId(){
   });
   return n;
 }
-
-// Real-time listener — updates item cache when Firestore changes
 function fbListen(onUpdate){
   return onSnapshot(collection(db,'items'),snap=>{
     const items=snap.docs.map(d=>d.data());
     onUpdate(items);
   });
 }
-
 window._fb={get:fbGet,set:fbSet,getItems:fbGetItems,saveItems:fbSaveItems,nextId:fbNextId,listen:fbListen};
 </script>
 <style>
@@ -568,6 +577,7 @@ const TYPES={
     {k:'status',l:'Status',t:'drop',dk:'si_status',req:true,ce:true},
     {k:'acknowledgment',l:'Contractor Acknowledgment',t:'area',span:2,ce:true},
     {k:'acknowledged_by',l:'Acknowledged By',t:'text',ce:true},{k:'date_acknowledged',l:'Date Acknowledged',t:'date',ce:true},
+    {k:'date_completed',l:'Date Completed',t:'date',ce:true},
   ]},
   cb:{label:'CB',full:'Construction Bulletin',hasAtts:true,fields:[
     {k:'cb_number',l:'CB #',t:'text',req:true},{k:'subject',l:'Subject',t:'text',req:true,span:2},
@@ -579,6 +589,7 @@ const TYPES={
     {k:'contractor_action',l:'Contractor Action Required',t:'area',span:2},
     {k:'status',l:'Status',t:'drop',dk:'cb_status',req:true,ce:true},
     {k:'contractor_response',l:'Contractor Response',t:'area',span:2,ce:true},
+    {k:'date_completed',l:'Date Completed / Acknowledged',t:'date',ce:true},
   ]},
   vo:{label:'VO',full:'Variation Order',hasAtts:true,fields:[
     {k:'vo_number',l:'VO #',t:'text',req:true},{k:'subject',l:'Subject',t:'text',req:true,span:2},
@@ -597,7 +608,9 @@ const TYPES={
     {k:'description',l:'Description',t:'area',req:true,span:2},{k:'severity',l:'Severity',t:'drop',dk:'severity',req:true},
     {k:'reported_by',l:'Reported By',t:'drop',dk:'submitted_by',req:true},{k:'date_reported',l:'Date Reported',t:'date',req:true},
     {k:'assigned_to',l:'Assigned To',t:'drop',dk:'assigned_to'},{k:'due_date',l:'Target Resolution Date',t:'date'},
-    {k:'status',l:'Status',t:'drop',dk:'status',req:true,ce:true},{k:'resolution_notes',l:'Resolution Notes',t:'area',span:2,ce:true}
+    {k:'status',l:'Status',t:'drop',dk:'status',req:true,ce:true},
+    {k:'resolution_notes',l:'Resolution Notes',t:'area',span:2,ce:true},
+    {k:'date_completed',l:'Date Resolved / Closed',t:'date',ce:true}
   ]},
   dependency:{label:'Hold',full:'Time Dependency / Schedule Hold',fields:[
     {k:'item_number',l:'Item #',t:'text',req:true},{k:'description',l:'Description',t:'area',req:true,span:2},
@@ -615,11 +628,18 @@ const TYPES={
 };
 const TKEYS=Object.keys(TYPES);
 const STATUSES=['Open','In Progress','Resolved','Closed'];
-const TERMINAL_STATUSES=new Set(['Closed','Resolved','Completed','Superseded','Approved','Rejected','Withdrawn']);
+const TERMINAL_STATUSES=new Set(['Closed','Resolved','Completed','Superseded','Approved','Rejected','Withdrawn','Acknowledged']);
 const isTerminal=i=>TERMINAL_STATUSES.has(i.status);
 const now=()=>new Date().toISOString().split('T')[0];
 const nowFull=()=>new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
-const overdue=i=>{if(!i.due_date||isTerminal(i))return false;return i.due_date<now();};
+// Overdue: only if active AND past due date AND not completed on time
+const overdue=i=>{
+  if(!i.due_date)return false;
+  if(isTerminal(i))return false;
+  // If completed date is set and was on or before due date — not overdue
+  if(i.date_completed&&i.date_completed<=i.due_date)return false;
+  return i.due_date<now();
+};
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
 // ══════════════════════════════════════════════
@@ -665,11 +685,19 @@ const Gate={
   _v:'',_len:6,
   async init(){
     this._v='';
-    shuffleKeypad('gate-keypad','Gate.press','Gate.del');
-    renderDots('gate-dots',this._len,0,'');
     const code=await Store.passcode();
-    if(!code){this._showLogin();}
-    else{document.getElementById('gate-hint').textContent='Contact your Project Manager if you have forgotten the passcode.';}
+    if(!code){this._showLogin();return;}
+    // Support legacy 4-digit codes — detect length from stored code
+    this._len=code.length||6;
+    // If legacy 4-digit — prompt to upgrade
+    if(this._len<6){
+      document.getElementById('gate-hint').textContent='⚠️ Your passcode is '+this._len+' digits. Enter it now, then upgrade to 6 digits in Settings → Security.';
+    } else {
+      document.getElementById('gate-hint').textContent='Contact your Project Manager if you have forgotten the passcode.';
+    }
+    // Update dots count to match actual code length
+    renderDots('gate-dots',this._len,0,'');
+    shuffleKeypad('gate-keypad','Gate.press','Gate.del');
   },
   press(d){
     if(this._v.length>=this._len)return;
