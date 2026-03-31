@@ -603,7 +603,7 @@ const TYPES={
     {k:'contractor_notes',l:'Contractor Notes',t:'area',span:2,ce:true},
     {k:'notes',l:'PM Notes',t:'area',span:2},
   ]},
-  issue:{label:'Issue',full:'Issue / Deficiency',fields:[
+  issue:{label:'Issue',full:'Issue',fields:[
     {k:'issue_number',l:'Issue #',t:'text',req:true},{k:'location',l:'Location',t:'drop',dk:'location',req:true},
     {k:'description',l:'Description',t:'area',req:true,span:2},{k:'severity',l:'Severity',t:'drop',dk:'severity',req:true},
     {k:'reported_by',l:'Reported By',t:'drop',dk:'submitted_by',req:true},{k:'date_reported',l:'Date Reported',t:'date',req:true},
@@ -1001,44 +1001,94 @@ const V={
     </a>
 
     <div class="dash-h">Action Required</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:24px">
+
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+      <span style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);white-space:nowrap">Latest Instructions &amp; Issues</span>
+      <div style="flex:1;height:1px;background:var(--line)"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1.6fr;gap:8px;margin-bottom:10px">
+      ${(()=>{
+        const siAll=[...items.filter(x=>x.type==='si')].sort((a,b)=>b.id-a.id);
+        const siLatest=siAll[0];const siOpen=siAll.filter(x=>!isTerminal(x)).length;
+        const cbAll=[...items.filter(x=>x.type==='cb')].sort((a,b)=>b.id-a.id);
+        const cbLatest=cbAll[0];const cbOpen=cbAll.filter(x=>!isTerminal(x)).length;
+        const issAll=items.filter(x=>x.type==='issue');
+        const issActive=issAll.filter(x=>!isTerminal(x));
+        const high=issActive.filter(x=>x.severity==='High'||x.severity==='Critical').length;
+        const med=issActive.filter(x=>x.severity==='Medium').length;
+        const low=issActive.filter(x=>x.severity==='Low').length;
+        return[
+          `<div onclick="Nav.go('list-si')" style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;cursor:pointer;position:relative;overflow:hidden" onmouseover="this.style.borderColor='#9333ea'" onmouseout="this.style.borderColor='var(--line)'">
+            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:#9333ea"></div>
+            <div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#9333ea;margin-bottom:8px">Site Instruction</div>
+            ${siLatest
+              ?`<div style="font-size:1.1rem;font-family:'DM Mono',monospace;font-weight:700;color:#9333ea;margin-bottom:4px">${esc(siLatest.si_number||'SI-'+siLatest.id)}</div>
+                <div style="font-size:0.75rem;color:var(--ink-2);line-height:1.5">${esc((siLatest.subject||'').slice(0,55))}</div>`
+              :`<div style="font-size:2.4rem;font-weight:300;font-family:'DM Mono',monospace;color:var(--ink-4);line-height:1">0</div><div style="font-size:0.65rem;color:var(--ink-4);margin-top:4px">none issued</div>`}
+          </div>`,
+          `<div onclick="Nav.go('list-cb')" style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;cursor:pointer;position:relative;overflow:hidden" onmouseover="this.style.borderColor='#10b981'" onmouseout="this.style.borderColor='var(--line)'">
+            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:#10b981"></div>
+            <div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#10b981;margin-bottom:8px">Const. Bulletin</div>
+            ${cbLatest
+              ?`<div style="font-size:1.1rem;font-family:'DM Mono',monospace;font-weight:700;color:#10b981;margin-bottom:4px">${esc(cbLatest.cb_number||'CB-'+cbLatest.id)}</div>
+                <div style="font-size:0.75rem;color:var(--ink-2);line-height:1.5">${esc((cbLatest.subject||'').slice(0,55))}</div>`
+              :`<div style="font-size:2.4rem;font-weight:300;font-family:'DM Mono',monospace;color:var(--ink-4);line-height:1">0</div><div style="font-size:0.65rem;color:var(--ink-4);margin-top:4px">none issued</div>`}
+          </div>`,
+          `<div onclick="Nav.go('list-issue')" style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;cursor:pointer;position:relative;overflow:hidden" onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--line)'">
+            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--red)"></div>
+            <div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--red);margin-bottom:8px">Issue</div>
+            <div style="display:flex;gap:0">
+              <div style="flex:1;text-align:center;padding:6px 4px">
+                <div style="font-size:2rem;font-weight:300;font-family:'DM Mono',monospace;line-height:1;color:${high>0?'var(--red)':'var(--ink-4)'}">${high}</div>
+                <div style="font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--red);margin-top:4px">High</div>
+              </div>
+              <div style="width:1px;background:var(--line);margin:4px 0"></div>
+              <div style="flex:1;text-align:center;padding:6px 4px">
+                <div style="font-size:2rem;font-weight:300;font-family:'DM Mono',monospace;line-height:1;color:${med>0?'#92400e':'var(--ink-4)'}">${med}</div>
+                <div style="font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#92400e;margin-top:4px">Medium</div>
+              </div>
+              <div style="width:1px;background:var(--line);margin:4px 0"></div>
+              <div style="flex:1;text-align:center;padding:6px 4px">
+                <div style="font-size:2rem;font-weight:300;font-family:'DM Mono',monospace;line-height:1;color:${low>0?'#15803d':'var(--ink-4)'}">${low}</div>
+                <div style="font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#15803d;margin-top:4px">Low</div>
+              </div>
+            </div>
+          </div>`
+        ].join('');
+      })()}
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+      <span style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);white-space:nowrap">Pending Requests &amp; Orders</span>
+      <div style="flex:1;height:1px;background:var(--line)"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px">
       ${[
-        {label:'RFI',type:'rfi',color:'#3b82f6',numKey:null},
-        {label:'RFA',type:'rfa',color:'#8b5cf6',numKey:null},
-        {label:'Site Instruction',type:'si',color:'#9333ea',numKey:'si_number'},
-        {label:'Const. Bulletin',type:'cb',color:'#10b981',numKey:'cb_number'},
-        {label:'Variation Order',type:'vo',color:'#f43f5e',numKey:'vo_number'},
-        {label:'Issue',type:'issue',color:'var(--red)',numKey:'issue_number'},
-      ].map(({label,type,color,numKey})=>{
-        const allOfType=[...items.filter(x=>x.type===type)].sort((a,b)=>b.id-a.id);
-        const open=allOfType.filter(x=>!isTerminal(x)).length;
-        const total=allOfType.length;
-        const latest=allOfType[0];
-        const num=latest&&numKey?latest[numKey]:'';
-        const subj=latest?(latest.subject||latest.description||''):'';
-        return`<div onclick="Nav.go('list-${type}')" style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px 14px;cursor:pointer;position:relative;overflow:hidden;min-height:90px" onmouseover="this.style.borderColor='${color}'" onmouseout="this.style.borderColor='var(--line)'">
-          <div style="position:absolute;top:0;left:0;right:0;height:2.5px;background:${color}"></div>
-          <div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:${color};margin-bottom:6px">${label}</div>
-          ${total===0
-            ? `<div style="font-size:2rem;font-weight:300;font-family:'DM Mono',monospace;color:var(--ink-4);line-height:1">0</div><div style="font-size:0.65rem;color:var(--ink-4);margin-top:4px">none issued</div>`
-            : `${num?`<div style="font-size:0.78rem;font-family:'DM Mono',monospace;font-weight:600;color:${color};margin-bottom:2px">${esc(num)}</div>`:`<div style="font-size:2rem;font-weight:300;font-family:'DM Mono',monospace;color:${open>0?color:'var(--ink-3)'};line-height:1;letter-spacing:-0.04em">${open}</div>`}
-            <div style="font-size:0.75rem;color:var(--ink-2);margin-top:2px;white-space:normal;line-height:1.4">${esc(subj.slice(0,40))}${subj.length>40?'…':''}</div>
-            <div style="font-size:0.65rem;color:var(--ink-4);margin-top:6px">${open} open · ${total} total</div>`
-          }
+        {label:'RFI',type:'rfi',color:'#3b82f6'},
+        {label:'RFA',type:'rfa',color:'#8b5cf6'},
+        {label:'Variation Order',type:'vo',color:'#f43f5e'},
+      ].map(({label,type,color})=>{
+        const open=items.filter(x=>x.type===type&&!isTerminal(x)).length;
+        const total=items.filter(x=>x.type===type).length;
+        return`<div onclick="Nav.go('list-${type}')" style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;cursor:pointer;position:relative;overflow:hidden" onmouseover="this.style.borderColor='${color}'" onmouseout="this.style.borderColor='var(--line)'">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${color}"></div>
+          <div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:${color};margin-bottom:8px">${label}</div>
+          <div style="font-size:2.4rem;font-weight:300;font-family:'DM Mono',monospace;line-height:1;letter-spacing:-0.04em;color:${open>0?color:'var(--ink-4)'}">${total===0?'0':open}</div>
+          <div style="font-size:0.65rem;color:var(--ink-4);margin-top:6px">${total===0?'none issued':`${open} open · ${total} total`}</div>
         </div>`;
       }).join('')}
     </div>
 
     <div class="dash-h">By Type — Open / Total</div>
     <div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;margin-bottom:24px">
-      ${['rfi','rfa','si','cb','vo','issue'].map((t,i)=>{
+      ${['si','cb','issue','rfi','rfa','vo'].map((t,i)=>{
         const colors={rfi:'#3b82f6',rfa:'#8b5cf6',si:'#9333ea',cb:'#10b981',vo:'#f43f5e',issue:'var(--red)'};
         const total=items.filter(x=>x.type===t).length;
         const open=items.filter(x=>x.type===t&&!isTerminal(x)).length;
         return`<div onclick="Nav.go('list-${t}')" style="display:flex;align-items:center;gap:10px;padding:6px 14px;border-bottom:${i<5?'1px solid var(--line-soft)':'none'};cursor:pointer" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
           <div style="width:5px;height:5px;border-radius:50%;background:${colors[t]};flex-shrink:0"></div>
           ${tPill(t)}
-          <span style="flex:1;font-size:0.78rem;color:var(--ink-3)">${TYPES[t].label}</span>
+          <span style="flex:1;font-size:0.78rem;color:var(--ink-3)">${TYPES[t].full}</span>
           <span style="font-size:0.75rem;font-family:'DM Mono',monospace;color:${open>0?colors[t]:'var(--ink-4)'};min-width:20px;text-align:right">${open}</span>
           <span style="font-size:0.7rem;color:var(--ink-4);margin-left:4px">/ ${total}</span>
         </div>`;
