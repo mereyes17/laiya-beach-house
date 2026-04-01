@@ -587,25 +587,32 @@ function defaultDrops(){return{
 // ══════════════════════════════════════════════
 const TYPES={
   rfi:{label:'RFI',full:'Request for Information',hasAtts:true,driveLink:'https://drive.google.com/drive/folders/1OwwjElI5mlJzaVl_NYaRA1cKuaKd25dy?usp=drive_link',driveName:'RFI Folder',fields:[
-    {k:'rfi_number',l:'RFI #',t:'text',req:true},{k:'subject',l:'Subject',t:'text',req:true,span:2},
+    {k:'rfi_number',l:'RFI #',t:'text',req:true},
+    {k:'subject',l:'Subject',t:'text',req:true,span:2},
     {k:'description',l:'Description / Information Requested',t:'area',req:true,span:2},
     {k:'submitted_by',l:'Submitted By',t:'drop',dk:'submitted_by',req:true,ce:true},
-    {k:'date_submitted',l:'Date Submitted',t:'date',req:true,ce:true},{k:'due_date',l:'Response Required By',t:'date'},
+    {k:'date_submitted',l:'Date Submitted',t:'date',req:true,ce:true},
+    {k:'due_date',l:'Response Required By',t:'date'},
     {k:'location',l:'Location',t:'drop',dk:'location',ce:true},
-    {k:'status',l:'Status',t:'drop',dk:'status',req:true,ce:true},
-    {k:'response',l:'Response / Reply',t:'area',span:2,ce:true},
-    {k:'responded_by',l:'Responded By',t:'text',ce:true},{k:'date_responded',l:'Date Responded',t:'date',ce:true},
+    // Response fields — only shown when editing
+    {k:'status',l:'Status',t:'drop',dk:'status',req:true,ce:true,responseOnly:true},
+    {k:'response',l:'Response / Reply',t:'area',span:2,ce:true,responseOnly:true},
+    {k:'responded_by',l:'Responded By',t:'text',ce:true,responseOnly:true},
+    {k:'date_responded',l:'Date Responded',t:'date',ce:true,responseOnly:true},
   ]},
   rfa:{label:'RFA',full:'Request for Approval',hasAtts:true,driveLink:'https://drive.google.com/drive/folders/1L9acaVxQJAkFhYi2KAEkwYJ3Hoe-BZRq?usp=drive_link',driveName:'RFA Folder',fields:[
-    {k:'rfa_number',l:'RFA #',t:'text',req:true},{k:'subject',l:'Subject',t:'text',req:true,span:2},
+    {k:'rfa_number',l:'RFA #',t:'text',req:true},
+    {k:'subject',l:'Subject',t:'text',req:true,span:2},
     {k:'description',l:'Description / What Requires Approval',t:'area',req:true,span:2},
     {k:'submitted_by',l:'Submitted By',t:'drop',dk:'submitted_by',req:true,ce:true},
-    {k:'date_submitted',l:'Date Submitted',t:'date',req:true,ce:true},{k:'due_date',l:'Approval Required By',t:'date'},
+    {k:'date_submitted',l:'Date Submitted',t:'date',req:true,ce:true},
+    {k:'due_date',l:'Approval Required By',t:'date'},
     {k:'location',l:'Location',t:'drop',dk:'location',ce:true},
-    {k:'status',l:'Status',t:'drop',dk:'status',req:true,ce:true},
-    {k:'approved_by',l:'Approved By',t:'drop',dk:'approved_by',ce:true},
-    {k:'decision',l:'Decision',t:'drop',dk:'decision',ce:true},
-    {k:'notes',l:'Notes / Comments',t:'area',span:2,ce:true},
+    // Response fields — only shown when editing
+    {k:'status',l:'Status',t:'drop',dk:'status',req:true,ce:true,responseOnly:true},
+    {k:'approved_by',l:'Approved By',t:'drop',dk:'approved_by',ce:true,responseOnly:true},
+    {k:'decision',l:'Decision',t:'drop',dk:'decision',ce:true,responseOnly:true},
+    {k:'notes',l:'Notes / Comments',t:'area',span:2,ce:true,responseOnly:true},
   ]},
   si:{label:'SI',full:'Site Instruction',hasAtts:true,fields:[
     {k:'si_number',l:'SI #',t:'text',req:true},{k:'subject',l:'Subject',t:'text',req:true,span:2},
@@ -1681,7 +1688,9 @@ const M={
       return company?`${name} — ${company}`:name;
     })();
 
-    const fh=td.fields.map(f=>{
+    const isNew=!item&&!ctr;
+
+    const buildFields=(fields)=>fields.map(f=>{
       const dis=ctr&&!f.ce;
       const defaultStatus={si:'Issued',cb:'Issued',vo:'Draft'}[type]||'Open';
       const isNumField=f.k===numKey&&!item;
@@ -1690,12 +1699,13 @@ const M={
       const ce=f.ce?'cef':'';
       let inp='';
       if(isSubmitterField){
-        // Auto-filled from logged-in user — show as read-only text
-        inp=`<input type="text" id="f_${f.k}" value="${esc(String(val))}" readonly style="background:var(--bg);color:var(--ink-2);font-weight:500;">
-        <div style="font-size:0.68rem;color:var(--ink-4);margin-top:2px">Auto-filled from your account</div>`;
-      } else if(f.t==='drop'){const opts=f.dk?(drops[f.dk]||[]):[];inp=`<select id="f_${f.k}" class="${ce}" ${dis?'disabled':''}>${f.req?'':'<option value="">— Select —</option>'}${opts.map(o=>`<option value="${esc(o)}" ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;}
-      else if(f.t==='area'){inp=`<textarea id="f_${f.k}" rows="3" class="${ce}" ${dis?'disabled':''}>${esc(val)}</textarea>`;}
-      else{
+        inp=`<input type="text" id="f_${f.k}" value="${esc(String(val))}" readonly style="background:var(--bg);color:var(--ink-2);font-weight:500;"><div style="font-size:0.68rem;color:var(--ink-4);margin-top:2px">Auto-filled from your account</div>`;
+      } else if(f.t==='drop'){
+        const opts=f.dk?(drops[f.dk]||[]):[];
+        inp=`<select id="f_${f.k}" class="${ce}" ${dis?'disabled':''}>${f.req?'':'<option value="">— Select —</option>'}${opts.map(o=>`<option value="${esc(o)}" ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
+      } else if(f.t==='area'){
+        inp=`<textarea id="f_${f.k}" rows="3" class="${ce}" ${dis?'disabled':''}>${esc(val)}</textarea>`;
+      } else {
         const isAutoNum=isNumField&&autoNum;
         inp=`<input type="${f.t}" id="f_${f.k}" value="${esc(String(val))}" class="${ce}" ${dis?'disabled':''}${isAutoNum?' readonly style="background:var(--bg);color:var(--ink-3);font-family:\'DM Mono\',monospace;font-weight:600;"':''}>`;
         if(isAutoNum)inp+=`<div style="font-size:0.68rem;color:var(--ink-4);margin-top:2px">Auto-generated — updates when saved</div>`;
@@ -1719,9 +1729,19 @@ const M={
       <button class="att-add-btn" onclick="(()=>{const l=document.getElementById('form-atts');const r=document.createElement('div');r.className='att-row';r.innerHTML='<input class=\\'url\\' type=\\'url\\' placeholder=\\'https://drive.google.com/…\\'><span class=\\'att-sep\\'>as</span><input type=\\'text\\' placeholder=\\'Display name\\' style=\\'flex:1.2\\'><button class=\\'att-del\\' onclick=\\'this.closest(\\\\\'.att-row\\\\\').remove()\\'><svg width=\\'13\\' height=\\'13\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\' stroke-linecap=\\'round\\'><line x1=\\'18\\' y1=\\'6\\' x2=\\'6\\' y2=\\'18\\'/><line x1=\\'6\\' y1=\\'6\\' x2=\\'18\\' y2=\\'18\\'/></svg></button>';l.appendChild(r);r.querySelector('input').focus();})()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add file link</button>
     </div>`:'';
 
+    // Split fields: request fields + att section + response fields
+    const reqFields=td.fields.filter(f=>!f.responseOnly);
+    const resFields=td.fields.filter(f=>f.responseOnly);
+    const fhReq=buildFields(reqFields);
+    const fhRes=resFields.length&&!isNew?buildFields(resFields):null;
+
     this.open(`<div class="mhead"><h2>${title}</h2><button class="mclose" onclick="M.close()">${X.svg.close}</button></div>
     <div class="mbody">${ctr?`<div class="ctr-hint"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Fields marked ✎ are editable by your role.</div>`:''}
-    <div class="ffb err" id="ffb"></div><div class="fgrid">${fh}${attSection}</div></div>
+    <div class="ffb err" id="ffb"></div>
+    <div class="fgrid">${fhReq}</div>
+    ${attSection}
+    ${fhRes?`<div style="border-top:1px solid var(--line);margin:16px 0 12px;padding-top:14px"><div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);margin-bottom:12px">Response / Decision</div><div class="fgrid">${fhRes}</div></div>`:''}
+    </div>
     <div class="mfoot"><button class="btn btn-ghost" onclick="M.close()">Cancel</button><button class="btn btn-pink" onclick="M.save('${type}',${!!item},${ctr})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>${item?'Save Changes':'Create Item'}</button></div>`);
   },
 
