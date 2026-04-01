@@ -267,11 +267,12 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
 
 /* ── MODAL ── */
 .moverlay{position:fixed;inset:0;background:rgba(24,24,27,0.4);display:flex;align-items:flex-start;justify-content:center;z-index:500;padding:44px 16px 24px;overflow-y:auto;backdrop-filter:blur(2px)}
-.mbox{background:var(--white);border-radius:12px;width:100%;max-width:680px;box-shadow:0 8px 40px rgba(0,0,0,0.14);flex-shrink:0}
-.mhead{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line)}
+.mbox{background:var(--white);border-radius:12px;width:100%;max-width:680px;box-shadow:0 8px 40px rgba(0,0,0,0.14);flex-shrink:0;display:flex;flex-direction:column;max-height:calc(100vh - 80px)}
+.mhead{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line);flex-shrink:0}
 .mhead h2{font-size:0.9rem;font-weight:600;color:var(--ink);letter-spacing:-0.02em}
 .mclose{background:none;border:none;cursor:pointer;color:var(--ink-4);padding:4px;border-radius:5px;display:flex;transition:all 0.12s}.mclose:hover{background:var(--line-soft);color:var(--ink)}
-.mbody{padding:20px}.mfoot{padding:12px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;background:var(--bg)}
+.mbody{padding:20px;overflow-y:auto;flex:1}
+.mfoot{padding:12px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;background:var(--bg);flex-shrink:0;border-radius:0 0 12px 12px}
 .tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .topt{padding:13px 8px;border:1.5px solid var(--line);border-radius:var(--r-lg);cursor:pointer;text-align:center;transition:all 0.12s}
 .topt:hover{border-color:var(--pink-mid);background:var(--pink-soft)}.topt.sel{border-color:var(--pink);background:var(--pink-soft)}
@@ -615,48 +616,67 @@ const TYPES={
     {k:'notes',l:'Notes / Comments',t:'area',span:2,ce:true,responseOnly:true},
   ]},
   si:{label:'SI',full:'Site Instruction',hasAtts:true,fields:[
-    {k:'si_number',l:'SI #',t:'text',req:true},{k:'subject',l:'Subject',t:'text',req:true,span:2},
+    {k:'si_number',l:'SI #',t:'text',req:true},
+    {k:'subject',l:'Subject',t:'text',req:true,span:2},
     {k:'description',l:'Description / Instruction',t:'area',req:true,span:2},
-    {k:'issued_by',l:'Issued By',t:'drop',dk:'issued_by',req:true},{k:'date_issued',l:'Date Issued',t:'date',req:true},
-    {k:'location',l:'Location',t:'drop',dk:'location'},{k:'due_date',l:'Comply By Date',t:'date'},
+    {k:'issued_by',l:'Issued By',t:'drop',dk:'issued_by',req:true},
+    {k:'date_issued',l:'Date Issued',t:'date',req:true},
+    {k:'location',l:'Location',t:'drop',dk:'location'},
+    {k:'due_date',l:'Comply By Date',t:'date'},
     {k:'drawings_referenced',l:'Drawings Referenced',t:'text',span:2},
-    {k:'status',l:'Status',t:'drop',dk:'si_status',req:true,ce:true},
-    {k:'acknowledgment',l:'Contractor Acknowledgment',t:'area',span:2,ce:true},
-    {k:'acknowledged_by',l:'Acknowledged By',t:'text',ce:true},{k:'date_acknowledged',l:'Date Acknowledged',t:'date',ce:true},
-    {k:'date_completed',l:'Date Completed',t:'date',ce:true},
+    // Response fields
+    {k:'status',l:'Status',t:'drop',dk:'si_status',req:true,ce:true,responseOnly:true},
+    {k:'acknowledgment',l:'Contractor Acknowledgment',t:'area',span:2,ce:true,responseOnly:true},
+    {k:'acknowledged_by',l:'Acknowledged By',t:'text',ce:true,responseOnly:true},
+    {k:'date_acknowledged',l:'Date Acknowledged',t:'date',ce:true,responseOnly:true},
+    {k:'date_completed',l:'Date Completed',t:'date',ce:true,responseOnly:true},
   ]},
   cb:{label:'CB',full:'Construction Bulletin',hasAtts:true,fields:[
-    {k:'cb_number',l:'CB #',t:'text',req:true},{k:'subject',l:'Subject',t:'text',req:true,span:2},
+    {k:'cb_number',l:'CB #',t:'text',req:true},
+    {k:'subject',l:'Subject',t:'text',req:true,span:2},
     {k:'description',l:'Description',t:'area',req:true,span:2},
-    {k:'issued_by',l:'Issued By',t:'drop',dk:'issued_by',req:true},{k:'date_issued',l:'Date Issued',t:'date',req:true},
-    {k:'revision_number',l:'Revision #',t:'text'},{k:'due_date',l:'Response Required By',t:'date'},
+    {k:'issued_by',l:'Issued By',t:'drop',dk:'issued_by',req:true},
+    {k:'date_issued',l:'Date Issued',t:'date',req:true},
+    {k:'revision_number',l:'Revision #',t:'text'},
+    {k:'due_date',l:'Response Required By',t:'date'},
     {k:'affects_drawings',l:'Affects Drawings',t:'text',span:2},
     {k:'affects_specs',l:'Affects Specs / Sections',t:'text',span:2},
     {k:'contractor_action',l:'Contractor Action Required',t:'area',span:2},
-    {k:'status',l:'Status',t:'drop',dk:'cb_status',req:true,ce:true},
-    {k:'contractor_response',l:'Contractor Response',t:'area',span:2,ce:true},
-    {k:'date_completed',l:'Date Completed / Acknowledged',t:'date',ce:true},
+    // Response fields
+    {k:'status',l:'Status',t:'drop',dk:'cb_status',req:true,ce:true,responseOnly:true},
+    {k:'contractor_response',l:'Contractor Response',t:'area',span:2,ce:true,responseOnly:true},
+    {k:'date_completed',l:'Date Completed / Acknowledged',t:'date',ce:true,responseOnly:true},
   ]},
   vo:{label:'VO',full:'Variation Order',hasAtts:true,fields:[
-    {k:'vo_number',l:'VO #',t:'text',req:true},{k:'subject',l:'Subject',t:'text',req:true,span:2},
+    {k:'vo_number',l:'VO #',t:'text',req:true},
+    {k:'subject',l:'Subject',t:'text',req:true,span:2},
     {k:'description',l:'Description / Scope of Work',t:'area',req:true,span:2},
-    {k:'requested_by',l:'Requested By',t:'drop',dk:'submitted_by',req:true},{k:'date_requested',l:'Date Requested',t:'date',req:true},
+    {k:'requested_by',l:'Requested By',t:'drop',dk:'submitted_by',req:true},
+    {k:'date_requested',l:'Date Requested',t:'date',req:true},
     {k:'reason',l:'Reason for Variation',t:'area',span:2},
     {k:'scope_of_change',l:'Scope of Change',t:'area',span:2},
-    {k:'time_impact',l:'Time Impact (days)',t:'text'},{k:'due_date',l:'Target Completion Date',t:'date'},
-    {k:'status',l:'Status',t:'drop',dk:'vo_status',req:true,ce:true},
-    {k:'approved_by',l:'Approved By',t:'drop',dk:'approved_by',ce:true},{k:'date_approved',l:'Date Approved',t:'date',ce:true},
-    {k:'contractor_notes',l:'Contractor Notes',t:'area',span:2,ce:true},
+    {k:'time_impact',l:'Time Impact (days)',t:'text'},
+    {k:'due_date',l:'Target Completion Date',t:'date'},
     {k:'notes',l:'PM Notes',t:'area',span:2},
+    // Response fields
+    {k:'status',l:'Status',t:'drop',dk:'vo_status',req:true,ce:true,responseOnly:true},
+    {k:'approved_by',l:'Approved By',t:'drop',dk:'approved_by',ce:true,responseOnly:true},
+    {k:'date_approved',l:'Date Approved',t:'date',ce:true,responseOnly:true},
+    {k:'contractor_notes',l:'Contractor Notes',t:'area',span:2,ce:true,responseOnly:true},
   ]},
   issue:{label:'Issue',full:'Issue',fields:[
-    {k:'issue_number',l:'Issue #',t:'text',req:true},{k:'location',l:'Location',t:'drop',dk:'location',req:true},
-    {k:'description',l:'Description',t:'area',req:true,span:2},{k:'severity',l:'Severity',t:'drop',dk:'severity',req:true},
-    {k:'reported_by',l:'Reported By',t:'drop',dk:'submitted_by',req:true},{k:'date_reported',l:'Date Reported',t:'date',req:true},
-    {k:'assigned_to',l:'Assigned To',t:'drop',dk:'assigned_to'},{k:'due_date',l:'Target Resolution Date',t:'date'},
-    {k:'status',l:'Status',t:'drop',dk:'status',req:true,ce:true},
-    {k:'resolution_notes',l:'Resolution Notes',t:'area',span:2,ce:true},
-    {k:'date_completed',l:'Date Resolved / Closed',t:'date',ce:true}
+    {k:'issue_number',l:'Issue #',t:'text',req:true},
+    {k:'location',l:'Location',t:'drop',dk:'location',req:true},
+    {k:'description',l:'Description',t:'area',req:true,span:2},
+    {k:'severity',l:'Severity',t:'drop',dk:'severity',req:true},
+    {k:'reported_by',l:'Reported By',t:'drop',dk:'submitted_by',req:true},
+    {k:'date_reported',l:'Date Reported',t:'date',req:true},
+    {k:'assigned_to',l:'Assigned To',t:'drop',dk:'assigned_to'},
+    {k:'due_date',l:'Target Resolution Date',t:'date'},
+    // Response fields
+    {k:'status',l:'Status',t:'drop',dk:'status',req:true,ce:true,responseOnly:true},
+    {k:'resolution_notes',l:'Resolution Notes',t:'area',span:2,ce:true,responseOnly:true},
+    {k:'date_completed',l:'Date Resolved / Closed',t:'date',ce:true,responseOnly:true},
   ]},
   dependency:{label:'Hold',full:'Time Dependency / Schedule Hold',fields:[
     {k:'item_number',l:'Item #',t:'text',req:true},{k:'description',l:'Description',t:'area',req:true,span:2},
@@ -818,8 +838,8 @@ const Login={
 
     const team=await Store.team();
 
-    // Check if this person is registered in team members
-    const match=team.find(m=>m.name.toLowerCase()===name.toLowerCase()&&m.roleId===roleId);
+    // Check if this person is registered in team members — CASE SENSITIVE
+    const match=team.find(m=>m.name===name&&m.roleId===roleId);
 
     if(match){
       // Registered member — always require PIN regardless of role
@@ -1532,7 +1552,7 @@ const TM={
     if(!roleId){err.textContent='Please select a role.';return;}
     if(!pin||pin.length!==4||!/^\d{4}$/.test(pin)){err.textContent='PIN must be exactly 4 digits.';return;}
     const team=await Store.team();
-    if(team.some(m=>m.name.toLowerCase()===name.toLowerCase()&&m.roleId===roleId)){err.textContent='A member with this name and role already exists.';return;}
+    if(team.some(m=>m.name===name&&m.roleId===roleId)){err.textContent='A member with this name and role already exists.';return;}
     team.push({name,company,roleId,pin});
     await Store.saveTeam(team);
     err.textContent='';
@@ -1678,11 +1698,20 @@ const M={
       return`${prefix}-${String(next).padStart(3,'0')}`;
     })();
 
-    // Auto-fill submitted_by from logged-in user name + company
+    // Auto-fill submitter field from logged-in user (or PM for SI)
     const autoSubmittedBy=(()=>{
       if(item)return null;
-      const name=S.user?.name||'';
       const team=Store._cache['bh_team']||[];
+      const roles=Store._cache['bh_roles']||[];
+      if(type==='si'){
+        // SI — always show the PM name + company
+        const pmRole=roles.find(r=>r.canSettings);
+        const pm=pmRole?team.find(m=>m.roleId===pmRole.id):null;
+        if(pm){const company=pm.company||'';return company?`${pm.name} — ${company}`:pm.name;}
+        // fallback to logged-in user if no PM in team
+      }
+      // All other types — use logged-in user
+      const name=S.user?.name||'';
       const member=team.find(m=>m.name===name);
       const company=member?.company||'';
       return company?`${name} — ${company}`:name;
@@ -1690,16 +1719,18 @@ const M={
 
     const isNew=!item&&!ctr;
 
-    const buildFields=(fields)=>fields.map(f=>{
-      const dis=ctr&&!f.ce;
+    const buildFields=(fields,forceDisable=false)=>fields.map(f=>{
+      const dis=(ctr&&!f.ce)||forceDisable;
       const defaultStatus={si:'Issued',cb:'Issued',vo:'Draft'}[type]||'Open';
       const isNumField=f.k===numKey&&!item;
-      const isSubmitterField=!item&&autoSubmittedBy&&(f.k==='submitted_by'||f.k==='reported_by'||f.k==='requested_by');
+      // Auto-fill submitter fields: submitted_by, reported_by, requested_by, issued_by
+      const isSubmitterField=!item&&autoSubmittedBy&&(f.k==='submitted_by'||f.k==='reported_by'||f.k==='requested_by'||f.k==='issued_by');
       const val=isNumField?autoNum:isSubmitterField?autoSubmittedBy:(item?(item[f.k]||''):(f.k==='status'?defaultStatus:(f.t==='date'&&(f.k==='date_submitted'||f.k==='date_reported'||f.k==='date_issued'||f.k==='date_requested')?now():'')));
       const ce=f.ce?'cef':'';
       let inp='';
       if(isSubmitterField){
-        inp=`<input type="text" id="f_${f.k}" value="${esc(String(val))}" readonly style="background:var(--bg);color:var(--ink-2);font-weight:500;"><div style="font-size:0.68rem;color:var(--ink-4);margin-top:2px">Auto-filled from your account</div>`;
+        const hint=type==='si'?'Auto-filled — always the Project Manager':'Auto-filled from your account';
+        inp=`<input type="text" id="f_${f.k}" value="${esc(String(val))}" readonly style="background:var(--bg);color:var(--ink-2);font-weight:500;"><div style="font-size:0.68rem;color:var(--ink-4);margin-top:2px">${hint}</div>`;
       } else if(f.t==='drop'){
         const opts=f.dk?(drops[f.dk]||[]):[];
         inp=`<select id="f_${f.k}" class="${ce}" ${dis?'disabled':''}>${f.req?'':'<option value="">— Select —</option>'}${opts.map(o=>`<option value="${esc(o)}" ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
@@ -1732,17 +1763,28 @@ const M={
     // Split fields: request fields + att section + response fields
     const reqFields=td.fields.filter(f=>!f.responseOnly);
     const resFields=td.fields.filter(f=>f.responseOnly);
-    const fhReq=buildFields(reqFields);
-    const fhRes=resFields.length&&!isNew?buildFields(resFields):null;
+
+    // When editing (not new, not ctr-only): lock all request fields, only response fields editable
+    const lockReqOnEdit=!isNew&&!!item&&!ctr;
+    const fhReq=buildFields(reqFields,lockReqOnEdit);
+    const fhRes=resFields.length&&!isNew?buildFields(resFields,false):null;
 
     this.open(`<div class="mhead"><h2>${title}</h2><button class="mclose" onclick="M.close()">${X.svg.close}</button></div>
-    <div class="mbody">${ctr?`<div class="ctr-hint"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Fields marked ✎ are editable by your role.</div>`:''}
-    <div class="ffb err" id="ffb"></div>
-    <div class="fgrid">${fhReq}</div>
-    ${attSection}
-    ${fhRes?`<div style="border-top:1px solid var(--line);margin:16px 0 12px;padding-top:14px"><div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);margin-bottom:12px">Response / Decision</div><div class="fgrid">${fhRes}</div></div>`:''}
+    <div class="mbody">
+      ${ctr?`<div class="ctr-hint"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Fields marked ✎ are editable by your role.</div>`:''}
+      ${lockReqOnEdit?`<div style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:8px 12px;margin-bottom:12px;font-size:0.75rem;color:var(--ink-4);display:flex;align-items:center;gap:7px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Original fields are locked. Only the Response / Decision section can be updated.</div>`:''}
+      <div class="ffb err" id="ffb"></div>
+      <div class="fgrid">${fhReq}</div>
+      ${attSection}
+      ${fhRes?`<div style="border-top:2px solid var(--pink-mid);margin:20px 0 14px;padding-top:16px"><div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--pink-deep);margin-bottom:14px">✎ Response / Decision</div><div class="fgrid">${fhRes}</div></div>`:''}
     </div>
-    <div class="mfoot"><button class="btn btn-ghost" onclick="M.close()">Cancel</button><button class="btn btn-pink" onclick="M.save('${type}',${!!item},${ctr})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>${item?'Save Changes':'Create Item'}</button></div>`);
+    <div class="mfoot" style="position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px 20px;display:flex;justify-content:flex-end;gap:8px;z-index:10">
+      <button class="btn btn-ghost" onclick="M.close()">Cancel</button>
+      <button class="btn btn-pink" onclick="M.save('${type}',${!!item},${ctr})">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        ${isNew?'Create Item':ctr?'Save Response':'Save Changes'}
+      </button>
+    </div>`);
   },
 
   async save(type,isEdit,ctr){
