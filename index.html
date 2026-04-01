@@ -500,10 +500,10 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
 //  DEFAULT ROLES
 // ══════════════════════════════════════════════
 const DEFAULT_ROLES=[
-  {id:'pm',  name:'Project Manager',    canCreate:true, canCreateRFI:true, canEditAll:true, canDelete:true, canSettings:true, pillClass:'pm'},
-  {id:'arch',name:'Architect',          canCreate:true, canCreateRFI:true, canEditAll:true, canDelete:false,canSettings:false,pillClass:'arch'},
-  {id:'gc',  name:'General Contractor', canCreate:false,canCreateRFI:true, canEditAll:false,canDelete:false,canSettings:false,pillClass:'gc'},
-  {id:'sub', name:'Subcontractor',      canCreate:false,canCreateRFI:true, canEditAll:false,canDelete:false,canSettings:false,pillClass:'sub'},
+  {id:'pm',  name:'Project Manager',    canCreate:true, canCreateRFI:true,canCreateRFA:true,canCreateSI:true,canCreateCB:true,canCreateVO:true,canCreateIssue:true, canEditAll:true, canDelete:true, canSettings:true, pillClass:'pm'},
+  {id:'arch',name:'Architect',          canCreate:true, canCreateRFI:true,canCreateRFA:true,canCreateSI:true,canCreateCB:true,canCreateVO:true,canCreateIssue:true, canEditAll:true, canDelete:false,canSettings:false,pillClass:'arch'},
+  {id:'gc',  name:'General Contractor', canCreate:false,canCreateRFI:true,canCreateRFA:true,canCreateSI:false,canCreateCB:false,canCreateVO:true,canCreateIssue:true, canEditAll:false,canDelete:false,canSettings:false,pillClass:'gc'},
+  {id:'sub', name:'Subcontractor',      canCreate:false,canCreateRFI:true,canCreateRFA:true,canCreateSI:false,canCreateCB:false,canCreateVO:false,canCreateIssue:true,canEditAll:false,canDelete:false,canSettings:false,pillClass:'sub'},
 ];
 
 // ══════════════════════════════════════════════
@@ -685,13 +685,19 @@ const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 //  SESSION
 // ══════════════════════════════════════════════
 const S={
-  user:null,   // {name, roleId, pin}
-  role:null,   // full role object
+  user:null,role:null,
   view:'dashboard',
   filter:{type:'all',status:'all',assignee:'',df:'',dt:''},
   sort:{col:'id',dir:'desc'},
   editItem:null,addType:null,_crit:false,
   can(p){return !!(this.role&&this.role[p])},
+  canType(t){
+    if(!this.role)return false;
+    if(this.role.canSettings)return true; // PM can always create all
+    const flag={rfi:'canCreateRFI',rfa:'canCreateRFA',si:'canCreateSI',cb:'canCreateCB',vo:'canCreateVO',issue:'canCreateIssue'}[t];
+    return flag?!!(this.role[flag]):!!(this.role.canCreate);
+  },
+  allowedTypes(){return TKEYS.filter(t=>this.canType(t));}
 };
 
 // ══════════════════════════════════════════════
@@ -880,7 +886,7 @@ const PinStep={
 // ══════════════════════════════════════════════
 const Auth={
   enter(name,role,member){
-    S.user={name,roleId:role.id};S.role=role;
+    S.user={name,roleId:role.id,_member:member};S.role=role;
     // Hide all auth screens
     document.getElementById('login-screen').style.display='none';
     document.getElementById('gate').style.display='none';
@@ -964,7 +970,7 @@ const Nav={
     else if(v.startsWith('list-')){
       const type=v.replace('list-','');
       title.textContent=type==='all'?'All Items':(TYPES[type]?.full||'Items');
-      const canAddThisType=S.can('canCreate')||(S.can('canCreateRFI')&&(type==='rfi'||type==='rfa'||type==='all'));
+      const canAddThisType=type==='all'?S.allowedTypes().length>0:S.canType(type);
       if(canAddThisType){
         const b=document.createElement('button');b.className='btn btn-pink';
         b.innerHTML=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Item`;
@@ -1451,9 +1457,13 @@ const V={
     <div class="dl-card"><div class="dl-head"><span>Add Role</span></div>
     <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">
       <div class="fg"><label>Role Name *</label><input type="text" id="rm-name" placeholder="e.g. MEP Subcontractor, Interior Designer…"></div>
-      <div><div style="font-size:0.72rem;font-weight:600;color:var(--ink-3);margin-bottom:8px">Permissions</div>
+      <div><div style="font-size:0.72rem;font-weight:600;color:var(--ink-3);margin-bottom:8px">Can Create</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${['rfi','rfa','si','cb','vo','issue'].map(t=>`<label style="display:flex;align-items:center;gap:5px;font-size:0.8rem;cursor:pointer;padding:5px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--white)"><input type="checkbox" id="rm-c-${t}"> ${TYPES[t].label}</label>`).join('')}
+        </div>
+      </div>
+      <div><div style="font-size:0.72rem;font-weight:600;color:var(--ink-3);margin-bottom:8px">Other Permissions</div>
         <div style="display:flex;flex-wrap:wrap;gap:10px">
-          <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer"><input type="checkbox" id="rm-create"> Create items</label>
           <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer"><input type="checkbox" id="rm-edit"> Edit all fields</label>
           <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer"><input type="checkbox" id="rm-delete"> Delete items</label>
         </div>
@@ -1527,12 +1537,35 @@ const TM={
     const team=await Store.team();team.splice(i,1);await Store.saveTeam(team);T.show('Member removed','ok');Nav.render();Login.init();
   },
   async edit(i){
-    const team=await Store.team();const m=team[i];
-    const newPin=prompt(`Enter new PIN for ${m.name} (4 digits):`,'');
-    if(newPin===null)return;
-    if(!newPin||newPin.length!==4||!/^\d{4}$/.test(newPin)){T.show('Invalid PIN — must be 4 digits','err');return;}
-    team[i].pin=newPin;await Store.saveTeam(team);T.show('PIN updated','ok');Nav.render();
-  }
+    const team=await Store.team();const roles=await Store.roles();const m=team[i];
+    M.open(`<div class="mhead"><h2>Edit Member — ${esc(m.name)}</h2><button class="mclose" onclick="M.close()">${X.svg.close}</button></div>
+    <div class="mbody" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg"><label>Full Name *</label><input type="text" id="tme-name" value="${esc(m.name)}" placeholder="e.g. Maria Santos"></div>
+        <div class="fg"><label>Company / Organization</label><input type="text" id="tme-company" value="${esc(m.company||'')}" placeholder="e.g. ALPA Exponential Builders"></div>
+      </div>
+      <div class="fg"><label>Role *</label><select id="tme-role"><option value="">— Select —</option>${roles.map(r=>`<option value="${r.id}" ${m.roleId===r.id?'selected':''}>${esc(r.name)}</option>`).join('')}</select></div>
+      <div class="fg" style="max-width:200px"><label>New PIN (4 digits) — leave blank to keep current</label>
+        <input type="password" id="tme-pin" maxlength="4" placeholder="Leave blank to keep" inputmode="numeric" style="font-family:'DM Mono',monospace;letter-spacing:0.2em;font-size:1rem" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)">
+      </div>
+      <div class="ferr" id="tme-err"></div>
+    </div>
+    <div class="mfoot"><button class="btn btn-ghost" onclick="M.close()">Cancel</button><button class="btn btn-pink" onclick="TM.saveEdit(${i})">Save Changes</button></div>`);
+  },
+  async saveEdit(i){
+    const name=document.getElementById('tme-name').value.trim();
+    const company=(document.getElementById('tme-company')?.value||'').trim();
+    const roleId=document.getElementById('tme-role').value;
+    const pin=document.getElementById('tme-pin').value.trim();
+    const err=document.getElementById('tme-err');
+    if(!name){err.textContent='Please enter a name.';return;}
+    if(!roleId){err.textContent='Please select a role.';return;}
+    if(pin&&(pin.length!==4||!/^\d{4}$/.test(pin))){err.textContent='PIN must be exactly 4 digits.';return;}
+    const team=await Store.team();
+    team[i]={...team[i],name,company,roleId,...(pin?{pin}:{})};
+    await Store.saveTeam(team);
+    M.close();T.show('Member updated','ok');Nav.render();Login.init();
+  },
 };
 
 // ══════════════════════════════════════════════
@@ -1545,7 +1578,20 @@ const RM={
     if(!name){err.textContent='Please enter a role name.';return;}
     const roles=await Store.roles();
     if(roles.some(r=>r.name.toLowerCase()===name.toLowerCase())){err.textContent='Role already exists.';return;}
-    roles.push({id:'r_'+Date.now(),name,canCreate:document.getElementById('rm-create').checked,canEditAll:document.getElementById('rm-edit').checked,canDelete:document.getElementById('rm-delete').checked,canSettings:false,pillClass:'other'});
+    const types=['rfi','rfa','si','cb','vo','issue'];
+    const typePerms={};
+    types.forEach(t=>{
+      const el=document.getElementById(`rm-c-${t}`);
+      typePerms[`canCreate${t.charAt(0).toUpperCase()+t.slice(1).replace('issue','Issue')}`]=el?el.checked:false;
+    });
+    typePerms.canCreateRFI=document.getElementById('rm-c-rfi')?.checked||false;
+    typePerms.canCreateRFA=document.getElementById('rm-c-rfa')?.checked||false;
+    typePerms.canCreateSI=document.getElementById('rm-c-si')?.checked||false;
+    typePerms.canCreateCB=document.getElementById('rm-c-cb')?.checked||false;
+    typePerms.canCreateVO=document.getElementById('rm-c-vo')?.checked||false;
+    typePerms.canCreateIssue=document.getElementById('rm-c-issue')?.checked||false;
+    const canCreate=Object.values(typePerms).some(Boolean);
+    roles.push({id:'r_'+Date.now(),name,canCreate,canCreateRFI:typePerms.canCreateRFI,canCreateRFA:typePerms.canCreateRFA,canCreateSI:typePerms.canCreateSI,canCreateCB:typePerms.canCreateCB,canCreateVO:typePerms.canCreateVO,canCreateIssue:typePerms.canCreateIssue,canEditAll:document.getElementById('rm-edit').checked,canDelete:document.getElementById('rm-delete').checked,canSettings:false,pillClass:'other'});
     await Store.saveRoles(roles);err.textContent='';T.show(`Role "${name}" added`,'ok');Nav.render();Login.init();
   },
   async remove(i){const roles=await Store.roles();roles.splice(i,1);await Store.saveRoles(roles);T.show('Role removed','ok');Nav.render();Login.init();}
@@ -1599,12 +1645,12 @@ const M={
 
   typeSelect(){
     const icons={rfi:'ℹ️',rfa:'✅',si:'📋',cb:'📣',vo:'🔄',issue:'⚠️',dependency:'⏸️',action:'☑️'};
-    // GC/Sub can only create RFI and RFA
-    const allowedTypes=S.can('canCreate')?TKEYS:['rfi','rfa'];
+    const allowed=S.allowedTypes();
+    const cols=allowed.length<=2?2:allowed.length<=4?4:4;
     this.open(`<div class="mhead"><h2>New Item — Select Type</h2><button class="mclose" onclick="M.close()">${X.svg.close}</button></div>
     <div class="mbody">
-      ${!S.can('canCreate')?`<div style="background:var(--pink-soft);border:1px solid var(--pink-mid);border-radius:var(--r);padding:9px 12px;margin-bottom:14px;font-size:0.78rem;color:var(--pink-deep)">As ${esc(S.role?.name||'')}, you can submit RFIs and RFAs only.</div>`:''}
-      <div class="tgrid" style="grid-template-columns:repeat(${S.can('canCreate')?4:2},1fr)">${allowedTypes.map(t=>`<div class="topt" onclick="M.pickType('${t}')"><div class="ti">${icons[t]||'📄'}</div><div class="tl">${TYPES[t].label}</div><div class="ts">${TYPES[t].full}</div></div>`).join('')}</div>
+      ${!S.can('canCreate')?`<div style="background:var(--pink-soft);border:1px solid var(--pink-mid);border-radius:var(--r);padding:9px 12px;margin-bottom:14px;font-size:0.78rem;color:var(--pink-deep)">As ${esc(S.role?.name||'')}, you can create: ${allowed.map(t=>TYPES[t].label).join(', ')}.</div>`:''}
+      <div class="tgrid" style="grid-template-columns:repeat(${cols},1fr)">${allowed.map(t=>`<div class="topt" onclick="M.pickType('${t}')"><div class="ti">${icons[t]||'📄'}</div><div class="tl">${TYPES[t].label}</div><div class="ts">${TYPES[t].full}</div></div>`).join('')}</div>
     </div>
     <div class="mfoot"><button class="btn btn-ghost" onclick="M.close()">Cancel</button></div>`);
   },
@@ -1625,21 +1671,35 @@ const M={
       return`${prefix}-${String(next).padStart(3,'0')}`;
     })();
 
+    // Auto-fill submitted_by from logged-in user name + company
+    const autoSubmittedBy=(()=>{
+      if(item)return null;
+      const name=S.user?.name||'';
+      const team=Store._cache['bh_team']||[];
+      const member=team.find(m=>m.name===name);
+      const company=member?.company||'';
+      return company?`${name} — ${company}`:name;
+    })();
+
     const fh=td.fields.map(f=>{
       const dis=ctr&&!f.ce;
       const defaultStatus={si:'Issued',cb:'Issued',vo:'Draft'}[type]||'Open';
-      // Use auto number for the number field on new items
       const isNumField=f.k===numKey&&!item;
-      const val=isNumField?autoNum:(item?(item[f.k]||''):(f.k==='status'?defaultStatus:(f.t==='date'&&(f.k==='date_submitted'||f.k==='date_reported'||f.k==='date_issued'||f.k==='date_requested')?now():'')));
+      const isSubmitterField=!item&&autoSubmittedBy&&(f.k==='submitted_by'||f.k==='reported_by'||f.k==='requested_by');
+      const val=isNumField?autoNum:isSubmitterField?autoSubmittedBy:(item?(item[f.k]||''):(f.k==='status'?defaultStatus:(f.t==='date'&&(f.k==='date_submitted'||f.k==='date_reported'||f.k==='date_issued'||f.k==='date_requested')?now():'')));
       const ce=f.ce?'cef':'';
       let inp='';
-      if(f.t==='drop'){const opts=f.dk?(drops[f.dk]||[]):[];inp=`<select id="f_${f.k}" class="${ce}" ${dis?'disabled':''}>${f.req?'':'<option value="">— Select —</option>'}${opts.map(o=>`<option value="${esc(o)}" ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;}
+      if(isSubmitterField){
+        // Auto-filled from logged-in user — show as read-only text
+        inp=`<input type="text" id="f_${f.k}" value="${esc(String(val))}" readonly style="background:var(--bg);color:var(--ink-2);font-weight:500;">
+        <div style="font-size:0.68rem;color:var(--ink-4);margin-top:2px">Auto-filled from your account</div>`;
+      } else if(f.t==='drop'){const opts=f.dk?(drops[f.dk]||[]):[];inp=`<select id="f_${f.k}" class="${ce}" ${dis?'disabled':''}>${f.req?'':'<option value="">— Select —</option>'}${opts.map(o=>`<option value="${esc(o)}" ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;}
       else if(f.t==='area'){inp=`<textarea id="f_${f.k}" rows="3" class="${ce}" ${dis?'disabled':''}>${esc(val)}</textarea>`;}
       else{
         const isAutoNum=isNumField&&autoNum;
         inp=`<input type="${f.t}" id="f_${f.k}" value="${esc(String(val))}" class="${ce}" ${dis?'disabled':''}${isAutoNum?' readonly style="background:var(--bg);color:var(--ink-3);font-family:\'DM Mono\',monospace;font-weight:600;"':''}>`;
         if(isAutoNum)inp+=`<div style="font-size:0.68rem;color:var(--ink-4);margin-top:2px">Auto-generated — updates when saved</div>`;
-      } 
+      }
       return`<div class="fg ${f.span===2?'full':''}"><label for="f_${f.k}">${f.l}${f.req?' *':''}${f.ce?`<span class="ce">✎</span>`:''}</label>${inp}<div class="ferr" id="fe_${f.k}"></div></div>`;
     }).join('');
 
@@ -1845,6 +1905,7 @@ V.directory=async function(){
 window.Gate=Gate;window.Login=Login;window.PinStep=PinStep;window.Auth=Auth;
 window.Nav=Nav;window.M=M;window.Conf=Conf;window.F=F;
 window.DL=DL;window.TM=TM;window.RM=RM;window.SEC=SEC;window.T=T;window.Store=Store;
+window.TM=TM; // ensures saveEdit is accessible from inline onclick
 
 // Wait for Firebase to be ready, boot the Store, then start the app
 async function boot(){
@@ -1855,6 +1916,29 @@ async function boot(){
     if(!window._fbReady)throw new Error('Firebase timeout');
     // Load all data into cache
     await Store.boot();
+    // ── Migrate existing roles to add per-type create permissions ──
+    const existingRoles=await Store.roles();
+    let needsMigration=existingRoles.some(r=>r.canCreateRFI===undefined);
+    if(needsMigration){
+      const migrated=existingRoles.map(r=>{
+        if(r.canCreateRFI!==undefined)return r;
+        // PM and Arch get all types; GC and Sub get RFI/RFA only; others keep canCreate
+        const isGC=r.id==='gc'||r.name?.toLowerCase().includes('contractor');
+        const isSub=r.id==='sub'||r.name?.toLowerCase().includes('subcontractor');
+        const isPM=r.canSettings;
+        const isArch=r.id==='arch'||r.name?.toLowerCase().includes('architect');
+        return{...r,
+          canCreateRFI:true,
+          canCreateRFA:true,
+          canCreateSI:isPM||isArch,
+          canCreateCB:isPM||isArch,
+          canCreateVO:isPM||isArch||isGC,
+          canCreateIssue:isPM||isArch||isGC||isSub,
+        };
+      });
+      await Store.saveRoles(migrated);
+      Store._cache['bh_roles']=migrated;
+    }
     // Start real-time listener for items — auto-refreshes when another user saves
     window._fb.listen(items=>{
       Store._items=items;
