@@ -500,10 +500,10 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
 //  DEFAULT ROLES
 // ══════════════════════════════════════════════
 const DEFAULT_ROLES=[
-  {id:'pm',  name:'Project Manager',    canCreate:true, canEditAll:true, canDelete:true, canSettings:true, pillClass:'pm'},
-  {id:'arch',name:'Architect',          canCreate:true, canEditAll:true, canDelete:false,canSettings:false,pillClass:'arch'},
-  {id:'gc',  name:'General Contractor', canCreate:false,canEditAll:false,canDelete:false,canSettings:false,pillClass:'gc'},
-  {id:'sub', name:'Subcontractor',      canCreate:false,canEditAll:false,canDelete:false,canSettings:false,pillClass:'sub'},
+  {id:'pm',  name:'Project Manager',    canCreate:true, canCreateRFI:true, canEditAll:true, canDelete:true, canSettings:true, pillClass:'pm'},
+  {id:'arch',name:'Architect',          canCreate:true, canCreateRFI:true, canEditAll:true, canDelete:false,canSettings:false,pillClass:'arch'},
+  {id:'gc',  name:'General Contractor', canCreate:false,canCreateRFI:true, canEditAll:false,canDelete:false,canSettings:false,pillClass:'gc'},
+  {id:'sub', name:'Subcontractor',      canCreate:false,canCreateRFI:true, canEditAll:false,canDelete:false,canSettings:false,pillClass:'sub'},
 ];
 
 // ══════════════════════════════════════════════
@@ -964,7 +964,8 @@ const Nav={
     else if(v.startsWith('list-')){
       const type=v.replace('list-','');
       title.textContent=type==='all'?'All Items':(TYPES[type]?.full||'Items');
-      if(S.can('canCreate')){
+      const canAddThisType=S.can('canCreate')||(S.can('canCreateRFI')&&(type==='rfi'||type==='rfa'||type==='all'));
+      if(canAddThisType){
         const b=document.createElement('button');b.className='btn btn-pink';
         b.innerHTML=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Item`;
         b.onclick=()=>M.openAdd(type==='all'?null:type);tr.appendChild(b);
@@ -1598,7 +1599,14 @@ const M={
 
   typeSelect(){
     const icons={rfi:'ℹ️',rfa:'✅',si:'📋',cb:'📣',vo:'🔄',issue:'⚠️',dependency:'⏸️',action:'☑️'};
-    this.open(`<div class="mhead"><h2>New Item — Select Type</h2><button class="mclose" onclick="M.close()">${X.svg.close}</button></div><div class="mbody"><div class="tgrid" style="grid-template-columns:repeat(4,1fr)">${TKEYS.map(t=>`<div class="topt" onclick="M.pickType('${t}')"><div class="ti">${icons[t]||'📄'}</div><div class="tl">${TYPES[t].label}</div><div class="ts">${TYPES[t].full}</div></div>`).join('')}</div></div><div class="mfoot"><button class="btn btn-ghost" onclick="M.close()">Cancel</button></div>`);
+    // GC/Sub can only create RFI and RFA
+    const allowedTypes=S.can('canCreate')?TKEYS:['rfi','rfa'];
+    this.open(`<div class="mhead"><h2>New Item — Select Type</h2><button class="mclose" onclick="M.close()">${X.svg.close}</button></div>
+    <div class="mbody">
+      ${!S.can('canCreate')?`<div style="background:var(--pink-soft);border:1px solid var(--pink-mid);border-radius:var(--r);padding:9px 12px;margin-bottom:14px;font-size:0.78rem;color:var(--pink-deep)">As ${esc(S.role?.name||'')}, you can submit RFIs and RFAs only.</div>`:''}
+      <div class="tgrid" style="grid-template-columns:repeat(${S.can('canCreate')?4:2},1fr)">${allowedTypes.map(t=>`<div class="topt" onclick="M.pickType('${t}')"><div class="ti">${icons[t]||'📄'}</div><div class="tl">${TYPES[t].label}</div><div class="ts">${TYPES[t].full}</div></div>`).join('')}</div>
+    </div>
+    <div class="mfoot"><button class="btn btn-ghost" onclick="M.close()">Cancel</button></div>`);
   },
   pickType(t){S.addType=t;this.close();this.form(t,null,false);},
 
@@ -1606,15 +1614,32 @@ const M={
     const td=TYPES[type],drops=await Store.drops();
     const title=item?`Edit ${td.label} #${item.id}`:`New ${td.full}`;
     const existAtts=item?(item.attachments||[]):[];
+
+    // Auto-generate document number for new items
+    const numKey={rfi:'rfi_number',rfa:'rfa_number',si:'si_number',cb:'cb_number',vo:'vo_number',issue:'issue_number'}[type];
+    const autoNum=(()=>{
+      if(item||!numKey)return''; // editing — don't override
+      const existing=Store.items().filter(x=>x.type===type);
+      const next=existing.length+1;
+      const prefix=type.toUpperCase();
+      return`${prefix}-${String(next).padStart(3,'0')}`;
+    })();
+
     const fh=td.fields.map(f=>{
       const dis=ctr&&!f.ce;
       const defaultStatus={si:'Issued',cb:'Issued',vo:'Draft'}[type]||'Open';
-      const val=item?(item[f.k]||''):(f.k==='status'?defaultStatus:(f.t==='date'&&(f.k==='date_submitted'||f.k==='date_reported'||f.k==='date_issued'||f.k==='date_requested')?now():''));
+      // Use auto number for the number field on new items
+      const isNumField=f.k===numKey&&!item;
+      const val=isNumField?autoNum:(item?(item[f.k]||''):(f.k==='status'?defaultStatus:(f.t==='date'&&(f.k==='date_submitted'||f.k==='date_reported'||f.k==='date_issued'||f.k==='date_requested')?now():'')));
       const ce=f.ce?'cef':'';
       let inp='';
       if(f.t==='drop'){const opts=f.dk?(drops[f.dk]||[]):[];inp=`<select id="f_${f.k}" class="${ce}" ${dis?'disabled':''}>${f.req?'':'<option value="">— Select —</option>'}${opts.map(o=>`<option value="${esc(o)}" ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;}
       else if(f.t==='area'){inp=`<textarea id="f_${f.k}" rows="3" class="${ce}" ${dis?'disabled':''}>${esc(val)}</textarea>`;}
-      else{inp=`<input type="${f.t}" id="f_${f.k}" value="${esc(String(val))}" class="${ce}" ${dis?'disabled':''}>`;} 
+      else{
+        const isAutoNum=isNumField&&autoNum;
+        inp=`<input type="${f.t}" id="f_${f.k}" value="${esc(String(val))}" class="${ce}" ${dis?'disabled':''}${isAutoNum?' readonly style="background:var(--bg);color:var(--ink-3);font-family:\'DM Mono\',monospace;font-weight:600;"':''}>`;
+        if(isAutoNum)inp+=`<div style="font-size:0.68rem;color:var(--ink-4);margin-top:2px">Auto-generated — updates when saved</div>`;
+      } 
       return`<div class="fg ${f.span===2?'full':''}"><label for="f_${f.k}">${f.l}${f.req?' *':''}${f.ce?`<span class="ce">✎</span>`:''}</label>${inp}<div class="ferr" id="fe_${f.k}"></div></div>`;
     }).join('');
 
