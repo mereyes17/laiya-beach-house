@@ -69,7 +69,37 @@ function fbListen(onUpdate){
 }
 window._fb={get:fbGet,set:fbSet,getItems:fbGetItems,saveItems:fbSaveItems,nextId:fbNextId,listen:fbListen};
 </script>
-<style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+const EMAIL_CFG={
+  publicKey:'UcoLv59g_MC1Yd7Zf',
+  serviceId:'laiya-beach-house',
+  templateId:'template_t5gh1tb',
+  pmEmail:'mereyes17@gmail.com',
+};
+emailjs.init({publicKey:EMAIL_CFG.publicKey});
+window._emailReady=true;
+
+// Only triggers for RFI and RFA
+window._sendPMEmail=function(type,num,subject,submittedBy,description,attachments,status){
+  if(!window._emailReady)return;
+  const attText=attachments&&attachments.length
+    ?attachments.map(a=>`${a.name||a.url}: ${a.url}`).join('\n')
+    :'No attachments';
+  emailjs.send(EMAIL_CFG.serviceId,EMAIL_CFG.templateId,{
+    to_email:EMAIL_CFG.pmEmail,
+    item_type:type,
+    item_number:num||'—',
+    subject:subject||'—',
+    submitted_by:submittedBy||'—',
+    created_date:new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),
+    status:status||'Open',
+    description:description||'—',
+    attachments:attText,
+    app_url:'https://mereyes17.github.io/laiya-beach-house/',
+  }).then(()=>console.log('Email sent'))
+    .catch(e=>console.warn('EmailJS error:',e));
+};</script>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap');
 :root{
   --pink:#f472b6;--pink-soft:#fce7f3;--pink-mid:#fbcfe8;--pink-deep:#db2777;
@@ -388,6 +418,7 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
     <div class="lw-field">
       <label>Your Full Name</label>
       <input type="text" id="login-name" placeholder="e.g. Maria Santos" autocomplete="name" oninput="Login.check()" onkeydown="if(event.key==='Enter')Login.next()">
+      <div style="font-size:0.68rem;color:var(--ink-4);margin-top:4px">⚠ Name is case-sensitive. Enter exactly as registered — e.g. <strong>Maria Santos</strong> not <strong>maria santos</strong>.</div>
     </div>
     <div class="lw-field">
       <label>Your Role</label>
@@ -554,19 +585,26 @@ function defaultDrops(){return{
 //  ITEM TYPES
 // ══════════════════════════════════════════════
 const TYPES={
-  rfi:{label:'RFI',full:'Request for Information',hasAtts:true,fields:[
+  rfi:{label:'RFI',full:'Request for Information',hasAtts:true,driveLink:'https://drive.google.com/drive/folders/1OwwjElI5mlJzaVl_NYaRA1cKuaKd25dy?usp=drive_link',driveName:'RFI Folder',fields:[
     {k:'rfi_number',l:'RFI #',t:'text',req:true},{k:'subject',l:'Subject',t:'text',req:true,span:2},
-    {k:'description',l:'Description',t:'area',req:true,span:2},{k:'submitted_by',l:'Submitted By',t:'drop',dk:'submitted_by',req:true},
-    {k:'date_submitted',l:'Date Submitted',t:'date',req:true},{k:'due_date',l:'Due Date',t:'date'},
-    {k:'status',l:'Status',t:'drop',dk:'status',req:true,ce:true},{k:'response',l:'Response',t:'area',span:2,ce:true},
-    {k:'attachments_note',l:'Attachments Note',t:'text',span:2,ce:true}
+    {k:'description',l:'Description / Information Requested',t:'area',req:true,span:2},
+    {k:'submitted_by',l:'Submitted By',t:'drop',dk:'submitted_by',req:true,ce:true},
+    {k:'date_submitted',l:'Date Submitted',t:'date',req:true,ce:true},{k:'due_date',l:'Response Required By',t:'date'},
+    {k:'location',l:'Location',t:'drop',dk:'location',ce:true},
+    {k:'status',l:'Status',t:'drop',dk:'status',req:true,ce:true},
+    {k:'response',l:'Response / Reply',t:'area',span:2,ce:true},
+    {k:'responded_by',l:'Responded By',t:'text',ce:true},{k:'date_responded',l:'Date Responded',t:'date',ce:true},
   ]},
-  rfa:{label:'RFA',full:'Request for Approval',hasAtts:true,fields:[
+  rfa:{label:'RFA',full:'Request for Approval',hasAtts:true,driveLink:'https://drive.google.com/drive/folders/1L9acaVxQJAkFhYi2KAEkwYJ3Hoe-BZRq?usp=drive_link',driveName:'RFA Folder',fields:[
     {k:'rfa_number',l:'RFA #',t:'text',req:true},{k:'subject',l:'Subject',t:'text',req:true,span:2},
-    {k:'description',l:'Description',t:'area',req:true,span:2},{k:'submitted_by',l:'Submitted By',t:'drop',dk:'submitted_by',req:true},
-    {k:'date_submitted',l:'Date Submitted',t:'date',req:true},{k:'due_date',l:'Due Date',t:'date'},
-    {k:'status',l:'Status',t:'drop',dk:'status',req:true,ce:true},{k:'approved_by',l:'Approved By',t:'drop',dk:'approved_by',ce:true},
-    {k:'decision',l:'Decision',t:'drop',dk:'decision',ce:true},{k:'notes',l:'Notes',t:'area',span:2,ce:true}
+    {k:'description',l:'Description / What Requires Approval',t:'area',req:true,span:2},
+    {k:'submitted_by',l:'Submitted By',t:'drop',dk:'submitted_by',req:true,ce:true},
+    {k:'date_submitted',l:'Date Submitted',t:'date',req:true,ce:true},{k:'due_date',l:'Approval Required By',t:'date'},
+    {k:'location',l:'Location',t:'drop',dk:'location',ce:true},
+    {k:'status',l:'Status',t:'drop',dk:'status',req:true,ce:true},
+    {k:'approved_by',l:'Approved By',t:'drop',dk:'approved_by',ce:true},
+    {k:'decision',l:'Decision',t:'drop',dk:'decision',ce:true},
+    {k:'notes',l:'Notes / Comments',t:'area',span:2,ce:true},
   ]},
   si:{label:'SI',full:'Site Instruction',hasAtts:true,fields:[
     {k:'si_number',l:'SI #',t:'text',req:true},{k:'subject',l:'Subject',t:'text',req:true,span:2},
@@ -865,10 +903,17 @@ const Auth={
     ['sb-settings-sec','sb-team','sb-roles','sb-dl','sb-sec-item'].forEach(id=>document.getElementById(id).style.display='none');
     document.getElementById('login-name').value='';
     document.getElementById('login-role').value='';
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('pin-screen').style.display='none';
     const code=await Store.passcode();
     if(code){
-      Gate._v='';Gate._render('gd');
+      // Always go back to gate if passcode is set
+      Gate._v='';
+      Gate._len=code.length||6;
+      renderDots('gate-dots',Gate._len,0,'');
+      shuffleKeypad('gate-keypad','Gate.press','Gate.del');
       document.getElementById('gate-err').textContent='';
+      document.getElementById('gate-hint').textContent='Contact your Project Manager if you have forgotten the passcode.';
       document.getElementById('gate').style.display='';
     } else {
       await Login.init();
@@ -1575,7 +1620,14 @@ const M={
     // Inline attachment builder for RFI/RFA
     const attSection=td.hasAtts?`<div class="full">
       <div style="font-size:0.72rem;font-weight:600;color:var(--ink-3);margin-bottom:8px;display:flex;align-items:center;gap:10px">Attached File Links
-        <a href="https://drive.google.com" target="_blank" rel="noopener" style="font-size:0.68rem;color:var(--pink-deep);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:3px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Open Google Drive</a>
+        <a href="${td.driveLink||'https://drive.google.com'}" target="_blank" rel="noopener" style="font-size:0.68rem;color:var(--pink-deep);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:3px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Open ${td.driveName||'Google Drive'}</a>
+      </div>
+      ${td.driveLink?`<div style="background:var(--pink-soft);border:1px solid var(--pink-mid);border-radius:var(--r);padding:9px 12px;margin-bottom:10px;font-size:0.75rem;color:var(--pink-deep);line-height:1.6">
+        <strong>Drive Folder Naming:</strong> Create a folder inside the ${td.driveName} named:<br>
+        <span style="font-family:'DM Mono',monospace;background:var(--white);padding:2px 8px;border-radius:4px;border:1px solid var(--pink-mid);display:inline-block;margin-top:4px">${type.toUpperCase()}-[#] — [Submitted By] — [Subject]</span><br>
+        <span style="font-size:0.68rem;color:var(--pink-deep);margin-top:3px;display:block">e.g. RFI-003 — ALPA Exponential Builders — Beam spacing at Level 2</span>
+        <span style="font-size:0.68rem;color:var(--pink-deep)">Only share the link to that specific subfolder below.</span>
+      </div>`:''}
       </div>
       <div class="att-list" id="form-atts">${existAtts.map((a,i)=>`<div class="att-row"><input class="url" type="url" placeholder="https://drive.google.com/…" value="${esc(a.url)}"><span class="att-sep">as</span><input type="text" placeholder="Display name" value="${esc(a.name)}" style="flex:1.2"><button class="att-del" onclick="this.closest('.att-row').remove()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')}</div>
       <button class="att-add-btn" onclick="(()=>{const l=document.getElementById('form-atts');const r=document.createElement('div');r.className='att-row';r.innerHTML='<input class=\\'url\\' type=\\'url\\' placeholder=\\'https://drive.google.com/…\\'><span class=\\'att-sep\\'>as</span><input type=\\'text\\' placeholder=\\'Display name\\' style=\\'flex:1.2\\'><button class=\\'att-del\\' onclick=\\'this.closest(\\\\\'.att-row\\\\\').remove()\\'><svg width=\\'13\\' height=\\'13\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\' stroke-linecap=\\'round\\'><line x1=\\'18\\' y1=\\'6\\' x2=\\'6\\' y2=\\'18\\'/><line x1=\\'6\\' y1=\\'6\\' x2=\\'18\\' y2=\\'18\\'/></svg></button>';l.appendChild(r);r.querySelector('input').focus();})()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add file link</button>
@@ -1602,6 +1654,19 @@ const M={
       td.fields.forEach(f=>{const el=document.getElementById(`f_${f.k}`);if(el)ni[f.k]=el.value;});
       const atts=collectAtts();if(atts!==null)ni.attachments=atts;
       addAudit(ni,`Created ${td.label}`);items.push(ni);
+      // Send PM email — only for RFI and RFA
+      if(window._sendPMEmail&&(type==='rfi'||type==='rfa')){
+        const numKey={rfi:'rfi_number',rfa:'rfa_number'}[type];
+        window._sendPMEmail(
+          td.full,
+          ni[numKey]||('#'+newId),
+          ni.subject||ni.description,
+          ni.submitted_by,
+          ni.description,
+          ni.attachments||[],
+          ni.status
+        );
+      }
     }
     Store.saveItems(items);this.close();T.show(isEdit?'Item updated':'Item created','ok');Nav.render();
   },
