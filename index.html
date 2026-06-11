@@ -713,6 +713,7 @@ const overdue=i=>{
   return i.due_date<now();
 };
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const docNum=item=>{const k={rfi:'rfi_number',rfa:'rfa_number',si:'si_number',cb:'cb_number',vo:'vo_number',issue:'issue_number'}[item?.type];return(k&&item[k])||`#${item?.id}`;};
 
 // ══════════════════════════════════════════════
 //  SESSION
@@ -1014,7 +1015,7 @@ const Nav={
       const id=parseInt(v.replace('detail-',''));
       const item=items.find(x=>x.id===id);
       if(!item){Nav.go('list-all');return;}
-      title.textContent=`${TYPES[item.type]?.label} #${item.id}`;
+      title.textContent=`${TYPES[item.type]?.label} ${docNum(item)}`;
       if(S.can('canEditAll')){
         const eb=document.createElement('button');eb.className='btn btn-ghost btn-sm';
         eb.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit`;
@@ -1182,7 +1183,7 @@ const V={
     </div>
 
     ${parties.length?`<div class="dash-h">Open Items by Party</div><div class="tshell" style="padding:8px 14px;margin-bottom:24px"><table class="party-table">${parties.map(([n,c])=>`<tr><td style="font-size:0.82rem;color:var(--ink-2);padding-right:12px;white-space:nowrap">${esc(n)}</td><td style="width:100%"><div class="party-bar-bg"><div class="party-bar-fill" style="width:${Math.round(c/maxP*100)}%"></div></div></td><td style="text-align:right;font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--ink-4);padding-left:10px">${c}</td></tr>`).join('')}</table></div>`:''}
-    ${recent.length?`<div class="dash-h">Recently Added</div><div class="tshell"><table class="itable"><thead><tr><th>ID</th><th>Type</th><th>Description</th><th>Status</th><th>Due</th><th>Files</th></tr></thead><tbody>${recent.map(item=>{const od=overdue(item),desc=item.subject||item.description||'—',atts=(item.attachments||[]).length;return`<tr class="${od?'od':''}"><td class="mono">#${item.id}</td><td>${tPill(item.type)}</td><td><span class="ilink" onclick="Nav.go('detail-${item.id}')">${od?'<span class="odot"></span>':''}${esc(desc.slice(0,50))}${desc.length>50?'…':''}</span></td><td>${sBadge(item.status)}</td><td style="font-size:0.75rem;color:var(--ink-4)">${item.due_date||'—'}</td><td style="font-size:0.75rem;color:var(--ink-4)">${atts?`📎 ${atts}`:''}</td></tr>`;}).join('')}</tbody></table></div>`:
+    ${recent.length?`<div class="dash-h">Recently Added</div><div class="tshell"><table class="itable"><thead><tr><th>No.</th><th>Type</th><th>Description</th><th>Status</th><th>Due</th><th>Files</th></tr></thead><tbody>${recent.map(item=>{const od=overdue(item),desc=item.subject||item.description||'—',atts=(item.attachments||[]).length;return`<tr class="${od?'od':''}"><td class="mono">${esc(docNum(item))}</td><td>${tPill(item.type)}</td><td><span class="ilink" onclick="Nav.go('detail-${item.id}')">${od?'<span class="odot"></span>':''}${esc(desc.slice(0,50))}${desc.length>50?'…':''}</span></td><td>${sBadge(item.status)}</td><td style="font-size:0.75rem;color:var(--ink-4)">${item.due_date||'—'}</td><td style="font-size:0.75rem;color:var(--ink-4)">${atts?`📎 ${atts}`:''}</td></tr>`;}).join('')}</tbody></table></div>`:
     `<div style="text-align:center;padding:48px 0;color:var(--ink-4);font-size:0.82rem">No items yet.${S.can('canCreate')?' Click <strong>New Item</strong> to begin.':''}</div>`}
     <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
       <div>
@@ -1410,7 +1411,7 @@ const V={
     </tr></thead><tbody>
     ${items.length===0?`<tr><td colspan="8" class="empty-td">No items match your filters.</td></tr>`:
     items.map(item=>{const od=overdue(item),desc=item.subject||item.description||'—',party=item.issued_by||item.requested_by||item.assigned_to||item.responsible_party||item.submitted_by||'—';
-    return`<tr class="${od?'od':''}"><td class="mono">#${item.id}</td>${!ft?`<td>${tPill(item.type)}</td>`:''}<td><span class="ilink" onclick="Nav.go('detail-${item.id}')">${od?'<span class="odot"></span>':''}${esc(desc.slice(0,52))}${desc.length>52?'…':''}</span></td><td style="font-size:0.78rem;color:var(--ink-3)">${esc(String(party).slice(0,26))}</td><td>${sBadge(item.status)}</td><td style="font-size:0.75rem;color:var(--ink-4)">${item.due_date||item.date_issued||item.date_requested||'—'}</td>
+    return`<tr class="${od?'od':''}"><td class="mono">${esc(docNum(item))}</td>${!ft?`<td>${tPill(item.type)}</td>`:''}<td><span class="ilink" onclick="Nav.go('detail-${item.id}')">${od?'<span class="odot"></span>':''}${esc(desc.slice(0,52))}${desc.length>52?'…':''}</span></td><td style="font-size:0.78rem;color:var(--ink-3)">${esc(String(party).slice(0,26))}</td><td>${sBadge(item.status)}</td><td style="font-size:0.75rem;color:var(--ink-4)">${item.due_date||item.date_issued||item.date_requested||'—'}</td>
     ${S.can('canEditAll')?`<td><div style="display:flex;gap:3px"><button class="ibtn" onclick="M.openEdit(Store.items().find(x=>x.id===${item.id}))"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>${S.can('canDelete')?`<button class="ibtn del" onclick="Conf.show(Store.items().find(x=>x.id===${item.id}))"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:''}</div></td>`:''}
     </tr>`;}).join('')}
     </tbody></table></div>`;
@@ -1422,7 +1423,7 @@ const V={
     `<div style="font-size:0.8rem;color:var(--ink-4);font-style:italic;margin-bottom:${S.can('canEditAll')?'10':'0'}px">No attachments.</div>`;
     return`
     <div class="dback" onclick="Nav.go('list-${item.type}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Back to ${td.full}</div>
-    <div class="dtrow"><h1>${td.label} #${item.id}</h1>${tPill(item.type)}${sBadge(item.status)}${od?`<span class="badge b-open">⚠ Overdue</span>`:''}</div>
+    <div class="dtrow"><h1>${td.label} ${esc(docNum(item))}</h1>${tPill(item.type)}${sBadge(item.status)}${od?`<span class="badge b-open">⚠ Overdue</span>`:''}</div>
     <div class="dcard">
       <div class="dchead"><span class="sub">${esc(item.subject||item.description||td.full)}</span>${item.due_date?`<span style="font-size:0.75rem;color:${od?'var(--red)':'var(--ink-4)'}">Due ${item.due_date}</span>`:''}</div>
       <div class="dbody">
@@ -1702,7 +1703,7 @@ const M={
 
   async form(type,item,ctr){
     const td=TYPES[type],drops=await Store.drops();
-    const title=item?`Edit ${td.label} #${item.id}`:`New ${td.full}`;
+    const title=item?`Edit ${td.label} ${docNum(item)}`:`New ${td.full}`;
     const existAtts=item?(item.attachments||[]):[];
 
     // Auto-generate document number for new items
@@ -1944,6 +1945,23 @@ Return ONLY the JSON object, no markdown, no explanation.`;
         btn.disabled=false;
         btn.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Re-fill from PDF`;
 
+        // Show "Upload to Drive folder" button
+        const driveLink=TYPES[type]?.driveLink;
+        if(driveLink){
+          const existing=document.getElementById('pdf-drive-btn');
+          if(existing)existing.remove();
+          const driveBtn=document.createElement('a');
+          driveBtn.id='pdf-drive-btn';
+          driveBtn.href=driveLink;
+          driveBtn.target='_blank';
+          driveBtn.rel='noopener';
+          driveBtn.style.cssText='display:inline-flex;align-items:center;gap:6px;font-size:0.72rem;font-weight:600;color:#1a73e8;background:#e8f0fe;border:1px solid #aecbfa;border-radius:6px;padding:5px 10px;text-decoration:none;margin-left:6px;flex-shrink:0;transition:all 0.12s';
+          driveBtn.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Open ${TYPES[type]?.driveName||'Drive Folder'} to upload`;
+          driveBtn.onmouseover=()=>driveBtn.style.background='#d2e3fc';
+          driveBtn.onmouseout=()=>driveBtn.style.background='#e8f0fe';
+          btn.parentNode.insertBefore(driveBtn,btn.nextSibling);
+        }
+
       }catch(err){
         console.error('PDF autofill error:',err);
         status.textContent=`Error: ${err.message}`;
@@ -1960,7 +1978,7 @@ Return ONLY the JSON object, no markdown, no explanation.`;
 //  CONFIRM / TOAST
 // ══════════════════════════════════════════════
 const Conf={
-  show(item){const o=document.createElement('div');o.className='cov';o.id='cv';o.innerHTML=`<div class="cbox"><h3>Delete ${TYPES[item.type]?.label||'Item'} #${item.id}?</h3><p>Permanently removes this item. Cannot be undone.</p><div class="cact"><button class="btn btn-ghost" onclick="document.getElementById('cv').remove()">Cancel</button><button class="btn btn-del" onclick="Conf.del(${item.id})">Delete</button></div></div>`;document.body.appendChild(o);},
+  show(item){const o=document.createElement('div');o.className='cov';o.id='cv';o.innerHTML=`<div class="cbox"><h3>Delete ${TYPES[item.type]?.label||'Item'} ${docNum(item)}?</h3><p>Permanently removes this item. Cannot be undone.</p><div class="cact"><button class="btn btn-ghost" onclick="document.getElementById('cv').remove()">Cancel</button><button class="btn btn-del" onclick="Conf.del(${item.id})">Delete</button></div></div>`;document.body.appendChild(o);},
   del(id){document.getElementById('cv')?.remove();Store.saveItems(Store.items().filter(x=>x.id!==id));T.show('Deleted','ok');if(S.view===`detail-${id}`)Nav.go('list-all');else Nav.render();}
 };
 const T={
