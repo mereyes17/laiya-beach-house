@@ -615,7 +615,7 @@ const TYPES={
     {k:'decision',l:'Decision',t:'drop',dk:'decision',ce:true,responseOnly:true},
     {k:'notes',l:'Notes / Comments',t:'area',span:2,ce:true,responseOnly:true},
   ]},
-  si:{label:'SI',full:'Site Instruction',hasAtts:true,fields:[
+  si:{label:'SI',full:'Site Instruction',hasAtts:true,driveLink:'https://drive.google.com/drive/folders/1ku3f_zuDamJSuoMJj_nvAwkxvtXQx6Aq?usp=drive_link',driveName:'SI Folder',fields:[
     {k:'si_number',l:'SI #',t:'text',req:true},
     {k:'subject',l:'Subject',t:'text',req:true,span:2},
     {k:'description',l:'Description / Instruction',t:'area',req:true,span:2},
@@ -631,7 +631,7 @@ const TYPES={
     {k:'date_acknowledged',l:'Date Acknowledged',t:'date',ce:true,responseOnly:true},
     {k:'date_completed',l:'Date Completed',t:'date',ce:true,responseOnly:true},
   ]},
-  cb:{label:'CB',full:'Construction Bulletin',hasAtts:true,fields:[
+  cb:{label:'CB',full:'Construction Bulletin',hasAtts:true,driveLink:'https://drive.google.com/drive/folders/1YpkxvKfKCreINm3sATudPKX4d9nnKr8U?usp=drive_link',driveName:'CB Folder',fields:[
     {k:'cb_number',l:'CB #',t:'text',req:true},
     {k:'subject',l:'Subject',t:'text',req:true,span:2},
     {k:'description',l:'Description',t:'area',req:true,span:2},
@@ -1664,7 +1664,7 @@ const F={
 //  MODAL
 // ══════════════════════════════════════════════
 const M={
-  open(html){const o=document.createElement('div');o.className='moverlay';o.id='modal';o.onclick=e=>{if(e.target===o)this.close();};o.innerHTML=`<div class="mbox">${html}</div>`;document.body.appendChild(o);},
+  open(html){const o=document.createElement('div');o.className='moverlay';o.id='modal';o.onclick=e=>{e.stopPropagation();};o.innerHTML=`<div class="mbox">${html}</div>`;document.body.appendChild(o);},
   close(){document.getElementById('modal')?.remove();},
   openAdd(pt){S.addType=pt;S.editItem=null;pt?this.form(pt,null,false):this.typeSelect();},
   openEdit(item){S.editItem=item;S.addType=item.type;this.form(item.type,item,false);},
@@ -1730,7 +1730,10 @@ const M={
       let inp='';
       if(isSubmitterField){
         const hint=type==='si'?'Auto-filled — always the Project Manager':'Auto-filled from your account';
-        inp=`<input type="text" id="f_${f.k}" value="${esc(String(val))}" readonly style="background:var(--bg);color:var(--ink-2);font-weight:500;"><div style="font-size:0.68rem;color:var(--ink-4);margin-top:2px">${hint}</div>`;
+        const isPM=S.can('canSettings');
+        inp=isPM
+          ?`<input type="text" id="f_${f.k}" value="${esc(String(val))}" style="font-weight:500;"><div style="font-size:0.68rem;color:var(--ink-4);margin-top:2px">Auto-filled — editable as PM</div>`
+          :`<input type="text" id="f_${f.k}" value="${esc(String(val))}" readonly style="background:var(--bg);color:var(--ink-2);font-weight:500;"><div style="font-size:0.68rem;color:var(--ink-4);margin-top:2px">${hint}</div>`;
       } else if(f.t==='drop'){
         const opts=f.dk?(drops[f.dk]||[]):[];
         inp=`<select id="f_${f.k}" class="${ce}" ${dis?'disabled':''}>${f.req?'':'<option value="">— Select —</option>'}${opts.map(o=>`<option value="${esc(o)}" ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
@@ -1756,7 +1759,7 @@ const M={
         <span style="font-size:0.68rem;color:var(--pink-deep)">Only share the link to that specific subfolder below.</span>
       </div>`:''}
       </div>
-      <div class="att-list" id="form-atts">${existAtts.map((a,i)=>`<div class="att-row"><input class="url" type="url" placeholder="https://drive.google.com/…" value="${esc(a.url)}"><span class="att-sep">as</span><input type="text" placeholder="Display name" value="${esc(a.name)}" style="flex:1.2"><button class="att-del" onclick="this.closest('.att-row').remove()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')}</div>
+      <div class="att-list" id="form-atts">${existAtts.map((a,i)=>`<div class="att-row"><input class="url" type="text" placeholder="https://drive.google.com/…" value="${esc(a.url)}"><span class="att-sep">as</span><input type="text" placeholder="Display name" value="${esc(a.name)}" style="flex:1.2"><button class="att-del" onclick="this.closest('.att-row').remove()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')}</div>
       <button class="att-add-btn" onclick="(()=>{const l=document.getElementById('form-atts');const r=document.createElement('div');r.className='att-row';r.innerHTML='<input class=\\'url\\' type=\\'url\\' placeholder=\\'https://drive.google.com/…\\'><span class=\\'att-sep\\'>as</span><input type=\\'text\\' placeholder=\\'Display name\\' style=\\'flex:1.2\\'><button class=\\'att-del\\' onclick=\\'this.closest(\\\\\'.att-row\\\\\').remove()\\'><svg width=\\'13\\' height=\\'13\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\' stroke-linecap=\\'round\\'><line x1=\\'18\\' y1=\\'6\\' x2=\\'6\\' y2=\\'18\\'/><line x1=\\'6\\' y1=\\'6\\' x2=\\'18\\' y2=\\'18\\'/></svg></button>';l.appendChild(r);r.querySelector('input').focus();})()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add file link</button>
     </div>`:'';
 
@@ -1765,14 +1768,14 @@ const M={
     const resFields=td.fields.filter(f=>f.responseOnly);
 
     // When editing (not new, not ctr-only): lock all request fields, only response fields editable
-    const lockReqOnEdit=!isNew&&!!item&&!ctr;
+    const lockReqOnEdit=!isNew&&!!item&&!ctr&&!S.can('canSettings');
     const fhReq=buildFields(reqFields,lockReqOnEdit);
     const fhRes=resFields.length&&!isNew?buildFields(resFields,false):null;
 
     this.open(`<div class="mhead"><h2>${title}</h2><button class="mclose" onclick="M.close()">${X.svg.close}</button></div>
     <div class="mbody">
       ${ctr?`<div class="ctr-hint"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Fields marked ✎ are editable by your role.</div>`:''}
-      ${lockReqOnEdit?`<div style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:8px 12px;margin-bottom:12px;font-size:0.75rem;color:var(--ink-4);display:flex;align-items:center;gap:7px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Original fields are locked. Only the Response / Decision section can be updated.</div>`:''}
+      ${lockReqOnEdit?`<div style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:8px 12px;margin-bottom:12px;font-size:0.75rem;color:var(--ink-4);display:flex;align-items:center;gap:7px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Original fields are locked. Only the Response / Decision section can be updated.</div>`:(!isNew&&!!item&&!ctr&&S.can('canSettings'))?`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--r);padding:8px 12px;margin-bottom:12px;font-size:0.75rem;color:#15803d;display:flex;align-items:center;gap:7px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><polyline points="17 8 12 3 7 8"/></svg>PM override — all fields editable.</div>`:''}
       <div class="ffb err" id="ffb"></div>
       <div class="fgrid">${fhReq}</div>
       ${attSection}
@@ -1823,7 +1826,7 @@ const M={
     const item=Store.items().find(x=>x.id===id);
     const atts=JSON.parse(JSON.stringify(item.attachments||[]));
     const rows=()=>document.getElementById('att-rows');
-    const render=()=>{rows().innerHTML=atts.map((a,i)=>`<div class="att-row"><input class="url" type="url" placeholder="https://drive.google.com/…" value="${esc(a.url)}" oninput="MATT[${i}].url=this.value"><span class="att-sep">as</span><input type="text" placeholder="Display name" value="${esc(a.name)}" oninput="MATT[${i}].name=this.value" style="flex:1.2"><button class="att-del" onclick="MATTR(${i})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('');window.MATT=atts;};
+    const render=()=>{rows().innerHTML=atts.map((a,i)=>`<div class="att-row"><input class="url" type="text" placeholder="https://drive.google.com/…" value="${esc(a.url)}" oninput="MATT[${i}].url=this.value"><span class="att-sep">as</span><input type="text" placeholder="Display name" value="${esc(a.name)}" oninput="MATT[${i}].name=this.value" style="flex:1.2"><button class="att-del" onclick="MATTR(${i})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('');window.MATT=atts;};
     window.MATTR=i=>{atts.splice(i,1);render();};
     window.MATTADD=()=>{atts.push({url:'',name:''});render();setTimeout(()=>{const inp=rows().querySelector('.att-row:last-child input');if(inp)inp.focus();},30);};
     window.MATTSAVE=()=>{
@@ -1877,7 +1880,7 @@ const DIR={
         <div class="fg"><label>Revision</label><input type="text" id="dd-rev" placeholder="e.g. Rev 3"></div>
         <div class="fg"><label>Date</label><input type="date" id="dd-date"></div>
         <div class="fg"><label>Issued By</label><input type="text" id="dd-issued" placeholder="e.g. Architect"></div>
-        <div class="fg full"><label>Google Drive Link</label><input type="url" id="dd-link" placeholder="https://drive.google.com/…"></div>
+        <div class="fg full"><label>Google Drive Link</label><input type="text" id="dd-link" placeholder="https://drive.google.com/…"></div>
         <div class="fg full"><label>Notes</label><textarea id="dd-notes" rows="2"></textarea></div>
       </div>
       <div class="ferr" id="dir-err" style="margin-top:8px"></div>
