@@ -68,6 +68,7 @@ function fbListen(onUpdate){
   });
 }
 window._fb={get:fbGet,set:fbSet,getItems:fbGetItems,saveItems:fbSaveItems,nextId:fbNextId,listen:fbListen};
+window._db=db;
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
@@ -318,6 +319,11 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
 .att-sep{font-size:0.7rem;color:var(--ink-4);flex-shrink:0}
 .att-del{background:none;border:none;cursor:pointer;color:var(--ink-4);padding:2px;border-radius:3px;display:flex;flex-shrink:0}.att-del:hover{color:var(--red)}
 .att-add-btn{display:inline-flex;align-items:center;gap:5px;font-size:0.75rem;color:var(--pink-deep);cursor:pointer;background:none;border:none;font-family:inherit;padding:4px 0;font-weight:500}.att-add-btn:hover{color:var(--pink)}
+.pdf-fill-btn{display:inline-flex;align-items:center;gap:6px;font-size:0.72rem;font-weight:600;color:var(--pink-deep);background:var(--pink-soft);border:1px solid var(--pink-mid);border-radius:6px;padding:5px 10px;cursor:pointer;font-family:inherit;transition:all 0.12s;flex-shrink:0}.pdf-fill-btn:hover{background:var(--pink-mid);border-color:var(--pink)}.pdf-fill-btn:disabled{opacity:0.5;cursor:not-allowed}
+.pdf-fill-status{font-size:0.7rem;color:var(--ink-4);font-style:italic;margin-top:6px;min-height:16px;text-align:center}
+.pdf-fill-status.ok{color:#15803d;font-style:normal;font-weight:500}
+.pdf-fill-status.err{color:var(--red);font-style:normal}
+@keyframes spin{to{transform:rotate(360deg)}}
 .att-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:var(--bg);border:1px solid var(--line);border-radius:20px;font-size:0.75rem;text-decoration:none;color:var(--ink-2);transition:all 0.12s;margin:3px 4px 3px 0}
 .att-chip:hover{border-color:var(--pink);color:var(--pink-deep);background:var(--pink-soft)}
 
@@ -1534,7 +1540,18 @@ const V={
         <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem"><span style="color:${teamCount?'var(--green)':'var(--ink-4)'}">●</span><span><strong>Layer 2 — Personal PINs</strong><span style="color:var(--ink-4);margin-left:8px">${teamCount} member${teamCount!==1?'s':''} registered</span></span></div>
       </div>
     </div>
-    <div style="background:var(--amber-soft);border:1px solid #fcd34d;border-radius:var(--r);padding:12px 14px;font-size:0.78rem;color:#92400e;max-width:520px;line-height:1.7;margin-top:4px"><strong>Note:</strong> All data is stored in Firebase Firestore. Accessible from any device via your GitHub Pages URL.</div>`;
+    <div style="background:var(--amber-soft);border:1px solid #fcd34d;border-radius:var(--r);padding:12px 14px;font-size:0.78rem;color:#92400e;max-width:520px;line-height:1.7;margin-top:4px"><strong>Note:</strong> All data is stored in Firebase Firestore. Accessible from any device via your GitHub Pages URL.</div>
+    <div class="dl-card" style="margin-top:20px">
+      <div class="dl-head"><span>AI Auto-fill API Key</span><span style="font-size:0.72rem;font-weight:600;text-transform:none;color:${localStorage.getItem('foro_anthropic_key')?'var(--green)':'var(--ink-4)'}">${localStorage.getItem('foro_anthropic_key')?'● Set':'○ Not set'}</span></div>
+      <div style="padding:16px">
+        <p style="font-size:0.78rem;color:var(--ink-3);margin-bottom:12px;line-height:1.6">Required for the <strong>Auto-fill from PDF</strong> feature in RFI/RFA/SI/CB forms. Get your key at <a href="https://console.anthropic.com" target="_blank" style="color:var(--pink-deep)">console.anthropic.com</a>. Stored locally on this device only — never sent to Firebase.</p>
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+          <div class="fg" style="flex:1;min-width:200px"><label>Anthropic API Key</label><input type="password" id="api-key-inp" placeholder="sk-ant-…" value="${localStorage.getItem('foro_anthropic_key')||''}" style="font-family:'DM Mono',monospace;font-size:0.75rem"></div>
+          <button class="btn btn-pink btn-sm" onclick="(()=>{const v=document.getElementById('api-key-inp').value.trim();if(!v){alert('Enter your API key');return;}localStorage.setItem('foro_anthropic_key',v);T.show('API key saved','ok');Nav.go('security');})()">Save Key</button>
+          ${localStorage.getItem('foro_anthropic_key')?`<button class="btn btn-del btn-sm" onclick="localStorage.removeItem('foro_anthropic_key');T.show('API key removed','ok');Nav.go('security')">Remove</button>`:''}
+        </div>
+      </div>
+    </div>`;
   }
 };
 
@@ -1772,8 +1789,9 @@ const M={
     const fhReq=buildFields(reqFields,lockReqOnEdit);
     const fhRes=resFields.length&&!isNew?buildFields(resFields,false):null;
 
-    this.open(`<div class="mhead"><h2>${title}</h2><button class="mclose" onclick="M.close()">${X.svg.close}</button></div>
+    this.open(`<div class="mhead"><h2>${title}</h2><div style="display:flex;align-items:center;gap:8px">${isNew?`<button class="pdf-fill-btn" id="pdf-fill-btn" onclick="M.autofillFromPDF('${type}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Auto-fill from PDF</button>`:''}<button class="mclose" onclick="M.close()">${X.svg.close}</button></div></div>
     <div class="mbody">
+      ${isNew?`<div class="pdf-fill-status" id="pdf-fill-status"></div>`:''}
       ${ctr?`<div class="ctr-hint"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Fields marked ✎ are editable by your role.</div>`:''}
       ${lockReqOnEdit?`<div style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:8px 12px;margin-bottom:12px;font-size:0.75rem;color:var(--ink-4);display:flex;align-items:center;gap:7px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Original fields are locked. Only the Response / Decision section can be updated.</div>`:(!isNew&&!!item&&!ctr&&S.can('canSettings'))?`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--r);padding:8px 12px;margin-bottom:12px;font-size:0.75rem;color:#15803d;display:flex;align-items:center;gap:7px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><polyline points="17 8 12 3 7 8"/></svg>PM override — all fields editable.</div>`:''}
       <div class="ffb err" id="ffb"></div>
@@ -1841,6 +1859,100 @@ const M={
     <button class="att-add-btn" onclick="MATTADD()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add link</button></div>
     <div class="mfoot"><button class="btn btn-ghost" onclick="M.close()">Cancel</button><button class="btn btn-pink" onclick="MATTSAVE()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Save</button></div>`);
     render();
+  },
+
+  autofillFromPDF(type){
+    // Create hidden file input and trigger click
+    const inp=document.createElement('input');
+    inp.type='file';inp.accept='application/pdf';
+    inp.onchange=async(e)=>{
+      const file=e.target.files[0];if(!file)return;
+      const btn=document.getElementById('pdf-fill-btn');
+      const status=document.getElementById('pdf-fill-status');
+      if(!btn||!status)return;
+      btn.disabled=true;
+      btn.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Reading PDF…`;
+      status.textContent='Sending to AI…';status.className='pdf-fill-status';
+
+      try{
+        // Convert PDF to base64
+        const base64=await new Promise((res,rej)=>{
+          const r=new FileReader();
+          r.onload=()=>res(r.result.split(',')[1]);
+          r.onerror=rej;
+          r.readAsDataURL(file);
+        });
+
+        // Field targets per type
+        const fieldMap={
+          rfi:['subject','description','submitted_by','date_submitted','due_date','location'],
+          rfa:['subject','description','submitted_by','date_submitted','due_date'],
+          si: ['subject','description','issued_by','date_issued','due_date','location'],
+          cb: ['subject','description','issued_by','date_issued','due_date','location'],
+        };
+        const fields=(fieldMap[type]||['subject','description','submitted_by','date_submitted']).join(', ');
+
+        const prompt=`You are a construction document parser. Extract information from this ${type.toUpperCase()} PDF and return ONLY a valid JSON object with these fields: ${fields}.
+
+Rules:
+- subject: short title summarizing the main issue (max 80 chars)
+- description: full description text from the document, verbatim if possible, including references and specific details
+- submitted_by / issued_by: person name + company, format "Name — Company" (e.g. "KJ Caponpon — ALPA Exponential Builders")
+- date_submitted / date_issued: in YYYY-MM-DD format (convert from any format found)
+- due_date: in YYYY-MM-DD format, or empty string "" if not found
+- location: specific location mentioned, or "Site" as default
+
+Return ONLY the JSON object, no markdown, no explanation.`;
+
+        const resp=await fetch('https://api.anthropic.com/v1/messages',{
+          method:'POST',
+          headers:{
+            'Content-Type':'application/json',
+            'x-api-key': localStorage.getItem('foro_anthropic_key')||localStorage.getItem('anthropic_api_key')||'',
+            'anthropic-version':'2023-06-01',
+            'anthropic-dangerous-direct-browser-access':'true'
+          },
+          body:JSON.stringify({
+            model:'claude-sonnet-4-20250514',
+            max_tokens:1000,
+            messages:[{role:'user',content:[
+              {type:'document',source:{type:'base64',media_type:'application/pdf',data:base64}},
+              {type:'text',text:prompt}
+            ]}]
+          })
+        });
+
+        if(!resp.ok)throw new Error(`API error ${resp.status}`);
+        const data=await resp.json();
+        const raw=(data.content||[]).find(c=>c.type==='text')?.text||'';
+        const clean=raw.replace(/```json|```/g,'').trim();
+        const parsed=JSON.parse(clean);
+
+        // Fill in form fields
+        let filled=0;
+        Object.entries(parsed).forEach(([k,v])=>{
+          const el=document.getElementById(`f_${k}`);
+          if(el&&!el.disabled&&v){
+            el.value=v;
+            el.dispatchEvent(new Event('input'));
+            filled++;
+          }
+        });
+
+        status.textContent=`✓ Filled ${filled} fields from ${file.name}`;
+        status.className='pdf-fill-status ok';
+        btn.disabled=false;
+        btn.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Re-fill from PDF`;
+
+      }catch(err){
+        console.error('PDF autofill error:',err);
+        status.textContent=`Error: ${err.message}`;
+        status.className='pdf-fill-status err';
+        btn.disabled=false;
+        btn.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Auto-fill from PDF`;
+      }
+    };
+    inp.click();
   }
 };
 
