@@ -1807,8 +1807,12 @@ const M={
           ?`<input type="text" id="f_${f.k}" value="${esc(String(val))}" style="font-weight:500;"><div style="font-size:0.68rem;color:var(--ink-4);margin-top:2px">Auto-filled — editable as PM</div>`
           :`<input type="text" id="f_${f.k}" value="${esc(String(val))}" readonly style="background:var(--bg);color:var(--ink-2);font-weight:500;"><div style="font-size:0.68rem;color:var(--ink-4);margin-top:2px">${hint}</div>`;
       } else if(f.t==='drop'){
-        const opts=f.dk?(drops[f.dk]||[]):[];
-        inp=`<select id="f_${f.k}" class="${ce}" ${dis?'disabled':''}>${f.req?'':'<option value="">— Select —</option>'}${opts.map(o=>`<option value="${esc(o)}" ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
+        const isPersonField=['submitted_by','issued_by','reported_by','requested_by','approved_by','assigned_to','responsible_party'].includes(f.dk);
+        const teamMembers=(Store._cache['bh_team']||[]).map(m=>m.name+(m.company?' — '+m.company:''));
+        const baseOpts=f.dk?(drops[f.dk]||[]):[];
+        const opts=isPersonField&&teamMembers.length>0?teamMembers:baseOpts;
+        const extraOpt=(val&&!opts.includes(val))?`<option value="${esc(val)}" selected>${esc(val)}</option>`:'';
+        inp=`<select id="f_${f.k}" class="${ce}" ${dis?'disabled':''}>${f.req?'':'<option value="">— Select —</option>'}${extraOpt}${opts.map(o=>`<option value="${esc(o)}" ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
       } else if(f.t==='area'){
         inp=`<textarea id="f_${f.k}" rows="3" class="${ce}" ${dis?'disabled':''}>${esc(val)}</textarea>`;
       } else {
