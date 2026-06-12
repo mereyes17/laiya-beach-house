@@ -1101,6 +1101,8 @@ const PinStep={
 const Auth={
   enter(name,role,member){
     S.user={name,roleId:role.id,_member:member};S.role=role;
+    // Persist session so refresh doesn't kick back to gate
+    sessionStorage.setItem('foro_session',JSON.stringify({name,roleId:role.id,member:member||null}));
     // Hide all auth screens
     document.getElementById('login-screen').style.display='none';
     document.getElementById('gate').style.display='none';
@@ -1130,6 +1132,7 @@ const Auth={
   },
   async signOut(){
     Presence.stop();
+    sessionStorage.removeItem('foro_session');
     S.user=null;S.role=null;
     document.getElementById('app').classList.remove('on');
     document.getElementById('login-name').value='';
@@ -1509,9 +1512,10 @@ const X={svg:{close:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none"
 const V={
   dashboard(items){
     const isPM=S.can('canSettings');
-    const isArch=S.role?.id==='arch'||(S.role?.canEditAll&&!isPM);
-    const isGC=S.role?.id==='gc'||(!S.can('canEditAll')&&S.can('canCreateRFI'));
-    const isContractor=isGC||S.role?.id==='sub'||(!S.can('canEditAll')&&!S.can('canCreateVO'));
+    const roleName=(S.role?.name||'').toLowerCase();
+    const isArch=S.role?.id==='arch'||roleName.includes('arch')||roleName.includes('design')||(S.role?.canEditAll&&!isPM);
+    const isGC=S.role?.id==='gc'||roleName.includes('contractor')||roleName.includes('general')||(!S.can('canEditAll')&&S.can('canCreateRFI')&&!isArch);
+    const isContractor=isGC||S.role?.id==='sub'||roleName.includes('sub')||(!isPM&&!isArch);
     const active=items.filter(x=>!isTerminal(x));
     const ov=items.filter(overdue);
     const hr=new Date().getHours();
@@ -2846,6 +2850,19 @@ async function boot(){
     });
     // Hide loading screen
     document.getElementById('loading').style.display='none';
+    // Restore session if still active (refresh without sign out)
+    const savedSession=sessionStorage.getItem('foro_session');
+    if(savedSession){
+      try{
+        const {name,roleId,member}=JSON.parse(savedSession);
+        const roles=await Store.roles();
+        const role=roles.find(r=>r.id===roleId);
+        if(name&&role){
+          Auth.enter(name,role,member||null);
+          return; // skip Gate entirely
+        }
+      }catch(e){sessionStorage.removeItem('foro_session');}
+    }
     // Start app
     await Gate.init();
   }catch(e){
