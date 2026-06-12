@@ -509,8 +509,8 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
 const DEFAULT_ROLES=[
   {id:'pm',  name:'Project Manager',    canCreate:true, canCreateRFI:true,canCreateRFA:true,canCreateSI:true,canCreateCB:true,canCreateVO:true,canCreateIssue:true, canEditAll:true, canDelete:true, canSettings:true, pillClass:'pm'},
   {id:'arch',name:'Architect',          canCreate:true, canCreateRFI:true,canCreateRFA:true,canCreateSI:true,canCreateCB:true,canCreateVO:true,canCreateIssue:true, canEditAll:true, canDelete:false,canSettings:false,pillClass:'arch'},
-  {id:'gc',  name:'General Contractor', canCreate:false,canCreateRFI:true,canCreateRFA:true,canCreateSI:false,canCreateCB:false,canCreateVO:true,canCreateIssue:true, canEditAll:false,canDelete:false,canSettings:false,pillClass:'gc'},
-  {id:'sub', name:'Subcontractor',      canCreate:false,canCreateRFI:true,canCreateRFA:true,canCreateSI:false,canCreateCB:false,canCreateVO:false,canCreateIssue:true,canEditAll:false,canDelete:false,canSettings:false,pillClass:'sub'},
+  {id:'gc',  name:'General Contractor', canCreate:false,canCreateRFI:true,canCreateRFA:true,canCreateSI:false,canCreateCB:false,canCreateVO:true,canCreateIssue:true, canEditAll:false,canRespondSI:true,canRespondCB:true,canDelete:false,canSettings:false,pillClass:'gc'},
+  {id:'sub', name:'Subcontractor',      canCreate:false,canCreateRFI:true,canCreateRFA:true,canCreateSI:false,canCreateCB:false,canCreateVO:false,canCreateIssue:true,canEditAll:false,canRespondSI:true,canRespondCB:true,canDelete:false,canSettings:false,pillClass:'sub'},
 ];
 
 // ══════════════════════════════════════════════
@@ -1015,10 +1015,20 @@ const Nav={
       const id=parseInt(v.replace('detail-',''));
       const item=items.find(x=>x.id===id);
       if(!item){Nav.go('list-all');return;}
+      // Back button
+      const bb=document.createElement('button');bb.className='btn btn-ghost btn-sm';
+      bb.style.cssText='margin-right:4px;display:inline-flex;align-items:center;gap:4px';
+      bb.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg> Back`;
+      bb.onclick=()=>Nav.go(`list-${item.type}`);
+      tr.appendChild(bb);
       title.textContent=`${docNum(item)}`;
       if(S.can('canEditAll')&&!isTerminal(item)){
         const rb=document.createElement('button');rb.className='btn btn-pink btn-sm';
         rb.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Add Response`;
+        rb.onclick=()=>M.openEdit(item);tr.appendChild(rb);
+      } else if(!isTerminal(item)&&((item.type==='si'&&S.role?.canRespondSI)||(item.type==='cb'&&S.role?.canRespondCB))){
+        const rb=document.createElement('button');rb.className='btn btn-pink btn-sm';
+        rb.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Respond`;
         rb.onclick=()=>M.openEdit(item);tr.appendChild(rb);
       }
       if(S.can('canEditAll')){
@@ -1095,24 +1105,35 @@ const V={
     <div class="dash-h">Action Required</div>
 
     ${(()=>{
-      if(!S.can('canEditAll'))return'';
-      const needsResp=items.filter(x=>['rfi','rfa','si','cb'].includes(x.type)&&!isTerminal(x));
+      if(!S.can('canEditAll')&&!S.role?.canRespondSI&&!S.role?.canRespondCB)return'';
+      // PM/Arch: all open RFI/RFA/SI/CB; GC/Sub: only SI/CB they need to acknowledge
+      let needsResp;
+      if(S.can('canEditAll')){
+        needsResp=items.filter(x=>['rfi','rfa','si','cb'].includes(x.type)&&!isTerminal(x));
+      } else {
+        const myTypes=[];
+        if(S.role?.canRespondSI)myTypes.push('si');
+        if(S.role?.canRespondCB)myTypes.push('cb');
+        needsResp=items.filter(x=>myTypes.includes(x.type)&&!isTerminal(x));
+      }
       if(!needsResp.length)return'';
+      const label=S.can('canEditAll')?'Awaiting Response':'Pending — Action Required';
       return`<div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:var(--r-lg);padding:14px 16px;margin-bottom:20px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c2410c" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span style="font-size:0.72rem;font-weight:700;color:#c2410c;text-transform:uppercase;letter-spacing:0.07em">${needsResp.length} Item${needsResp.length!==1?'s':''} Awaiting Response</span>
+          <span style="font-size:0.72rem;font-weight:700;color:#c2410c;text-transform:uppercase;letter-spacing:0.07em">${needsResp.length} Item${needsResp.length!==1?'s':''} ${label}</span>
         </div>
         <div style="display:flex;flex-direction:column;gap:6px">
           ${needsResp.slice(0,5).map(x=>{
             const desc=x.subject||x.description||'—';
             const od=overdue(x);
+            const canAct=S.can('canEditAll')||(x.type==='si'&&S.role?.canRespondSI)||(x.type==='cb'&&S.role?.canRespondCB);
             return`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--white);border-radius:6px;border:1px solid #fed7aa;cursor:pointer" onclick="Nav.go('detail-${x.id}')">
               ${tPill(x.type)}
               <span style="font-size:0.75rem;font-weight:600;font-family:'DM Mono',monospace;color:var(--ink-3);flex-shrink:0">${esc(docNum(x))}</span>
               <span style="font-size:0.78rem;color:var(--ink-2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(desc.slice(0,60))}${desc.length>60?'…':''}</span>
               ${od?`<span style="font-size:0.68rem;color:var(--red);font-weight:600;flex-shrink:0">Overdue</span>`:''}
-              <button style="font-size:0.68rem;font-weight:600;color:var(--pink-deep);background:var(--pink-soft);border:1px solid var(--pink-mid);border-radius:4px;padding:3px 8px;cursor:pointer;flex-shrink:0;font-family:inherit" onclick="event.stopPropagation();M.openEdit(Store.items().find(i=>i.id===${x.id}))">Respond</button>
+              ${canAct?`<button style="font-size:0.68rem;font-weight:600;color:var(--pink-deep);background:var(--pink-soft);border:1px solid var(--pink-mid);border-radius:4px;padding:3px 8px;cursor:pointer;flex-shrink:0;font-family:inherit" onclick="event.stopPropagation();M.openEdit(Store.items().find(i=>i.id===${x.id}))">Respond</button>`:''}
             </div>`;
           }).join('')}
           ${needsResp.length>5?`<div style="font-size:0.72rem;color:var(--ink-4);text-align:center;padding-top:4px">+${needsResp.length-5} more — see All Items</div>`:''}
@@ -1529,7 +1550,9 @@ const V={
       </div>
       <div><div style="font-size:0.72rem;font-weight:600;color:var(--ink-3);margin-bottom:8px">Other Permissions</div>
         <div style="display:flex;flex-wrap:wrap;gap:10px">
-          <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer"><input type="checkbox" id="rm-edit"> Edit all fields</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer"><input type="checkbox" id="rm-edit"> Edit all fields (respond to RFI/RFA)</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer"><input type="checkbox" id="rm-respond-si"> Respond to Site Instructions (SI)</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer"><input type="checkbox" id="rm-respond-cb"> Respond to Construction Bulletins (CB)</label>
           <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer"><input type="checkbox" id="rm-delete"> Delete items</label>
         </div>
         <div style="font-size:0.7rem;color:var(--ink-4);margin-top:6px">All roles can view items and update response/notes fields (✎).</div>
@@ -1667,7 +1690,7 @@ const RM={
     typePerms.canCreateVO=document.getElementById('rm-c-vo')?.checked||false;
     typePerms.canCreateIssue=document.getElementById('rm-c-issue')?.checked||false;
     const canCreate=Object.values(typePerms).some(Boolean);
-    roles.push({id:'r_'+Date.now(),name,canCreate,canCreateRFI:typePerms.canCreateRFI,canCreateRFA:typePerms.canCreateRFA,canCreateSI:typePerms.canCreateSI,canCreateCB:typePerms.canCreateCB,canCreateVO:typePerms.canCreateVO,canCreateIssue:typePerms.canCreateIssue,canEditAll:document.getElementById('rm-edit').checked,canDelete:document.getElementById('rm-delete').checked,canSettings:false,pillClass:'other'});
+    roles.push({id:'r_'+Date.now(),name,canCreate,canCreateRFI:typePerms.canCreateRFI,canCreateRFA:typePerms.canCreateRFA,canCreateSI:typePerms.canCreateSI,canCreateCB:typePerms.canCreateCB,canCreateVO:typePerms.canCreateVO,canCreateIssue:typePerms.canCreateIssue,canEditAll:document.getElementById('rm-edit').checked,canRespondSI:document.getElementById('rm-respond-si')?.checked||false,canRespondCB:document.getElementById('rm-respond-cb')?.checked||false,canDelete:document.getElementById('rm-delete').checked,canSettings:false,pillClass:'other'});
     await Store.saveRoles(roles);err.textContent='';T.show(`Role "${name}" added`,'ok');Nav.render();Login.init();
   },
   async remove(i){const roles=await Store.roles();roles.splice(i,1);await Store.saveRoles(roles);T.show('Role removed','ok');Nav.render();Login.init();}
@@ -1960,9 +1983,12 @@ Return ONLY the JSON object, no markdown, no explanation.`;
         const clean=raw.replace(/```json|```/g,'').trim();
         const parsed=JSON.parse(clean);
 
-        // Fill in form fields
+        // Fill in form fields — skip submitter fields for non-PM (use logged-in user)
+        const submitterFields=['submitted_by','issued_by','reported_by','requested_by'];
+        const isPM=S.can('canSettings');
         let filled=0;
         Object.entries(parsed).forEach(([k,v])=>{
+          if(submitterFields.includes(k)&&!isPM)return; // non-PM: keep auto-filled name
           const el=document.getElementById(`f_${k}`);
           if(el&&!el.disabled&&v){
             el.value=v;
