@@ -539,7 +539,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Displ
     </div>
     <div class="lw-field">
       <label>Your Full Name</label>
-      <input type="text" id="login-name" placeholder="e.g. KJ Caponpon" autocomplete="name" oninput="Login.check()" onkeydown="if(event.key==='Enter')Login.next()">
+      <input type="text" id="login-name" placeholder="e.g. Khimme Caponpon" autocomplete="name" oninput="Login.check()" onkeydown="if(event.key==='Enter')Login.next()">
       <div class="lw-name-hint">Type exactly as registered — name is case-sensitive</div>
     </div>
     <div class="lw-field">
@@ -695,7 +695,9 @@ const Store={
       snap.forEach(doc=>{
         const k=doc.id;
         if(k.startsWith('presence_')){
-          const d=doc.data();
+          const raw=doc.data();
+          // Handle both flat {name,role,ts} and fbSet-wrapped {v:{name,role,ts}}
+          const d=(raw&&raw.v&&raw.v.ts)?raw.v:raw;
           if(d&&d.ts)out.push(d);
         }
       });
@@ -1174,9 +1176,7 @@ const Presence={
     const write=async()=>{
       try{
         const key=`presence_${name.replace(/\s+/g,'_')}`;
-        // Write flat (not wrapped) so _loadPresence can read name/role/ts directly
-        try{const {setDoc,doc}=await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
-        await setDoc(doc(window._db,'config',key),{name,role:roleName,ts:Date.now()});}catch(e2){}
+        await window._fb.set(key,{name,role:roleName,ts:Date.now()});
       }catch(e){}
     };
     await write();
@@ -1186,12 +1186,11 @@ const Presence={
   },
   stop(){
     if(this._timer)clearInterval(this._timer);
-    // Remove own presence
+    // Remove own presence by writing null (fbSet with null removes the doc effectively)
     try{
       const name=S.user?.name||'';
       const key=`presence_${name.replace(/\s+/g,'_')}`;
-      try{const {deleteDoc,doc}=await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
-      await deleteDoc(doc(window._db,'config',key));}catch(e){}
+      window._fb.set(key,null);
     }catch(e){}
   },
   listen(){
@@ -2503,7 +2502,7 @@ const M={
 Rules:
 - subject: short title summarizing the main issue (max 80 chars)
 - description: full description text from the document, verbatim if possible, including references and specific details
-- submitted_by / issued_by: person name + company, format "Name — Company" (e.g. "KJ Caponpon — ALPA Exponential Builders")
+- submitted_by / issued_by: person name + company, format "Name — Company" (e.g. "Khimme Caponpon — ALPA Exponential Builders")
 - date_submitted / date_issued: in YYYY-MM-DD format (convert from any format found)
 - due_date: in YYYY-MM-DD format, or empty string "" if not found
 - location: specific location mentioned, or "Site" as default
