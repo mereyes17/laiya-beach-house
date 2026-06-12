@@ -104,15 +104,17 @@ window._sendPMEmail=function(type,num,subject,submittedBy,description,attachment
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap');
 :root{
-  --pink:#f472b6;--pink-soft:#fce7f3;--pink-mid:#fbcfe8;--pink-deep:#db2777;
-  --ink:#18181b;--ink-2:#3f3f46;--ink-3:#71717a;--ink-4:#a1a1aa;
-  --line:#e4e4e7;--line-soft:#f4f4f5;--white:#ffffff;--bg:#fafafa;
-  --red:#ef4444;--red-soft:#fef2f2;--amber:#f59e0b;--amber-soft:#fffbeb;
-  --green:#22c55e;--green-soft:#f0fdf4;--zinc:#71717a;--zinc-soft:#f4f4f5;
-  --sidebar-w:224px;--r:6px;--r-lg:10px;
+  --pink:#c4a0ad;--pink-soft:#f5eeef;--pink-mid:#dfc8cc;--pink-deep:#7c4d5a;
+  --pink-hot:#c4186c;--pink-hot-soft:#fce7f3;
+  --ink:#2f3437;--ink-2:#4a5568;--ink-3:#718096;--ink-4:#a0aec0;
+  --line:#ede8e2;--line-soft:#f5f3f0;--white:#ffffff;--bg:#f5f3f0;
+  --red:#ef4444;--red-soft:#fef2f2;--amber:#f59e0b;--amber-soft:#fff8f0;
+  --green:#22c55e;--green-soft:#f0fdf4;--zinc:#9a8f85;--zinc-soft:#f5f3f0;
+  --terra:#e8a87c;--terra-soft:#fff3e8;--terra-deep:#9a4a20;
+  --sidebar-w:196px;--r:8px;--r-lg:12px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5}
 
 /* ── LOADING ── */
 #loading{position:fixed;inset:0;background:var(--white);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9000;gap:16px}
@@ -138,23 +140,32 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
 .gate-err{font-size:0.75rem;color:var(--red);min-height:18px}
 .gate-hint{font-size:0.7rem;color:var(--ink-4);margin-top:14px}
 
-/* ── LOGIN SCREEN ── */
-.login-screen{position:fixed;inset:0;background:var(--white);display:flex;align-items:center;justify-content:center;z-index:2000}
-.lw{width:100%;max-width:400px;padding:0 24px}
-.lw-mark{width:42px;height:42px;border-radius:11px;background:var(--pink);display:flex;align-items:center;justify-content:center;margin-bottom:22px}
-.lw-proj{font-size:0.7rem;font-weight:700;color:var(--pink-deep);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px}
-.lw h1{font-size:1.4rem;font-weight:600;letter-spacing:-0.04em;margin-bottom:4px}
-.lw-sub{font-size:0.83rem;color:var(--ink-3);margin-bottom:24px}
+/* ── LOGIN SCREEN — split layout ── */
+.login-screen{position:fixed;inset:0;background:var(--white);display:flex;z-index:2000}
+.lw-photo{flex:1.2;position:relative;overflow:hidden;display:none}
+@media(min-width:640px){.lw-photo{display:block}}
+.lw-photo-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.lw-photo-fallback{position:absolute;inset:0;background:linear-gradient(160deg,#87ceeb 0%,#5ba8c4 12%,#4a8fa8 22%,#7a9e8a 32%,#9bb88a 42%,#c8b89a 52%,#b09070 62%,#7a6050 72%,#5a4030 82%,#eee8e0 90%,#c8c8b8 100%)}
+.lw-photo-overlay{position:absolute;inset:0;background:linear-gradient(270deg,rgba(255,255,255,0) 50%,rgba(255,255,255,0.7) 100%)}
+.lw-photo-badge{position:absolute;bottom:20px;left:20px;background:rgba(47,52,55,0.72);border-radius:10px;padding:8px 12px;backdrop-filter:blur(6px)}
+.lw-photo-badge-title{font-size:0.82rem;font-weight:700;color:#fff;letter-spacing:-0.01em}
+.lw-photo-badge-sub{font-size:0.72rem;color:rgba(255,255,255,0.65);margin-top:2px}
+.lw{width:100%;max-width:380px;padding:32px 28px;display:flex;flex-direction:column;justify-content:center;border-left:1px solid var(--line);background:var(--white);overflow-y:auto}
+.lw-mark{width:34px;height:34px;border-radius:9px;background:var(--pink);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.lw-proj{font-size:0.68rem;font-weight:700;color:var(--pink-deep);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px}
+.lw h1{font-size:1.3rem;font-weight:700;letter-spacing:-0.04em;margin-bottom:3px;color:var(--ink)}
+.lw-sub{font-size:0.82rem;color:var(--ink-4);margin-bottom:22px}
 .lw-field{margin-bottom:14px}
-.lw-field label{font-size:0.7rem;font-weight:700;color:var(--ink-3);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.07em}
+.lw-field label{font-size:0.68rem;font-weight:700;color:var(--ink-3);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.07em}
 .lw-field input,.lw-field select{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:var(--r-lg);font-size:0.9rem;font-family:inherit;outline:none;transition:border-color 0.12s;background:var(--white);color:var(--ink)}
 .lw-field input:focus,.lw-field select:focus{border-color:var(--pink);box-shadow:0 0 0 3px var(--pink-soft)}
-/* PIN entry row */
+.lw-name-hint{font-size:0.68rem;color:var(--ink-4);margin-top:3px}
 .lw-pin-row{display:flex;gap:8px;margin-bottom:6px}
 .lw-pin-row input{flex:1;text-align:center;font-family:'DM Mono',monospace;letter-spacing:0.25em;font-size:1.1rem;padding:10px 8px}
 .lw-err{font-size:0.75rem;color:var(--red);min-height:18px;margin-top:2px}
-.lw-enter{margin-top:16px;width:100%;padding:13px;background:var(--ink);color:white;border:none;border-radius:var(--r-lg);font-size:0.875rem;font-weight:600;cursor:pointer;font-family:inherit;transition:background 0.15s}
+.lw-enter{margin-top:16px;width:100%;padding:12px;background:var(--ink);color:white;border:none;border-radius:var(--r-lg);font-size:0.875rem;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;letter-spacing:-0.01em}
 .lw-enter:hover{background:var(--ink-2)}.lw-enter:disabled{opacity:0.35;cursor:not-allowed}
+.lw-hint{font-size:0.7rem;color:var(--ink-4);text-align:center;margin-top:10px}
 .lw-notice{background:var(--amber-soft);border:1px solid #fcd34d;border-radius:var(--r);padding:9px 12px;font-size:0.77rem;color:#92400e;margin-bottom:16px;display:flex;gap:7px;align-items:flex-start;line-height:1.5}
 
 /* ── PIN ENTRY (personal PIN keypad after name selected) ── */
@@ -170,35 +181,61 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
 
 /* ── SIDEBAR ── */
 #sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
-.sb-top{padding:16px 14px 12px;border-bottom:1px solid var(--line-soft)}
-.sb-logo{display:flex;align-items:center;gap:9px;margin-bottom:10px}
-.sb-lm{width:28px;height:28px;border-radius:7px;background:var(--pink);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.sb-ln{font-size:0.875rem;font-weight:600;color:var(--ink);letter-spacing:-0.02em}
-.sb-user{font-size:0.8rem;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-top{padding:14px 12px 10px}
+.sb-logo{display:flex;align-items:center;gap:9px;margin-bottom:18px}
+.sb-lm{width:28px;height:28px;border-radius:8px;background:var(--pink);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-ln{font-size:0.9rem;font-weight:700;color:var(--ink);letter-spacing:-0.02em}
+.sb-user{font-size:0.82rem;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sb-rp{display:inline-flex;align-items:center;font-size:0.67rem;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:3px}
 .sb-rp.pm{background:var(--pink-soft);color:var(--pink-deep)}
 .sb-rp.arch{background:#eff6ff;color:#1d4ed8}
-.sb-rp.gc{background:var(--amber-soft);color:#92400e}
+.sb-rp.gc{background:var(--terra-soft);color:var(--terra-deep)}
 .sb-rp.sub{background:var(--green-soft);color:#15803d}
 .sb-rp.other{background:var(--zinc-soft);color:var(--zinc)}
-.sb-nav{padding:10px 6px;flex:1}
-.sb-sec{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-4);padding:10px 8px 4px}
-.sb-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r);cursor:pointer;font-size:0.82rem;font-weight:400;color:var(--ink-3);transition:all 0.12s;user-select:none}
+.sb-nav{padding:4px 8px;flex:1}
+.sb-sec{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-4);padding:12px 6px 4px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:var(--r);cursor:pointer;font-size:0.84rem;font-weight:500;color:var(--ink-3);transition:all 0.12s;user-select:none;margin-bottom:1px}
 .sb-item:hover{background:var(--line-soft);color:var(--ink)}
-.sb-item.on{background:var(--pink-soft);color:var(--pink-deep);font-weight:500}
-.sb-item svg{flex-shrink:0;opacity:0.65}.sb-item.on svg{opacity:1}
-.sb-badge{margin-left:auto;background:var(--pink);color:white;font-size:0.6rem;padding:1px 6px;border-radius:20px;font-weight:700}
-.sb-foot{padding:10px 6px 14px;border-top:1px solid var(--line-soft)}
-.sb-foot-btn{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r);font-size:0.82rem;color:var(--ink-3);cursor:pointer;background:none;border:none;font-family:inherit;transition:all 0.12s;width:100%}
+.sb-item.on{background:var(--pink-hot-soft);color:var(--pink-hot);font-weight:600}
+.sb-item svg{flex-shrink:0;opacity:0.5;width:15px;height:15px}.sb-item.on svg{opacity:1}
+.sb-badge{margin-left:auto;background:var(--pink-hot);color:white;font-size:0.6rem;padding:1px 6px;border-radius:20px;font-weight:800;min-width:18px;text-align:center}
+.sb-badge-gray{margin-left:auto;background:var(--line);color:var(--ink-3);font-size:0.6rem;padding:1px 6px;border-radius:20px;font-weight:700;min-width:18px;text-align:center}
+.sb-badge-warn{margin-left:auto;background:var(--terra-soft);color:var(--terra-deep);font-size:0.6rem;padding:1px 6px;border-radius:20px;font-weight:800;min-width:18px;text-align:center}
+.sb-foot{padding:10px 10px 14px;border-top:1px solid var(--line)}
+.sb-foot-user{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.sb-foot-av{width:28px;height:28px;border-radius:50%;background:var(--pink-soft);display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:800;color:var(--pink-deep);flex-shrink:0;position:relative}
+.sb-foot-av .online-dot{position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;background:#22c55e;border:2px solid var(--white)}
+.sb-foot-name{font-size:0.82rem;font-weight:600;color:var(--ink)}
+.sb-foot-role{font-size:0.7rem;color:var(--ink-4)}
+.presence-label{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-4);margin-bottom:5px}
+.presence-row{display:flex;align-items:center;gap:2px}
+.pres-av{width:22px;height:22px;border-radius:50%;border:2px solid var(--white);display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:800;margin-left:-5px;position:relative;flex-shrink:0;cursor:default}
+.pres-av:first-child{margin-left:0}
+.pres-av .p-on{position:absolute;bottom:0;right:0;width:6px;height:6px;border-radius:50%;background:#22c55e;border:1.5px solid var(--white)}
+.pres-av .p-idle{position:absolute;bottom:0;right:0;width:6px;height:6px;border-radius:50%;background:var(--amber);border:1.5px solid var(--white)}
+.pres-count{font-size:0.72rem;color:var(--pink-deep);font-weight:600;margin-left:7px}
+.sb-foot-btn{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--r);font-size:0.82rem;color:var(--ink-3);cursor:pointer;background:none;border:none;font-family:inherit;transition:all 0.12s;width:100%}
 .sb-foot-btn:hover{background:var(--line-soft);color:var(--ink)}
 
 /* ── TOPBAR ── */
 #main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-#topbar{background:var(--white);border-bottom:1px solid var(--line);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.tb-left{display:flex;align-items:center;gap:10px}
-.tb-title{font-size:0.9rem;font-weight:600;color:var(--ink);letter-spacing:-0.02em}
-.tb-right{display:flex;gap:8px}
-#content{flex:1;overflow-y:auto;padding:26px 26px 40px}
+#topbar{background:var(--white);border-bottom:1px solid var(--line);padding:0 20px;min-height:54px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:12px}
+.tb-left{display:flex;flex-direction:column;justify-content:center;gap:1px}
+.tb-date{font-size:0.68rem;font-weight:500;color:var(--ink-4);text-transform:uppercase;letter-spacing:0.04em}
+.tb-title{font-size:1rem;font-weight:700;color:var(--ink);letter-spacing:-0.03em;line-height:1.1}
+.tb-right{display:flex;gap:8px;align-items:center}
+.tb-search{position:relative;flex:1;max-width:240px}
+.tb-search input{width:100%;padding:6px 10px 6px 30px;border:1px solid var(--line);border-radius:var(--r);font-size:0.8rem;font-family:inherit;outline:none;background:var(--line-soft);color:var(--ink);transition:all 0.15s}
+.tb-search input:focus{border-color:var(--pink);background:var(--white);box-shadow:0 0 0 3px var(--pink-soft)}
+.tb-search-icon{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--ink-4);pointer-events:none}
+.tb-search-results{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:200;max-height:280px;overflow-y:auto;display:none}
+.tb-search-results.open{display:block}
+.tb-sr-item{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--line-soft)}
+.tb-sr-item:last-child{border:none}
+.tb-sr-item:hover{background:var(--line-soft)}
+.tb-sr-subj{flex:1;font-size:0.8rem;color:var(--ink);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-sr-meta{font-size:0.72rem;color:var(--ink-4)}
+#content{flex:1;overflow-y:auto;padding:22px 22px 40px}
 
 /* ── BUTTONS ── */
 .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);border:none;cursor:pointer;font-size:0.8rem;font-weight:500;font-family:inherit;transition:all 0.12s;line-height:1;letter-spacing:-0.01em}
@@ -209,19 +246,88 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
 .btn-sm{padding:5px 10px;font-size:0.75rem}
 
 /* ── KPI / DASH ── */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:10px;margin-bottom:24px}
-.kpi{background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:15px 13px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden}
-.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--line)}
-.kpi.c-pink::after{background:var(--pink)}.kpi.c-blue::after{background:#60a5fa}.kpi.c-purple::after{background:#a78bfa}
-.kpi.c-red::after{background:var(--red)}.kpi.c-amber::after{background:var(--amber)}.kpi.c-green::after{background:var(--green)}.kpi.c-zinc::after{background:var(--zinc)}
-.kpi:hover{border-color:var(--pink-mid);transform:translateY(-1px);box-shadow:0 3px 14px rgba(244,114,182,0.1)}
-.kpi-lbl{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);margin-bottom:8px}
-.kpi-num{font-size:1.9rem;font-weight:300;color:var(--ink);letter-spacing:-0.05em;line-height:1;font-family:'DM Mono',monospace}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:10px;margin-bottom:20px}
+.kpi{background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 14px 12px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r-lg) var(--r-lg) 0 0}
+.kpi::after{display:none}
+.kpi.c-pink::before{background:var(--pink)}.kpi.c-blue::before{background:#60a5fa}.kpi.c-purple::before{background:#a78bfa}
+.kpi.c-red::before{background:var(--red)}.kpi.c-amber::before{background:var(--amber)}.kpi.c-green::before{background:var(--green)}.kpi.c-zinc::before{background:var(--zinc)}
+.kpi.c-terra::before{background:var(--terra)}
+.kpi:hover{border-color:var(--pink-mid);transform:translateY(-1px);box-shadow:0 4px 16px rgba(196,160,173,0.15)}
+.kpi-lbl{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-4);margin-bottom:6px;margin-top:2px}
+.kpi-num{font-size:1.8rem;font-weight:700;color:var(--ink);letter-spacing:-0.05em;line-height:1}
+.kpi-sub{font-size:0.72rem;color:var(--ink-4);margin-top:4px}
+.kpi-trend{font-size:0.68rem;font-weight:600;margin-top:2px}
+.kpi-trend.up{color:var(--red)}.kpi-trend.down{color:#15803d}.kpi-trend.flat{color:var(--ink-4)}
+.kpi-bar{height:2px;border-radius:1px;background:var(--line);margin-top:8px}
+.kpi-bar-fill{height:2px;border-radius:1px}
 .kpi.c-red .kpi-num{color:var(--red)}
 .dash-h{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);margin-bottom:12px}
-.dash-greeting{margin-bottom:22px}
-.dash-greeting .dg-date{font-size:1.05rem;font-weight:600;color:var(--ink);letter-spacing:-0.03em}
-.dash-greeting .dg-sub{font-size:0.8rem;color:var(--ink-4);margin-top:2px}
+.dash-greeting{margin-bottom:18px}
+.dash-greeting .dg-date{font-size:0.82rem;color:var(--ink-4);margin-bottom:2px}
+.dash-greeting .dg-name{font-size:1.1rem;font-weight:700;color:var(--ink);letter-spacing:-0.03em}
+.dash-greeting .dg-sub{font-size:0.78rem;color:var(--ink-4);margin-top:2px}
+/* comment thread */
+.comment-thread{display:flex;flex-direction:column;gap:0}
+.comment-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line-soft)}
+.comment-item:last-child{border-bottom:none}
+.comment-av{width:28px;height:28px;border-radius:50%;background:var(--pink-soft);display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:800;color:var(--pink-deep);flex-shrink:0;margin-top:1px}
+.comment-body{flex:1}
+.comment-meta{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+.comment-who{font-size:0.78rem;font-weight:700;color:var(--ink)}
+.comment-role{font-size:0.68rem;color:var(--ink-4)}
+.comment-time{font-size:0.68rem;color:var(--ink-4);margin-left:auto;font-family:monospace}
+.comment-text{font-size:0.82rem;color:var(--ink-2);line-height:1.5}
+.comment-official{border-left:3px solid var(--pink);padding-left:8px;background:var(--pink-soft);border-radius:0 var(--r) var(--r) 0;padding:6px 10px}
+.comment-box{display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line-soft)}
+.comment-input{flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r);font-size:0.82rem;font-family:inherit;outline:none;resize:none;min-height:36px;max-height:100px;transition:border-color 0.12s}
+.comment-input:focus{border-color:var(--pink);box-shadow:0 0 0 3px var(--pink-soft)}
+.comment-send{padding:7px 14px;background:var(--ink);color:white;border:none;border-radius:var(--r);font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;align-self:flex-end}
+.comment-send:hover{background:var(--ink-2)}
+/* seen indicator */
+.seen-indicator{display:flex;align-items:center;gap:6px;font-size:0.72rem;color:#15803d;background:var(--green-soft);border:1px solid #bbf7d0;border-radius:var(--r);padding:5px 10px;margin-top:8px}
+.seen-indicator svg{flex-shrink:0}
+/* activity log */
+.activity-log{display:flex;flex-direction:column;gap:0}
+.activity-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-soft)}
+.activity-item:last-child{border-bottom:none}
+.activity-line{display:flex;flex-direction:column;gap:1px;flex:1}
+.activity-action{font-size:0.78rem;color:var(--ink-2)}
+.activity-action strong{color:var(--ink);font-weight:600}
+.activity-time{font-size:0.68rem;color:var(--ink-4);font-family:monospace}
+/* drive link card */
+.drive-card{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px 14px;cursor:pointer;transition:all 0.15s;text-decoration:none;margin-bottom:16px}
+.drive-card:hover{border-color:var(--pink-mid);box-shadow:0 2px 12px rgba(196,160,173,0.12)}
+.drive-icon{width:34px;height:34px;border-radius:8px;background:var(--pink-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.drive-text{flex:1}
+.drive-title{font-size:0.85rem;font-weight:600;color:var(--pink-deep)}
+.drive-sub{font-size:0.72rem;color:var(--ink-4);margin-top:1px}
+.drive-arr{font-size:0.85rem;color:var(--pink);font-weight:700}
+/* priority item */
+.priority-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--white);border-radius:var(--r);border:1px solid var(--line);margin-bottom:5px;cursor:pointer;transition:all 0.12s}
+.priority-item:hover{border-color:var(--pink-mid)}
+.priority-item:last-child{margin-bottom:0}
+.priority-item.urgent{border-left:3px solid var(--red)}
+.priority-item.warn{border-left:3px solid var(--amber)}
+.pi-text{flex:1;min-width:0}
+.pi-title{font-size:0.82rem;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pi-sub{font-size:0.72rem;color:var(--ink-4);margin-top:1px}
+.pi-age{font-size:0.72rem;font-weight:700;color:var(--red);flex-shrink:0}
+.pi-warn-age{font-size:0.72rem;font-weight:700;color:#c2410c;flex-shrink:0}
+.pi-act-btn{font-size:0.7rem;font-weight:700;padding:3px 9px;border-radius:5px;background:var(--pink-soft);color:var(--pink-deep);border:1px solid var(--pink-mid);cursor:pointer;flex-shrink:0;font-family:inherit;white-space:nowrap}
+.pi-act-btn:hover{background:var(--pink-mid)}
+/* new since last visit */
+.new-since{display:flex;align-items:center;gap:8px;background:var(--pink-soft);border:1px solid var(--pink-mid);border-radius:var(--r);padding:8px 12px;margin-bottom:14px;cursor:pointer;transition:all 0.12s}
+.new-since:hover{border-color:var(--pink)}
+.new-since-dot{width:7px;height:7px;border-radius:50%;background:var(--pink-hot);flex-shrink:0}
+.new-since-lbl{font-size:0.8rem;font-weight:600;color:var(--pink-deep);flex:1}
+.new-since-arr{font-size:0.8rem;color:var(--pink);font-weight:700}
+/* CTA card */
+.cta-card{background:var(--pink-soft);border:1.5px dashed var(--pink-mid);border-radius:var(--r-lg);padding:18px;text-align:center}
+.cta-title{font-size:0.88rem;font-weight:700;color:var(--pink-deep);margin-bottom:3px}
+.cta-sub{font-size:0.78rem;color:var(--ink-4);margin-bottom:12px}
+.cta-btn{display:inline-flex;align-items:center;gap:6px;background:var(--pink);color:white;font-size:0.82rem;font-weight:700;padding:8px 18px;border-radius:var(--r);cursor:pointer;border:none;font-family:inherit}
+.cta-btn:hover{background:var(--pink-deep)}
 .act-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;margin-bottom:24px}
 .act-card{background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px 14px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:11px}
 .act-card:hover{border-color:var(--pink-mid);transform:translateY(-1px);box-shadow:0 3px 14px rgba(244,114,182,0.1)}
@@ -412,21 +518,29 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
   </div>
 </div>
 
-<!-- ══ STEP 2: Login (name + role) ══ -->
+<!-- ══ STEP 2: Login (name + role) — split layout ══ -->
 <div class="login-screen" id="login-screen" style="display:none">
+  <div class="lw-photo">
+    <div class="lw-photo-fallback"></div>
+    <div class="lw-photo-overlay"></div>
+    <div class="lw-photo-badge">
+      <div class="lw-photo-badge-title">Lim Beach House</div>
+      <div class="lw-photo-badge-sub">Laiya, San Juan, Batangas</div>
+    </div>
+  </div>
   <div class="lw">
-    <div class="lw-mark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+    <div class="lw-mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
     <div class="lw-proj">Beach House — Mr. &amp; Mrs. Jose Ma. K. Lim</div>
     <h1>Sign In</h1>
-    <p class="lw-sub">Enter your name and select your role.</p>
+    <p class="lw-sub">Foro Consulting Construction Tracker</p>
     <div id="lw-notice" class="lw-notice" style="display:none">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span>No team members are registered yet. Sign in as <strong>Project Manager</strong> to add your team in Settings → Team Members.</span>
+      <span>No team members yet. Sign in as <strong>Project Manager</strong> to add your team in Settings → Team Members.</span>
     </div>
     <div class="lw-field">
       <label>Your Full Name</label>
-      <input type="text" id="login-name" placeholder="e.g. Maria Santos" autocomplete="name" oninput="Login.check()" onkeydown="if(event.key==='Enter')Login.next()">
-      <div style="font-size:0.68rem;color:var(--ink-4);margin-top:4px">⚠ Name is case-sensitive. Enter exactly as registered — e.g. <strong>Maria Santos</strong> not <strong>maria santos</strong>.</div>
+      <input type="text" id="login-name" placeholder="e.g. KJ Caponpon" autocomplete="name" oninput="Login.check()" onkeydown="if(event.key==='Enter')Login.next()">
+      <div class="lw-name-hint">Type exactly as registered — name is case-sensitive</div>
     </div>
     <div class="lw-field">
       <label>Your Role</label>
@@ -436,6 +550,7 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
     </div>
     <div class="lw-err" id="login-err"></div>
     <button class="lw-enter" id="login-btn" onclick="Login.next()">Continue →</button>
+    <div class="lw-hint">Foro Consulting Inc.</div>
   </div>
 </div>
 
@@ -458,33 +573,23 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
     <div class="sb-top">
       <div class="sb-logo">
         <div class="sb-lm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
-        <span class="sb-ln">Beach House</span>
+        <span class="sb-ln">Foro</span>
       </div>
-      <div id="sb-user" class="sb-user"></div>
-      <div id="sb-rp" class="sb-rp"></div>
     </div>
-    <div class="sb-nav">
-      <div class="sb-sec">Overview</div>
-      <div class="sb-item" data-v="focus" onclick="Nav.go('focus')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Today's Focus<span class="sb-badge" id="fb" style="display:none"></span></div>
-      <div class="sb-item on" data-v="dashboard" onclick="Nav.go('dashboard')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard<span class="sb-badge" id="ob" style="display:none"></span></div>
-      <div class="sb-item" data-v="schedule" onclick="Nav.go('schedule')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</div>
-      <div class="sb-item" data-v="directory" onclick="Nav.go('directory')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Directory</div>
-      <div class="sb-sec">Documents</div>
-      <div class="sb-item" data-v="list-all" onclick="Nav.go('list-all')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>All Items</div>
-      <div class="sb-item" data-v="list-rfi" onclick="Nav.go('list-rfi')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>RFIs</div>
-      <div class="sb-item" data-v="list-rfa" onclick="Nav.go('list-rfa')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>RFAs</div>
-      <div class="sb-item" data-v="list-si" onclick="Nav.go('list-si')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Site Instructions</div>
-      <div class="sb-item" data-v="list-cb" onclick="Nav.go('list-cb')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Construction Bulletins</div>
-      <div class="sb-item" data-v="list-vo" onclick="Nav.go('list-vo')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/><circle cx="12" cy="12" r="10"/></svg>Variation Orders</div>
-      <div class="sb-item" data-v="list-issue" onclick="Nav.go('list-issue')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Issues</div>
-      <div class="sb-sec" id="sb-settings-sec" style="display:none">Settings</div>
-      <div class="sb-item" data-v="team" onclick="Nav.go('team')" id="sb-team" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Team Members</div>
-      <div class="sb-item" data-v="roles" onclick="Nav.go('roles')" id="sb-roles" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Roles</div>
-      <div class="sb-item" data-v="dropdowns" onclick="Nav.go('dropdowns')" id="sb-dl" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><polyline points="3 6 4 7 6 5"/><polyline points="3 12 4 13 6 11"/><polyline points="3 18 4 19 6 17"/></svg>Dropdown Lists</div>
-      <div class="sb-item" data-v="security" onclick="Nav.go('security')" id="sb-sec-item" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Security</div>
+    <div class="sb-nav" id="sb-nav-dynamic">
+      <!-- Rendered by Nav.renderSidebar() based on role -->
     </div>
     <div class="sb-foot">
-      <button class="sb-foot-btn" onclick="Auth.signOut()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>
+      <div class="sb-foot-user">
+        <div class="sb-foot-av" id="sb-foot-av"><div class="online-dot"></div></div>
+        <div>
+          <div class="sb-foot-name" id="sb-foot-name"></div>
+          <div class="sb-foot-role" id="sb-foot-role"></div>
+        </div>
+      </div>
+      <div class="presence-label" id="presence-section" style="display:none">Also online</div>
+      <div class="presence-row" id="presence-row"></div>
+      <button class="sb-foot-btn" onclick="Auth.signOut()" style="margin-top:8px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>
     </div>
   </nav>
 
@@ -492,9 +597,18 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
     <div id="topbar">
       <div class="tb-left">
         <button class="mob-menu" onclick="document.getElementById('sidebar').classList.toggle('mob')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-        <span class="tb-title" id="tb-title">Dashboard</span>
+        <div>
+          <div class="tb-date" id="tb-date"></div>
+          <div class="tb-title" id="tb-title">Dashboard</div>
+        </div>
       </div>
-      <div class="tb-right" id="tb-right"></div>
+      <div class="tb-right" id="tb-right">
+        <div class="tb-search">
+          <svg class="tb-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="tb-search-input" placeholder="Search items…" oninput="Search.query(this.value)" onblur="setTimeout(()=>Search.close(),150)">
+          <div class="tb-search-results" id="tb-search-results"></div>
+        </div>
+      </div>
     </div>
     <div id="content"></div>
   </div>
@@ -508,7 +622,7 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
 // ══════════════════════════════════════════════
 const DEFAULT_ROLES=[
   {id:'pm',  name:'Project Manager',    canCreate:true, canCreateRFI:true,canCreateRFA:true,canCreateSI:true,canCreateCB:true,canCreateVO:true,canCreateIssue:true, canEditAll:true, canDelete:true, canSettings:true, pillClass:'pm'},
-  {id:'arch',name:'Architect',          canCreate:true, canCreateRFI:true,canCreateRFA:true,canCreateSI:true,canCreateCB:true,canCreateVO:true,canCreateIssue:true, canEditAll:true, canDelete:false,canSettings:false,pillClass:'arch'},
+  {id:'arch',name:'Architect',          canCreate:true, canCreateRFI:true,canCreateRFA:true,canCreateSI:false,canCreateCB:true,canCreateVO:true,canCreateIssue:true, canEditAll:true, canDelete:false,canSettings:false,pillClass:'arch'},
   {id:'gc',  name:'General Contractor', canCreate:false,canCreateRFI:true,canCreateRFA:true,canCreateSI:false,canCreateCB:false,canCreateVO:true,canCreateIssue:true, canEditAll:false,canRespondSI:true,canRespondCB:true,canDelete:false,canSettings:false,pillClass:'gc'},
   {id:'sub', name:'Subcontractor',      canCreate:false,canCreateRFI:true,canCreateRFA:true,canCreateSI:false,canCreateCB:false,canCreateVO:false,canCreateIssue:true,canEditAll:false,canRespondSI:true,canRespondCB:true,canDelete:false,canSettings:false,pillClass:'sub'},
 ];
@@ -569,6 +683,72 @@ const Store={
     this._cache['bh_team']=team||[];
     this._cache['bh_passcode']=passcode||null;
     this._cache['bh_directory']=directory||{contacts:[],documents:[]};
+  },
+
+  // ── Presence ──
+  async _loadPresence(){
+    try{
+      const {getDocs,collection,query,where}=await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+      // We store presence as flat keys — scan config collection
+      const snap=await getDocs(collection(window._db,'config'));
+      const out=[];
+      snap.forEach(doc=>{
+        const k=doc.id;
+        if(k.startsWith('presence_')){
+          const d=doc.data();
+          if(d&&d.ts)out.push(d);
+        }
+      });
+      return out;
+    }catch(e){return[];}
+  },
+
+  // ── Comments ──
+  async getComments(itemId){
+    try{
+      const key=`comments_${itemId}`;
+      return await this.get(key,[])||[];
+    }catch(e){return[];}
+  },
+  async addComment(itemId,text,isOfficial=false){
+    const key=`comments_${itemId}`;
+    const existing=await this.getComments(itemId);
+    const comment={
+      id:Date.now(),
+      who:S.user.name,
+      role:S.role.name,
+      text,
+      isOfficial,
+      ts:new Date().toISOString()
+    };
+    existing.push(comment);
+    await this.set(key,existing);
+    return comment;
+  },
+
+  // ── Seen tracking ──
+  async markSeen(itemId){
+    const key=`seen_${itemId}`;
+    const existing=await this.get(key,[])||[];
+    const alreadySeen=existing.find(s=>s.who===S.user.name);
+    if(alreadySeen)return;
+    existing.push({who:S.user.name,role:S.role.name,ts:new Date().toISOString()});
+    await this.set(key,existing);
+  },
+  async getSeen(itemId){
+    return await this.get(`seen_${itemId}`,[])||[];
+  },
+
+  // ── Activity log ──
+  async addActivity(itemId,action){
+    const key=`activity_${itemId}`;
+    const existing=await this.get(key,[])||[];
+    existing.push({who:S.user?.name||'System',role:S.role?.name||'',action,ts:new Date().toISOString()});
+    if(existing.length>50)existing.splice(0,existing.length-50);
+    await this.set(key,existing);
+  },
+  async getActivity(itemId){
+    return await this.get(`activity_${itemId}`,[])||[];
   }
 };
 
@@ -926,22 +1106,32 @@ const Auth={
     document.getElementById('gate').style.display='none';
     const ps=document.getElementById('pin-screen');if(ps)ps.style.display='none';
     document.getElementById('app').classList.add('on');
-    document.getElementById('sb-user').textContent=name;
-    const rp=document.getElementById('sb-rp');
-    rp.textContent=role.name;rp.className='sb-rp '+(role.pillClass||'other');
-    if(role.canSettings){
-      document.getElementById('sb-settings-sec').style.display='';
-      document.getElementById('sb-team').style.display='';
-      document.getElementById('sb-roles').style.display='';
-      document.getElementById('sb-dl').style.display='';
-      document.getElementById('sb-sec-item').style.display='';
+    // Update sidebar footer with user info
+    const initials=name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+    const av=document.getElementById('sb-foot-av');
+    if(av){av.innerHTML=`${initials}<div class="online-dot"></div>`;}
+    const fn=document.getElementById('sb-foot-name');if(fn)fn.textContent=name;
+    const fr=document.getElementById('sb-foot-role');if(fr)fr.textContent=role.name;
+    // Update live date in topbar
+    const dateEl=document.getElementById('tb-date');
+    if(dateEl){
+      const d=new Date();
+      dateEl.textContent=d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' · Laiya, Batangas';
     }
+    // Render role-based sidebar
+    Nav.renderSidebar();
+    // Start presence heartbeat
+    Presence.start(name,role.name);
+    // Store last visit timestamp for "new since" feature
+    const lastVisit=localStorage.getItem('foro_last_visit');
+    S.lastVisit=lastVisit?new Date(lastVisit):null;
+    localStorage.setItem('foro_last_visit',new Date().toISOString());
     Nav.go('dashboard');
   },
   async signOut(){
+    Presence.stop();
     S.user=null;S.role=null;
     document.getElementById('app').classList.remove('on');
-    ['sb-settings-sec','sb-team','sb-roles','sb-dl','sb-sec-item'].forEach(id=>document.getElementById(id).style.display='none');
     document.getElementById('login-name').value='';
     document.getElementById('login-role').value='';
     document.getElementById('login-screen').style.display='none';
@@ -973,6 +1163,98 @@ function addAudit(item,action){
 }
 
 // ══════════════════════════════════════════════
+//  PRESENCE SYSTEM
+// ══════════════════════════════════════════════
+const Presence={
+  _timer:null,
+  async start(name,roleName){
+    const write=async()=>{
+      try{
+        const key=`presence_${name.replace(/\s+/g,'_')}`;
+        await window._fb.set(key,{name,role:roleName,ts:Date.now()});
+      }catch(e){}
+    };
+    await write();
+    this._timer=setInterval(write,60000);
+    // Listen for changes
+    this.listen();
+  },
+  stop(){
+    if(this._timer)clearInterval(this._timer);
+    // Remove own presence
+    try{
+      const name=S.user?.name||'';
+      const key=`presence_${name.replace(/\s+/g,'_')}`;
+      window._fb.set(key,null);
+    }catch(e){}
+  },
+  listen(){
+    // Poll every 30s for online users
+    const poll=async()=>{
+      try{
+        const all=await window._fb.get('bh_config',{});
+        // get presence keys
+        const items=await Store._loadPresence();
+        this.render(items);
+      }catch(e){}
+    };
+    poll();
+    setInterval(poll,30000);
+  },
+  render(users){
+    const row=document.getElementById('presence-row');
+    const sec=document.getElementById('presence-section');
+    if(!row||!sec)return;
+    const now=Date.now();
+    const others=(users||[]).filter(u=>u.name!==S.user?.name&&(now-u.ts)<300000);// 5min
+    if(!others.length){sec.style.display='none';row.innerHTML='';return;}
+    sec.style.display='';
+    const active=others.filter(u=>(now-u.ts)<120000);// 2min = active
+    row.innerHTML=others.map(u=>{
+      const ini=u.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+      const isActive=(now-u.ts)<120000;
+      const colors=['#f5eeef:#7c4d5a','#fff3e8:#9a4a20','#e8f4ff:#1e5fa0','#f0fdf4:#166534'];
+      const ci=Math.abs(u.name.charCodeAt(0))%colors.length;
+      const [bg,fg]=colors[ci].split(':');
+      return`<div class="pres-av" style="background:${bg};color:${fg}" title="${esc(u.name)} — ${esc(u.role)}">${ini}<div class="${isActive?'p-on':'p-idle'}"></div></div>`;
+    }).join('')+`<span class="pres-count">${active.length} active</span>`;
+  }
+};
+
+// ══════════════════════════════════════════════
+//  SEARCH
+// ══════════════════════════════════════════════
+const Search={
+  query(q){
+    const inp=document.getElementById('tb-search-input');
+    const res=document.getElementById('tb-search-results');
+    if(!res)return;
+    if(!q||q.length<2){res.classList.remove('open');return;}
+    const items=Store.items();
+    const lq=q.toLowerCase();
+    const matches=items.filter(x=>{
+      return(x.subject||'').toLowerCase().includes(lq)||
+             (x.description||'').toLowerCase().includes(lq)||
+             (x.submitted_by||x.issued_by||'').toLowerCase().includes(lq)||
+             docNum(x).toLowerCase().includes(lq);
+    }).slice(0,8);
+    if(!matches.length){res.innerHTML='<div style="padding:10px 12px;font-size:0.78rem;color:var(--ink-4)">No results found</div>';res.classList.add('open');return;}
+    res.innerHTML=matches.map(x=>`
+      <div class="tb-sr-item" onclick="Search.close();Nav.go('detail-${x.id}')">
+        ${tPill(x.type)}
+        <span style="font-size:0.72rem;font-family:monospace;color:var(--ink-4);flex-shrink:0">${esc(docNum(x))}</span>
+        <span class="tb-sr-subj">${esc((x.subject||x.description||'—').slice(0,50))}</span>
+        <span class="tb-sr-meta">${esc(x.submitted_by||x.issued_by||'')}</span>
+      </div>`).join('');
+    res.classList.add('open');
+  },
+  close(){
+    const res=document.getElementById('tb-search-results');
+    if(res)res.classList.remove('open');
+  }
+};
+
+// ══════════════════════════════════════════════
 //  NAVIGATION
 // ══════════════════════════════════════════════
 const Nav={
@@ -980,6 +1262,113 @@ const Nav={
     S.view=v;
     document.querySelectorAll('.sb-item').forEach(el=>el.classList.toggle('on',el.dataset.v===v));
     this.render();
+  },
+  renderSidebar(){
+    const isPM=S.can('canSettings');
+    const isArch=S.role?.id==='arch'||(S.role?.canEditAll&&!isPM);
+    const isGC=S.role?.id==='gc'||(!S.can('canEditAll')&&S.can('canCreateRFI'));
+    const isSub=S.role?.id==='sub'||(!S.can('canEditAll')&&!S.can('canCreateVO'));
+    const isContractor=isGC||isSub;
+    const nav=document.getElementById('sb-nav-dynamic');
+    if(!nav)return;
+    const si=(label,v,icon,badge='')=>`<div class="sb-item" data-v="${v}" onclick="Nav.go('${v}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${icon}</svg>${label}${badge}</div>`;
+    const sec=label=>`<div class="sb-sec">${label}</div>`;
+    // Icons
+    const ICO={
+      dash:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
+      focus:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+      sched:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+      dir:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+      all:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+      rfi:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+      rfa:'<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+      si:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>',
+      cb:'<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
+      vo:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/><circle cx="12" cy="12" r="10"/>',
+      issue:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+      action:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+      dep:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+      team:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>',
+      roles:'<circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/>',
+      drops:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><polyline points="3 6 4 7 6 5"/>',
+      sec:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+      actlog:'<svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
+    };
+    // Count open items for badges
+    const items=Store.items()||[];
+    const openRFI=items.filter(x=>x.type==='rfi'&&!isTerminal(x)).length;
+    const openRFA=items.filter(x=>x.type==='rfa'&&!isTerminal(x)).length;
+    const openSI=items.filter(x=>x.type==='si'&&!isTerminal(x)).length;
+    const openCB=items.filter(x=>x.type==='cb'&&!isTerminal(x)).length;
+    const focusCount=items.filter(x=>!isTerminal(x)&&(overdue(x)||(x.due_date&&x.due_date===now()))).length;
+    const focusBadge=focusCount?`<span class="sb-badge" id="fb">${focusCount}</span>`:'<span class="sb-badge" id="fb" style="display:none"></span>';
+    const obBadge=items.filter(overdue).length?`<span class="sb-badge" id="ob">${items.filter(overdue).length}</span>`:'<span class="sb-badge" id="ob" style="display:none"></span>';
+    const rfiBadge=openRFI?`<span class="sb-badge-gray">${openRFI}</span>`:'';
+    const siWarnBadge=openSI?`<span class="sb-badge-warn">${openSI}</span>`:'';
+    const cbWarnBadge=openCB?`<span class="sb-badge-warn">${openCB}</span>`:'';
+
+    let html='';
+    if(isPM){
+      html+=sec('Overview');
+      html+=si('Dashboard','dashboard',ICO.dash,obBadge);
+      html+=si("Today's Focus",'focus',ICO.focus,focusBadge);
+      html+=si('Schedule','schedule',ICO.sched);
+      html+=si('Directory','directory',ICO.dir);
+      html+=sec('Documents');
+      html+=si('All Items','list-all',ICO.all);
+      html+=si('RFIs','list-rfi',ICO.rfi,rfiBadge);
+      html+=si('RFAs','list-rfa',ICO.rfa);
+      html+=si('Site Instr.','list-si',ICO.si,siWarnBadge);
+      html+=si('CB','list-cb',ICO.cb,cbWarnBadge);
+      html+=si('Var. Orders','list-vo',ICO.vo);
+      html+=si('Issues','list-issue',ICO.issue);
+      html+=si('Actions','list-action',ICO.action);
+      html+=si('Holds','list-dependency',ICO.dep);
+      html+=sec('System');
+      html+=si('Team Members','team',ICO.team);
+      html+=si('Roles','roles',ICO.roles);
+      html+=si('Dropdowns','dropdowns',ICO.drops);
+      html+=si('Security','security',ICO.sec);
+    } else if(isArch){
+      html+=sec('Overview');
+      html+=si('Dashboard','dashboard',ICO.dash);
+      html+=si('Directory','directory',ICO.dir);
+      html+=sec('For My Action');
+      html+=si('RFAs','list-rfa',ICO.rfa,openRFA?`<span class="sb-badge-warn">${openRFA}</span>`:'');
+      html+=si('RFIs','list-rfi',ICO.rfi,rfiBadge);
+      html+=sec('Issued By Me');
+      html+=si('CB','list-cb',ICO.cb);
+      html+=si('Var. Orders','list-vo',ICO.vo);
+      html+=sec('All Docs');
+      html+=si('All Items','list-all',ICO.all);
+      html+=si('Issues','list-issue',ICO.issue);
+    } else if(isContractor){
+      html+=sec('Overview');
+      html+=si('Dashboard','dashboard',ICO.dash);
+      html+=si('Directory','directory',ICO.dir);
+      html+=sec('My Submissions');
+      html+=si('My RFIs','list-rfi',ICO.rfi,rfiBadge);
+      html+=si('My RFAs','list-rfa',ICO.rfa);
+      html+=si('My Issues','list-issue',ICO.issue);
+      html+=sec('Respond To');
+      html+=si('Site Instr.','list-si',ICO.si,siWarnBadge);
+      html+=si('CB','list-cb',ICO.cb,cbWarnBadge);
+    } else {
+      // Generic fallback
+      html+=sec('Overview');
+      html+=si('Dashboard','dashboard',ICO.dash);
+      html+=si('Directory','directory',ICO.dir);
+      html+=sec('Documents');
+      html+=si('All Items','list-all',ICO.all);
+      html+=si('RFIs','list-rfi',ICO.rfi);
+      html+=si('RFAs','list-rfa',ICO.rfa);
+      html+=si('Site Instr.','list-si',ICO.si);
+      html+=si('CB','list-cb',ICO.cb);
+      html+=si('Issues','list-issue',ICO.issue);
+    }
+    nav.innerHTML=html;
+    // Re-apply active state
+    document.querySelectorAll('.sb-item').forEach(el=>el.classList.toggle('on',el.dataset.v===S.view));
   },
   async render(){
     const items=Store.items();
@@ -1010,6 +1399,9 @@ const Nav={
         b.innerHTML=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Item`;
         b.onclick=()=>M.openAdd(type==='all'?null:type);tr.appendChild(b);
       }
+      const pb=document.createElement('button');pb.className='btn btn-ghost btn-sm';
+      pb.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Print`;
+      pb.onclick=()=>PrintExport.list(type==='all'?null:type);tr.appendChild(pb);
       c.innerHTML=V.list(type==='all'?null:type,items);
     } else if(v.startsWith('detail-')){
       const id=parseInt(v.replace('detail-',''));
@@ -1042,6 +1434,51 @@ const Nav={
         db.onclick=()=>Conf.show(item);tr.appendChild(db);
       }
       c.innerHTML=V.detail(item);
+      // Load comments, seen, activity after render
+      (async()=>{
+        // Mark as seen for SI/CB (non-PM, non-author)
+        if(['si','cb'].includes(item.type)&&!S.can('canSettings')){
+          await Store.markSeen(item.id);
+        }
+        // Render comments
+        const comments=await Store.getComments(item.id);
+        const cEl=document.getElementById('comment-list');
+        if(cEl){
+          cEl.innerHTML=comments.length?comments.map(cm=>`
+            <div class="comment-item">
+              <div class="comment-av">${esc(cm.who.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase())}</div>
+              <div class="comment-body">
+                <div class="comment-meta">
+                  <span class="comment-who">${esc(cm.who)}</span>
+                  <span class="comment-role">${esc(cm.role)}</span>
+                  <span class="comment-time">${new Date(cm.ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+                </div>
+                <div class="comment-text ${cm.isOfficial?'comment-official':''}">${esc(cm.text)}</div>
+              </div>
+            </div>`).join(''):'<div style="font-size:0.8rem;color:var(--ink-4);padding:10px 0;font-style:italic">No comments yet.</div>';
+        }
+        // Render seen indicator on SI/CB
+        if(['si','cb'].includes(item.type)){
+          const seen=await Store.getSeen(item.id);
+          const sEl=document.getElementById('seen-list');
+          if(sEl&&seen.length){
+            sEl.innerHTML=seen.map(s=>`<div class="seen-indicator"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Seen by <strong>${esc(s.who)}</strong> (${esc(s.role)}) · ${new Date(s.ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>`).join('');
+          }
+        }
+        // Render activity log
+        const acts=await Store.getActivity(item.id);
+        const aEl=document.getElementById('activity-list');
+        if(aEl&&acts.length){
+          aEl.innerHTML=acts.slice().reverse().map(a=>`
+            <div class="activity-item">
+              <div class="audit-dot"></div>
+              <div class="activity-line">
+                <div class="activity-action"><strong>${esc(a.who)}</strong> — ${esc(a.action)}</div>
+                <div class="activity-time">${new Date(a.ts).toLocaleString('en-PH',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+              </div>
+            </div>`).join('');
+        }
+      })();
     }
   }
 };
@@ -1071,42 +1508,27 @@ const X={svg:{close:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none"
 // ══════════════════════════════════════════════
 const V={
   dashboard(items){
-    const tc={};TKEYS.forEach(t=>tc[t]=items.filter(x=>x.type===t).length);
-    const sc={};STATUSES.forEach(s=>sc[s]=items.filter(x=>x.status===s).length);
-    const ov=items.filter(overdue);
+    const isPM=S.can('canSettings');
+    const isArch=S.role?.id==='arch'||(S.role?.canEditAll&&!isPM);
+    const isGC=S.role?.id==='gc'||(!S.can('canEditAll')&&S.can('canCreateRFI'));
+    const isContractor=isGC||S.role?.id==='sub'||(!S.can('canEditAll')&&!S.can('canCreateVO'));
     const active=items.filter(x=>!isTerminal(x));
-    const t7=new Date();t7.setDate(t7.getDate()+7);const t7s=t7.toISOString().split('T')[0];
-    const dueWk=active.filter(x=>x.due_date&&x.due_date>=now()&&x.due_date<=t7s);
-    const crit=items.filter(x=>(x.severity==='Critical'||x.severity==='High'||x.priority==='Critical'||x.priority==='High')&&!isTerminal(x));
-    const unassigned=active.filter(x=>!x.assigned_to&&!x.responsible_party);
-    const oldestAge=(()=>{const o=active.filter(x=>x.created);if(!o.length)return 0;const old=o.reduce((a,b)=>a.created<b.created?a:b);return Math.floor((new Date()-new Date(old.created))/864e5);})();
+    const ov=items.filter(overdue);
+    const hr=new Date().getHours();
+    const greet=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
     const partyMap={};active.forEach(x=>{const p=x.assigned_to||x.responsible_party||x.submitted_by;if(p)partyMap[p]=(partyMap[p]||0)+1;});
     const parties=Object.entries(partyMap).sort((a,b)=>b[1]-a[1]).slice(0,5);const maxP=parties[0]?.[1]||1;
     const recent=[...items].sort((a,b)=>b.id-a.id).slice(0,5);
-    const dateStr=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-    const hr=new Date().getHours();
-    const greet=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
-    return`
-    <div class="dash-greeting">
-      <div class="dg-date">${greet}, ${esc(S.user?.name||'')} — ${dateStr}</div>
-      <div class="dg-sub">${active.length} active item${active.length!==1?'s':''} · Signed in as ${esc(S.role?.name||'')}</div>
-    </div>
 
-    <a href="https://drive.google.com/drive/folders/1YdDZdRCG2UkpIWetUmkXkNQzvNcGd9_K?usp=drive_link" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--white);border:1.5px solid var(--pink-mid);border-radius:var(--r-lg);text-decoration:none;margin-bottom:20px;transition:all 0.15s" onmouseover="this.style.borderColor='var(--pink)';this.style.boxShadow='0 3px 14px rgba(244,114,182,0.12)'" onmouseout="this.style.borderColor='var(--pink-mid)';this.style.boxShadow=''">
-      <div style="width:36px;height:36px;border-radius:9px;background:var(--pink-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--pink-deep)" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-      </div>
-      <div style="flex:1">
-        <div style="font-size:0.85rem;font-weight:600;color:var(--pink-deep);letter-spacing:-0.01em">📁 Project Plans &amp; Drawings</div>
-        <div style="font-size:0.71rem;color:var(--ink-4);margin-top:1px">Tap to open Google Drive folder →</div>
-      </div>
-    </a>
+    // Drive link (shared all roles)
+    const driveLink=`<a href="https://drive.google.com/drive/folders/1YdDZdRCG2UkpIWetUmkXkNQzvNcGd9_K?usp=drive_link" target="_blank" rel="noopener" class="drive-card">
+      <div class="drive-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--pink-deep)" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+      <div class="drive-text"><div class="drive-title">Project Plans &amp; Drawings</div><div class="drive-sub">Google Drive · Tap to open</div></div>
+      <div class="drive-arr">→</div>
+    </a>`;
 
-    <div class="dash-h">Action Required</div>
-
-    ${(()=>{
-      if(!S.can('canEditAll')&&!S.role?.canRespondSI&&!S.role?.canRespondCB)return'';
-      // PM/Arch: all open RFI/RFA/SI/CB; GC/Sub: only SI/CB they need to acknowledge
+    // Awaiting strip
+    const awaitStrip=(()=>{
       let needsResp;
       if(S.can('canEditAll')){
         needsResp=items.filter(x=>['rfi','rfa','si','cb'].includes(x.type)&&!isTerminal(x));
@@ -1117,133 +1539,209 @@ const V={
         needsResp=items.filter(x=>myTypes.includes(x.type)&&!isTerminal(x));
       }
       if(!needsResp.length)return'';
-      const label=S.can('canEditAll')?'Awaiting Response':'Pending — Action Required';
-      return`<div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:var(--r-lg);padding:14px 16px;margin-bottom:20px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c2410c" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span style="font-size:0.72rem;font-weight:700;color:#c2410c;text-transform:uppercase;letter-spacing:0.07em">${needsResp.length} Item${needsResp.length!==1?'s':''} ${label}</span>
+      return`<div style="background:var(--amber-soft);border:1px solid #fcd9a8;border-radius:var(--r-lg);padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="width:7px;height:7px;border-radius:50%;background:var(--amber);flex-shrink:0"></div>
+        <span style="font-size:0.82rem;font-weight:600;color:#92400e;flex:1">${needsResp.length} item${needsResp.length!==1?'s':''} awaiting response</span>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">${needsResp.slice(0,4).map(x=>`<span onclick="Nav.go('detail-${x.id}')" style="font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:5px;background:var(--white);border:1px solid #fcd9a8;color:#b45309;cursor:pointer">${esc(docNum(x))}</span>`).join('')}${needsResp.length>4?`<span style="font-size:0.72rem;color:#b45309">+${needsResp.length-4}</span>`:''}</div>
+      </div>`;
+    })();
+
+    // KPI cards
+    const kpiCards=(()=>{
+      const openRFI=items.filter(x=>x.type==='rfi'&&!isTerminal(x));
+      const openRFA=items.filter(x=>x.type==='rfa'&&!isTerminal(x));
+      const resolved=items.filter(x=>isTerminal(x));
+      const issues=items.filter(x=>x.type==='issue'&&!isTerminal(x));
+      return`<div class="kpi-grid">
+        <div class="kpi c-pink" onclick="Nav.go('list-rfi')">
+          <div class="kpi-lbl">Open RFIs</div>
+          <div class="kpi-num">${openRFI.length}</div>
+          <div class="kpi-sub">${openRFI.filter(overdue).length} overdue</div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:${Math.min(100,openRFI.length*10)}%;background:var(--pink)"></div></div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          ${needsResp.slice(0,5).map(x=>{
-            const desc=x.subject||x.description||'—';
-            const od=overdue(x);
-            const canAct=S.can('canEditAll')||(x.type==='si'&&S.role?.canRespondSI)||(x.type==='cb'&&S.role?.canRespondCB);
-            return`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--white);border-radius:6px;border:1px solid #fed7aa;cursor:pointer" onclick="Nav.go('detail-${x.id}')">
-              ${tPill(x.type)}
-              <span style="font-size:0.75rem;font-weight:600;font-family:'DM Mono',monospace;color:var(--ink-3);flex-shrink:0">${esc(docNum(x))}</span>
-              <span style="font-size:0.78rem;color:var(--ink-2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(desc.slice(0,60))}${desc.length>60?'…':''}</span>
-              ${od?`<span style="font-size:0.68rem;color:var(--red);font-weight:600;flex-shrink:0">Overdue</span>`:''}
-              ${canAct?`<button style="font-size:0.68rem;font-weight:600;color:var(--pink-deep);background:var(--pink-soft);border:1px solid var(--pink-mid);border-radius:4px;padding:3px 8px;cursor:pointer;flex-shrink:0;font-family:inherit" onclick="event.stopPropagation();M.openEdit(Store.items().find(i=>i.id===${x.id}))">Respond</button>`:''}
-            </div>`;
-          }).join('')}
-          ${needsResp.length>5?`<div style="font-size:0.72rem;color:var(--ink-4);text-align:center;padding-top:4px">+${needsResp.length-5} more — see All Items</div>`:''}
+        <div class="kpi c-terra" onclick="Nav.go('list-rfa')">
+          <div class="kpi-lbl">Open RFAs</div>
+          <div class="kpi-num">${openRFA.length}</div>
+          <div class="kpi-sub">${openRFA.filter(overdue).length} overdue</div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:${Math.min(100,openRFA.length*20)}%;background:var(--terra)"></div></div>
+        </div>
+        <div class="kpi c-green" onclick="Nav.go('list-all')">
+          <div class="kpi-lbl">Resolved</div>
+          <div class="kpi-num">${resolved.length}</div>
+          <div class="kpi-sub">all time</div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:${Math.min(100,resolved.length*8)}%;background:var(--green)"></div></div>
+        </div>
+        <div class="kpi ${issues.length>0?'c-red':'c-zinc'}" onclick="Nav.go('list-issue')">
+          <div class="kpi-lbl">Issues</div>
+          <div class="kpi-num">${issues.length}</div>
+          <div class="kpi-sub">${issues.filter(x=>x.severity==='Critical'||x.severity==='High').length} critical</div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:${Math.min(100,issues.length*20)}%;background:${issues.length>0?'var(--red)':'var(--zinc)'}"></div></div>
         </div>
       </div>`;
-    })()}
+    })();
 
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
-      <span style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);white-space:nowrap">Latest Instructions &amp; Issues</span>
-      <div style="flex:1;height:1px;background:var(--line)"></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1.6fr;gap:8px;margin-bottom:10px">
-      ${(()=>{
-        const siAll=[...items.filter(x=>x.type==='si')].sort((a,b)=>b.id-a.id);
-        const siLatest=siAll[0];const siOpen=siAll.filter(x=>!isTerminal(x)).length;
-        const cbAll=[...items.filter(x=>x.type==='cb')].sort((a,b)=>b.id-a.id);
-        const cbLatest=cbAll[0];const cbOpen=cbAll.filter(x=>!isTerminal(x)).length;
-        const issAll=items.filter(x=>x.type==='issue');
-        const issActive=issAll.filter(x=>!isTerminal(x));
-        const high=issActive.filter(x=>x.severity==='High'||x.severity==='Critical').length;
-        const med=issActive.filter(x=>x.severity==='Medium').length;
-        const low=issActive.filter(x=>x.severity==='Low').length;
-        return[
-          `<div onclick="Nav.go('list-si')" style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;cursor:pointer;position:relative;overflow:hidden" onmouseover="this.style.borderColor='#9333ea'" onmouseout="this.style.borderColor='var(--line)'">
-            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:#9333ea"></div>
-            <div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#9333ea;margin-bottom:8px">Site Instruction</div>
-            ${siLatest
-              ?`<div style="font-size:1.1rem;font-family:'DM Mono',monospace;font-weight:700;color:#9333ea;margin-bottom:4px">${esc(siLatest.si_number||'SI-'+siLatest.id)}</div>
-                <div style="font-size:0.75rem;color:var(--ink-2);line-height:1.5">${esc((siLatest.subject||'').slice(0,55))}</div>`
-              :`<div style="font-size:2.4rem;font-weight:300;font-family:'DM Mono',monospace;color:var(--ink-4);line-height:1">0</div><div style="font-size:0.65rem;color:var(--ink-4);margin-top:4px">none issued</div>`}
-          </div>`,
-          `<div onclick="Nav.go('list-cb')" style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;cursor:pointer;position:relative;overflow:hidden" onmouseover="this.style.borderColor='#10b981'" onmouseout="this.style.borderColor='var(--line)'">
-            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:#10b981"></div>
-            <div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#10b981;margin-bottom:8px">Const. Bulletin</div>
-            ${cbLatest
-              ?`<div style="font-size:1.1rem;font-family:'DM Mono',monospace;font-weight:700;color:#10b981;margin-bottom:4px">${esc(cbLatest.cb_number||'CB-'+cbLatest.id)}</div>
-                <div style="font-size:0.75rem;color:var(--ink-2);line-height:1.5">${esc((cbLatest.subject||'').slice(0,55))}</div>`
-              :`<div style="font-size:2.4rem;font-weight:300;font-family:'DM Mono',monospace;color:var(--ink-4);line-height:1">0</div><div style="font-size:0.65rem;color:var(--ink-4);margin-top:4px">none issued</div>`}
-          </div>`,
-          `<div onclick="Nav.go('list-issue')" style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;cursor:pointer;position:relative;overflow:hidden" onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--line)'">
-            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--red)"></div>
-            <div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--red);margin-bottom:8px">Issue</div>
-            <div style="display:flex;gap:0">
-              <div style="flex:1;text-align:center;padding:6px 4px">
-                <div style="font-size:2rem;font-weight:300;font-family:'DM Mono',monospace;line-height:1;color:${high>0?'var(--red)':'var(--ink-4)'}">${high}</div>
-                <div style="font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--red);margin-top:4px">High</div>
-              </div>
-              <div style="width:1px;background:var(--line);margin:4px 0"></div>
-              <div style="flex:1;text-align:center;padding:6px 4px">
-                <div style="font-size:2rem;font-weight:300;font-family:'DM Mono',monospace;line-height:1;color:${med>0?'#92400e':'var(--ink-4)'}">${med}</div>
-                <div style="font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#92400e;margin-top:4px">Medium</div>
-              </div>
-              <div style="width:1px;background:var(--line);margin:4px 0"></div>
-              <div style="flex:1;text-align:center;padding:6px 4px">
-                <div style="font-size:2rem;font-weight:300;font-family:'DM Mono',monospace;line-height:1;color:${low>0?'#15803d':'var(--ink-4)'}">${low}</div>
-                <div style="font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#15803d;margin-top:4px">Low</div>
-              </div>
-            </div>
-          </div>`
-        ].join('');
-      })()}
-    </div>
-
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
-      <span style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4);white-space:nowrap">Pending Requests &amp; Orders</span>
-      <div style="flex:1;height:1px;background:var(--line)"></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px">
-      ${[
-        {label:'RFI',type:'rfi',color:'#3b82f6'},
-        {label:'RFA',type:'rfa',color:'#8b5cf6'},
-        {label:'Variation Order',type:'vo',color:'#f43f5e'},
-      ].map(({label,type,color})=>{
-        const open=items.filter(x=>x.type===type&&!isTerminal(x)).length;
-        const total=items.filter(x=>x.type===type).length;
-        return`<div onclick="Nav.go('list-${type}')" style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;cursor:pointer;position:relative;overflow:hidden" onmouseover="this.style.borderColor='${color}'" onmouseout="this.style.borderColor='var(--line)'">
-          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${color}"></div>
-          <div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:${color};margin-bottom:8px">${label}</div>
-          <div style="font-size:2.4rem;font-weight:300;font-family:'DM Mono',monospace;line-height:1;letter-spacing:-0.04em;color:${open>0?color:'var(--ink-4)'}">${total===0?'0':open}</div>
-          <div style="font-size:0.65rem;color:var(--ink-4);margin-top:6px">${total===0?'none issued':`${open} open · ${total} total`}</div>
-        </div>`;
-      }).join('')}
-    </div>
-
-    <div class="dash-h">By Type — Open / Total</div>
-    <div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;margin-bottom:24px">
-      ${['si','cb','issue','rfi','rfa','vo'].map((t,i)=>{
-        const colors={rfi:'#3b82f6',rfa:'#8b5cf6',si:'#9333ea',cb:'#10b981',vo:'#f43f5e',issue:'var(--red)'};
-        const total=items.filter(x=>x.type===t).length;
-        const open=items.filter(x=>x.type===t&&!isTerminal(x)).length;
-        return`<div onclick="Nav.go('list-${t}')" style="display:flex;align-items:center;gap:10px;padding:6px 14px;border-bottom:${i<5?'1px solid var(--line-soft)':'none'};cursor:pointer" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
-          <div style="width:5px;height:5px;border-radius:50%;background:${colors[t]};flex-shrink:0"></div>
-          ${tPill(t)}
-          <span style="flex:1;font-size:0.78rem;color:var(--ink-3)">${TYPES[t].full}</span>
-          <span style="font-size:0.75rem;font-family:'DM Mono',monospace;color:${open>0?colors[t]:'var(--ink-4)'};min-width:20px;text-align:right">${open}</span>
-          <span style="font-size:0.7rem;color:var(--ink-4);margin-left:4px">/ ${total}</span>
-        </div>`;
-      }).join('')}
-    </div>
-
-    ${parties.length?`<div class="dash-h">Open Items by Party</div><div class="tshell" style="padding:8px 14px;margin-bottom:24px"><table class="party-table">${parties.map(([n,c])=>`<tr><td style="font-size:0.82rem;color:var(--ink-2);padding-right:12px;white-space:nowrap">${esc(n)}</td><td style="width:100%"><div class="party-bar-bg"><div class="party-bar-fill" style="width:${Math.round(c/maxP*100)}%"></div></div></td><td style="text-align:right;font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--ink-4);padding-left:10px">${c}</td></tr>`).join('')}</table></div>`:''}
-    ${recent.length?`<div class="dash-h">Recently Added</div><div class="tshell"><table class="itable"><thead><tr><th>No.</th><th>Type</th><th>Description</th><th>Status</th><th>Due</th><th>Files</th></tr></thead><tbody>${recent.map(item=>{const od=overdue(item),desc=item.subject||item.description||'—',atts=(item.attachments||[]).length;return`<tr class="${od?'od':''}"><td class="mono">${esc(docNum(item))}</td><td>${tPill(item.type)}</td><td><span class="ilink" onclick="Nav.go('detail-${item.id}')">${od?'<span class="odot"></span>':''}${esc(desc.slice(0,50))}${desc.length>50?'…':''}</span></td><td>${sBadge(item.status)}</td><td style="font-size:0.75rem;color:var(--ink-4)">${item.due_date||'—'}</td><td style="font-size:0.75rem;color:var(--ink-4)">${atts?`📎 ${atts}`:''}</td></tr>`;}).join('')}</tbody></table></div>`:
-    `<div style="text-align:center;padding:48px 0;color:var(--ink-4);font-size:0.82rem">No items yet.${S.can('canCreate')?' Click <strong>New Item</strong> to begin.':''}</div>`}
-    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-      <div>
-        <div class="dash-h" style="margin-bottom:4px">14-Day Look-Ahead</div>
-        <div style="font-size:0.78rem;color:var(--ink-4)">${(()=>{const t14=new Date();t14.setDate(t14.getDate()+14);const t14s=t14.toISOString().split('T')[0];const active2=items.filter(x=>!isTerminal(x));const la=active2.filter(x=>x.due_date&&x.due_date>=now()&&x.due_date<=t14s);const holds=items.filter(x=>x.type==='dependency'&&!isTerminal(x));return`${la.length} item${la.length!==1?'s':''} due · ${holds.length} active hold${holds.length!==1?'s':''}`;})()}</div>
+    // Recent items panel
+    const recentPanel=`<div class="dcard" style="margin-bottom:0">
+      <div class="dchead"><span style="font-size:0.78rem;font-weight:700;color:var(--ink)">Recent Items</span><button class="btn btn-ghost btn-sm" onclick="Nav.go('list-all')">View all →</button></div>
+      <div class="dbody" style="padding:0">
+        ${recent.length?recent.map(x=>{
+          const od=overdue(x);
+          return`<div style="display:flex;align-items:center;gap:8px;padding:9px 16px;border-bottom:1px solid var(--line-soft);cursor:pointer" onclick="Nav.go('detail-${x.id}')">
+            <div style="width:6px;height:6px;border-radius:50%;background:${od?'var(--red)':isTerminal(x)?'var(--green)':'var(--amber)'}"></div>
+            ${tPill(x.type)}
+            <span style="font-size:0.72rem;color:var(--ink-4);font-family:monospace;flex-shrink:0">${esc(docNum(x))}</span>
+            <span style="flex:1;font-size:0.82rem;color:var(--ink);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((x.subject||x.description||'—').slice(0,50))}</span>
+            ${od?'<span style="font-size:0.7rem;color:var(--red);font-weight:700;flex-shrink:0">'+Math.floor((new Date()-new Date(x.created))/864e5)+'d</span>':''}
+            ${sBadge(x.status)}
+          </div>`;
+        }).join(''):'<div class="empty-td">No items yet</div>'}
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="Nav.go('schedule')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Open Schedule</button>
     </div>`;
+
+    // By party panel
+    const partyPanel=`<div class="dcard" style="margin-bottom:0">
+      <div class="dchead"><span style="font-size:0.78rem;font-weight:700;color:var(--ink)">By Party</span></div>
+      <div class="dbody">
+        ${parties.length?parties.map(([p,n])=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:5px 0">
+            <div style="font-size:0.82rem;color:var(--ink-2);font-weight:500;width:110px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p)}</div>
+            <div style="flex:1;height:4px;background:var(--line);border-radius:2px;overflow:hidden"><div style="height:4px;border-radius:2px;background:var(--pink);width:${Math.round(n/maxP*100)}%"></div></div>
+            <div style="font-size:0.82rem;font-weight:700;color:var(--pink-deep);width:20px;text-align:right">${n}</div>
+          </div>`).join(''):'<div style="font-size:0.82rem;color:var(--ink-4);font-style:italic">No data yet</div>'}
+      </div>
+    </div>`;
+
+    // ── PM VIEW ──
+    if(isPM){
+      const newSince=S.lastVisit?items.filter(x=>x.created&&new Date(x.created)>S.lastVisit).length:0;
+      const priority=[...items.filter(x=>!isTerminal(x))].sort((a,b)=>{
+        const da=overdue(a)?1:0,db=overdue(b)?1:0;
+        if(da!==db)return db-da;
+        return(a.created||'')>(b.created||'')?1:-1;
+      }).slice(0,5);
+      return`
+        <div class="dash-greeting">
+          <div class="dg-date">${new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div>
+          <div class="dg-name">${greet}, ${esc(S.user?.name?.split(' ')[0]||'')}</div>
+          <div class="dg-sub">${active.length} active · ${ov.length} overdue · Signed in as ${esc(S.role?.name||'')}</div>
+        </div>
+        ${newSince>0?`<div class="new-since" onclick="Nav.go('list-all')"><div class="new-since-dot"></div><div class="new-since-lbl">${newSince} new item${newSince!==1?'s':''} since your last visit</div><div class="new-since-arr">→</div></div>`:''}
+        ${awaitStrip}
+        ${kpiCards}
+        ${driveLink}
+        <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:12px;margin-bottom:16px">
+          <div class="dcard" style="margin-bottom:0">
+            <div class="dchead"><span style="font-size:0.78rem;font-weight:700;color:${ov.length>0?'var(--red)':'var(--ink)'}">⚑ Needs Attention</span><span style="font-size:0.72rem;color:var(--ink-4)">${priority.length} items</span></div>
+            <div class="dbody" style="padding:8px">
+              ${priority.length?priority.map(x=>{
+                const od=overdue(x);
+                const age=x.created?Math.floor((new Date()-new Date(x.created))/864e5):0;
+                return`<div class="priority-item ${od?'urgent':'warn'}" onclick="Nav.go('detail-${x.id}')">
+                  ${tPill(x.type)}
+                  <div class="pi-text">
+                    <div class="pi-title">${esc((x.subject||x.description||'—').slice(0,45))}</div>
+                    <div class="pi-sub">${esc(x.submitted_by||x.issued_by||'')} · ${esc(x.status||'')}</div>
+                  </div>
+                  ${od?`<span class="pi-age">${age}d</span>`:`<span class="pi-warn-age">${age}d</span>`}
+                  <button class="pi-act-btn" onclick="event.stopPropagation();M.openEdit(Store.items().find(i=>i.id===${x.id}))">Respond</button>
+                </div>`;
+              }).join(''):'<div style="font-size:0.82rem;color:var(--ink-4);padding:10px;font-style:italic">All caught up!</div>'}
+            </div>
+          </div>
+          ${partyPanel}
+        </div>
+        ${recentPanel}`;
+    }
+
+    // ── CONTRACTOR VIEW ──
+    if(isContractor){
+      const mySubs=items.filter(x=>['rfi','rfa','issue'].includes(x.type)&&(x.submitted_by===S.user?.name||x.reported_by===S.user?.name));
+      const needSI=items.filter(x=>x.type==='si'&&!isTerminal(x));
+      const needCB=items.filter(x=>x.type==='cb'&&!isTerminal(x));
+      return`
+        <div class="dash-greeting">
+          <div class="dg-date">${new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div>
+          <div class="dg-name">${greet}, ${esc(S.user?.name?.split(' ')[0]||'')}</div>
+          <div class="dg-sub">Lim Beach House · ${esc(S.role?.name||'')}</div>
+        </div>
+        ${awaitStrip}
+        <div class="dcard">
+          <div class="dchead"><span style="font-size:0.78rem;font-weight:700;color:var(--ink)">My Recent Submissions</span><button class="btn btn-ghost btn-sm" onclick="Nav.go('list-rfi')">View all →</button></div>
+          <div class="dbody" style="padding:0">
+            ${mySubs.length?[...mySubs].sort((a,b)=>b.id-a.id).slice(0,5).map(x=>{
+              const statusColor=isTerminal(x)?'var(--green)':overdue(x)?'var(--red)':'var(--amber)';
+              const statusLabel=isTerminal(x)?'Resolved':x.status||'Open';
+              return`<div style="display:flex;align-items:center;gap:8px;padding:9px 16px;border-bottom:1px solid var(--line-soft);cursor:pointer" onclick="Nav.go('detail-${x.id}')">
+                <div style="width:6px;height:6px;border-radius:50%;background:${statusColor}"></div>
+                ${tPill(x.type)}
+                <span style="font-size:0.72rem;color:var(--ink-4);font-family:monospace;flex-shrink:0">${esc(docNum(x))}</span>
+                <span style="flex:1;font-size:0.82rem;color:var(--ink);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((x.subject||x.description||'—').slice(0,45))}</span>
+                <span style="font-size:0.7rem;font-weight:700;color:${statusColor}">${esc(statusLabel)}</span>
+              </div>`;
+            }).join(''):'<div class="empty-td">No submissions yet</div>'}
+          </div>
+        </div>
+        <div class="cta-card">
+          <div class="cta-title">Need clarification on something?</div>
+          <div class="cta-sub">Submit a new RFI and the PM will be notified immediately.</div>
+          <button class="cta-btn" onclick="M.open('rfi')">+ Submit New RFI</button>
+        </div>
+        ${driveLink}`;
+    }
+
+    // ── ARCHITECT VIEW ──
+    if(isArch){
+      const pendingRFA=items.filter(x=>x.type==='rfa'&&!isTerminal(x));
+      const openRFI=items.filter(x=>x.type==='rfi'&&!isTerminal(x));
+      return`
+        <div class="dash-greeting">
+          <div class="dg-date">${new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div>
+          <div class="dg-name">${greet}, ${esc(S.user?.name?.split(' ')[0]||'')}</div>
+          <div class="dg-sub">Lim Beach House · ${esc(S.role?.name||'')}</div>
+        </div>
+        ${awaitStrip}
+        ${pendingRFA.length?`<div class="dcard">
+          <div class="dchead"><span style="font-size:0.78rem;font-weight:700;color:var(--terra-deep)">RFAs — Pending Your Response</span><span style="font-size:0.72rem;color:var(--ink-4)">${pendingRFA.length} open</span></div>
+          <div class="dbody" style="padding:8px">
+            ${pendingRFA.map(x=>{
+              const age=x.created?Math.floor((new Date()-new Date(x.created))/864e5):0;
+              return`<div class="priority-item ${overdue(x)?'urgent':'warn'}" onclick="Nav.go('detail-${x.id}')">
+                ${tPill(x.type)}
+                <div class="pi-text">
+                  <div class="pi-title">${esc((x.subject||'—').slice(0,50))}</div>
+                  <div class="pi-sub">${esc(x.submitted_by||'')} · ${age}d open</div>
+                </div>
+                <button class="pi-act-btn" onclick="event.stopPropagation();M.openEdit(Store.items().find(i=>i.id===${x.id}))">Respond</button>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`:''}
+        <div class="dcard">
+          <div class="dchead"><span style="font-size:0.78rem;font-weight:700;color:var(--ink)">RFIs Needing Input</span><button class="btn btn-ghost btn-sm" onclick="Nav.go('list-rfi')">View all →</button></div>
+          <div class="dbody" style="padding:0">
+            ${openRFI.length?openRFI.slice(0,5).map(x=>{
+              const age=x.created?Math.floor((new Date()-new Date(x.created))/864e5):0;
+              const od=overdue(x);
+              return`<div style="display:flex;align-items:center;gap:8px;padding:9px 16px;border-bottom:1px solid var(--line-soft);cursor:pointer" onclick="Nav.go('detail-${x.id}')">
+                <div style="width:6px;height:6px;border-radius:50%;background:${od?'var(--red)':'var(--amber)'}"></div>
+                ${tPill(x.type)}
+                <span style="font-size:0.72rem;color:var(--ink-4);font-family:monospace;flex-shrink:0">${esc(docNum(x))}</span>
+                <span style="flex:1;font-size:0.82rem;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((x.subject||'—').slice(0,45))}</span>
+                <span style="font-size:0.7rem;font-weight:700;color:${od?'var(--red)':'var(--amber)'}">${age}d</span>
+              </div>`;
+            }).join(''):'<div class="empty-td">No open RFIs</div>'}
+          </div>
+        </div>
+        ${driveLink}`;
+    }
+
+    // ── GENERIC FALLBACK ──
+    return`
+      <div class="dash-greeting">
+        <div class="dg-name">${greet}, ${esc(S.user?.name?.split(' ')[0]||'')}</div>
+        <div class="dg-sub">Lim Beach House</div>
+      </div>
+      ${awaitStrip}${kpiCards}${recentPanel}${driveLink}`;
   },
 
   schedule(items){
@@ -1476,6 +1974,7 @@ const V={
     return`
     <div class="dback" onclick="Nav.go('list-${item.type}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Back to ${td.full}</div>
     <div class="dtrow"><h1>${td.label} ${esc(docNum(item))}</h1>${tPill(item.type)}${sBadge(item.status)}${od?`<span class="badge b-open">⚠ Overdue</span>`:''}</div>
+
     <div class="dcard">
       <div class="dchead"><span class="sub">${esc(item.subject||item.description||td.full)}</span>${item.due_date?`<span style="font-size:0.75rem;color:${od?'var(--red)':'var(--ink-4)'}">Due ${item.due_date}</span>`:''}</div>
       <div class="dbody">
@@ -1488,7 +1987,33 @@ const V={
         </div>
       </div>
     </div>
-    ${item.audit&&item.audit.length?`<div class="dcard"><div class="dchead"><span class="sub" style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-4)">Activity Log</span></div><div class="dbody" style="padding:8px 18px">${item.audit.map(a=>`<div class="audit-entry"><div class="audit-dot"></div><div><span class="audit-who">${esc(a.who)}</span><span class="audit-role">${esc(a.role)}</span><div class="audit-action">${esc(a.action)}</div><div class="audit-time">${esc(a.ts)}</div></div></div>`).join('')}</div></div>`:''}`;
+
+    ${['si','cb'].includes(item.type)?`<div id="seen-list" style="margin-bottom:12px"></div>`:''}
+
+    <div class="dcard">
+      <div class="dchead"><span class="sub" style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-4)">Comments &amp; Discussion</span></div>
+      <div class="dbody">
+        <div class="comment-thread" id="comment-list"><div style="font-size:0.8rem;color:var(--ink-4);font-style:italic">Loading…</div></div>
+        <div class="comment-box">
+          <textarea class="comment-input" id="comment-input" placeholder="Add a comment…" rows="1"></textarea>
+          <div style="display:flex;flex-direction:column;gap:4px;align-self:flex-end">
+            ${S.can('canEditAll')?`<button class="comment-send" style="background:var(--pink);font-size:0.72rem;padding:5px 10px" onclick="CommentsUI.send(${item.id},true)">Official Response</button>`:''}
+            <button class="comment-send" onclick="CommentsUI.send(${item.id},false)">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dcard">
+      <div class="dchead"><span class="sub" style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-4)">Activity Log</span>
+        <button class="btn btn-ghost btn-sm" onclick="PrintExport.item(${item.id})" style="font-size:0.7rem"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Print</button>
+      </div>
+      <div class="dbody" style="padding:8px 18px">
+        <div class="activity-log" id="activity-list">
+          ${item.audit&&item.audit.length?item.audit.slice().reverse().map(a=>`<div class="activity-item"><div class="audit-dot"></div><div class="activity-line"><div class="activity-action"><strong>${esc(a.who)}</strong> — ${esc(a.action)}</div><div class="activity-time">${esc(a.ts)}</div></div></div>`).join(''):'<div style="font-size:0.8rem;color:var(--ink-4);font-style:italic">No activity recorded yet.</div>'}
+        </div>
+      </div>
+    </div>`;
   },
 
   async team(){
@@ -1875,25 +2400,31 @@ const M={
     const items=Store.items();
     if(isEdit&&S.editItem){
       const idx=items.findIndex(x=>x.id===S.editItem.id);
-      if(idx>=0){const changed=[];td.fields.forEach(f=>{const el=document.getElementById(`f_${f.k}`);if(el&&!el.disabled){const old=items[idx][f.k]||'';if(old!==el.value)changed.push(f.l);items[idx][f.k]=el.value;}});const atts=collectAtts();if(atts!==null){if(JSON.stringify(items[idx].attachments||[])!==JSON.stringify(atts))changed.push('Attachments');items[idx].attachments=atts;}items[idx].updated=now();addAudit(items[idx],changed.length?`Updated: ${changed.join(', ')}`:'Edited item');}
+      if(idx>=0){const changed=[];td.fields.forEach(f=>{const el=document.getElementById(`f_${f.k}`);if(el&&!el.disabled){const old=items[idx][f.k]||'';if(old!==el.value)changed.push(f.l);items[idx][f.k]=el.value;}});const atts=collectAtts();if(atts!==null){if(JSON.stringify(items[idx].attachments||[])!==JSON.stringify(atts))changed.push('Attachments');items[idx].attachments=atts;}items[idx].updated=now();addAudit(items[idx],changed.length?`Updated: ${changed.join(', ')}`:'Edited item');Store.addActivity(items[idx].id,changed.length?`Updated: ${changed.join(', ')}`:'Edited item');}
     } else {
       const newId=await Store.nextId();
       const ni={id:newId,type,status:({si:'Issued',cb:'Issued',vo:'Draft'}[type]||'Open'),created:now(),audit:[]};
       td.fields.forEach(f=>{const el=document.getElementById(`f_${f.k}`);if(el)ni[f.k]=el.value;});
       const atts=collectAtts();if(atts!==null)ni.attachments=atts;
       addAudit(ni,`Created ${td.label}`);items.push(ni);
-      // Send PM email — only for RFI and RFA
-      if(window._sendPMEmail&&(type==='rfi'||type==='rfa')){
-        const numKey={rfi:'rfi_number',rfa:'rfa_number'}[type];
-        window._sendPMEmail(
-          td.full,
-          ni[numKey]||('#'+newId),
-          ni.subject||ni.description,
-          ni.submitted_by,
-          ni.description,
-          ni.attachments||[],
-          ni.status
-        );
+      // Log activity
+      Store.addActivity(newId,`${td.label} created by ${S.user?.name||'Unknown'}`);
+      // Send email notifications
+      if(window._sendPMEmail){
+        const numKey={rfi:'rfi_number',rfa:'rfa_number',si:'si_number',cb:'cb_number',vo:'vo_number'}[type];
+        const docN=ni[numKey]||('#'+newId);
+        if(type==='rfi'||type==='rfa'){
+          // Notify PM on new RFI/RFA
+          window._sendPMEmail(td.full,docN,ni.subject||ni.description,ni.submitted_by,ni.description,ni.attachments||[],ni.status);
+        }
+        if(type==='si'||type==='cb'){
+          // Notify GC on new SI/CB
+          window._sendPMEmail(td.full,docN,ni.subject||ni.description,ni.issued_by||S.user?.name,ni.description,ni.attachments||[],ni.status);
+        }
+        if(type==='rfa'){
+          // Also notify Architect on RFA
+          window._sendPMEmail('RFA for Architect review',docN,ni.subject||ni.description,ni.submitted_by,ni.description,ni.attachments||[],ni.status);
+        }
       }
     }
     Store.saveItems(items);this.close();T.show(isEdit?'Item updated':'Item created','ok');Nav.render();
@@ -2032,6 +2563,116 @@ Return ONLY the JSON object, no markdown, no explanation.`;
       }
     };
     inp.click();
+  }
+};
+
+// ══════════════════════════════════════════════
+//  COMMENTS UI
+// ══════════════════════════════════════════════
+const CommentsUI={
+  async send(itemId,isOfficial){
+    const inp=document.getElementById('comment-input');
+    const text=inp?.value?.trim();
+    if(!text)return;
+    inp.value='';
+    inp.disabled=true;
+    try{
+      const comment=await Store.addComment(itemId,text,isOfficial);
+      await Store.addActivity(itemId,isOfficial?`Official response added`:`Commented`);
+      // Re-render comment list
+      const cEl=document.getElementById('comment-list');
+      if(cEl){
+        const all=await Store.getComments(itemId);
+        cEl.innerHTML=all.map(cm=>`
+          <div class="comment-item">
+            <div class="comment-av">${esc(cm.who.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase())}</div>
+            <div class="comment-body">
+              <div class="comment-meta">
+                <span class="comment-who">${esc(cm.who)}</span>
+                <span class="comment-role">${esc(cm.role)}</span>
+                <span class="comment-time">${new Date(cm.ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+              </div>
+              <div class="comment-text ${cm.isOfficial?'comment-official':''}">${esc(cm.text)}</div>
+            </div>
+          </div>`).join('');
+      }
+      T.show(isOfficial?'Official response added':'Comment sent','ok');
+      // Send email notification
+      if(isOfficial){
+        const item=Store.items().find(x=>x.id===itemId);
+        if(item)window._sendPMEmail(item.type,docNum(item),item.subject||'',S.user.name,text,[],item.status||'');
+      }
+    }catch(e){T.show('Failed to send','err');}
+    finally{if(inp)inp.disabled=false;}
+  }
+};
+
+// ══════════════════════════════════════════════
+//  PRINT / EXPORT
+// ══════════════════════════════════════════════
+const PrintExport={
+  item(itemId){
+    const item=Store.items().find(x=>x.id===itemId);
+    if(!item)return;
+    const td=TYPES[item.type]||{};
+    const fields=td.fields||[];
+    const w=window.open('','_blank');
+    w.document.write(`<!DOCTYPE html><html><head><title>${td.label||''} ${docNum(item)}</title>
+    <style>
+      body{font-family:Arial,sans-serif;font-size:12px;color:#2f3437;margin:32px;max-width:800px}
+      .header{border-bottom:2px solid #c4a0ad;padding-bottom:12px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-end}
+      .brand{font-size:16px;font-weight:700;color:#c4a0ad;letter-spacing:-0.02em}
+      .doc-num{font-size:13px;font-weight:700;color:#2f3437}
+      h1{font-size:15px;font-weight:700;margin:0 0 4px}
+      .meta{font-size:11px;color:#718096;margin-bottom:20px}
+      .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-bottom:20px}
+      .field label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#a0aec0;display:block;margin-bottom:3px}
+      .field .val{font-size:12px;color:#2f3437;font-weight:500}
+      .section{margin-top:16px;padding-top:12px;border-top:1px solid #e2ddd8}
+      .section h2{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#a0aec0;margin-bottom:8px}
+      .footer{margin-top:32px;padding-top:12px;border-top:1px solid #e2ddd8;font-size:10px;color:#a0aec0;display:flex;justify-content:space-between}
+      @media print{body{margin:20px}}
+    </style></head><body>
+    <div class="header">
+      <div><div class="brand">Foro Consulting Inc.</div><div style="font-size:10px;color:#a0aec0">Lim Beach House · Laiya, San Juan, Batangas</div></div>
+      <div class="doc-num">${td.label||''} ${docNum(item)}</div>
+    </div>
+    <h1>${item.subject||item.description||td.full||''}</h1>
+    <div class="meta">Status: ${item.status||'Open'} · Generated: ${new Date().toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'})}</div>
+    <div class="grid">
+      ${fields.map(f=>{const v=item[f.k];return v?`<div class="field"><label>${f.l}</label><div class="val">${v}</div></div>`:''}).join('')}
+    </div>
+    ${item.attachments?.length?`<div class="section"><h2>Attachments</h2>${item.attachments.map(a=>`<div>• <a href="${a.url}">${a.name||a.url}</a></div>`).join('')}</div>`:''}
+    <div class="footer"><span>Foro Consulting Inc. — Project Manager's Copy</span><span>Printed ${new Date().toLocaleString('en-PH')}</span></div>
+    </body></html>`);
+    w.document.close();
+    setTimeout(()=>w.print(),400);
+  },
+  list(type){
+    const items=Store.items().filter(x=>!type||x.type===type);
+    const td=type?TYPES[type]:{label:'All Items',full:'All Document Types'};
+    const w=window.open('','_blank');
+    w.document.write(`<!DOCTYPE html><html><head><title>Item Log — ${td.label}</title>
+    <style>
+      body{font-family:Arial,sans-serif;font-size:11px;color:#2f3437;margin:24px}
+      .header{border-bottom:2px solid #c4a0ad;padding-bottom:10px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-end}
+      .brand{font-size:15px;font-weight:700;color:#c4a0ad}
+      table{width:100%;border-collapse:collapse}
+      th{text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#718096;border-bottom:1.5px solid #c4a0ad;padding:6px 8px}
+      td{padding:7px 8px;border-bottom:1px solid #f0ece8;vertical-align:top}
+      tr:nth-child(even) td{background:#fdfcfb}
+      .footer{margin-top:16px;font-size:9px;color:#a0aec0;text-align:right}
+    </style></head><body>
+    <div class="header">
+      <div><div class="brand">Foro Consulting Inc.</div><div style="font-size:10px;color:#a0aec0">Lim Beach House · Item Log</div></div>
+      <div style="font-size:11px;color:#718096">${new Date().toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'})}</div>
+    </div>
+    <table><thead><tr><th>#</th><th>Type</th><th>Subject</th><th>Submitted By</th><th>Status</th><th>Date</th></tr></thead>
+    <tbody>${items.map(x=>`<tr><td style="font-family:monospace;color:#a0aec0">${docNum(x)}</td><td>${TYPES[x.type]?.label||x.type}</td><td>${x.subject||x.description||'—'}</td><td>${x.submitted_by||x.issued_by||'—'}</td><td>${x.status||'Open'}</td><td>${x.date_submitted||x.date_issued||x.created?.slice(0,10)||'—'}</td></tr>`).join('')}</tbody></table>
+    <div class="footer">Foro Consulting Inc. — Generated ${new Date().toLocaleString('en-PH')}</div>
+    </body></html>`);
+    w.document.close();
+    setTimeout(()=>w.print(),400);
   }
 };
 
