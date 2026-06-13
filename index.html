@@ -605,7 +605,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Displ
       <div class="tb-right" id="tb-right">
         <div class="tb-search">
           <svg class="tb-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="tb-search-input" placeholder="Search items…" oninput="Search.query(this.value)" onblur="setTimeout(()=>Search.close(),150)">
+          <input type="text" id="tb-search-input" placeholder="Search items…" oninput="Search.query(this.value)" onblur="setTimeout(()=>Search.close(),300)">
           <div class="tb-search-results" id="tb-search-results"></div>
         </div>
       </div>
@@ -941,6 +941,17 @@ function renderDots(containerId,count,filled,state){
 
 // ── Global keyboard handler for keypads ──
 document.addEventListener('keydown',e=>{
+  // ESC closes any open modal
+  if(e.key==='Escape'){
+    const modal=document.getElementById('modal');
+    if(modal){M.close();return;}
+    const cv=document.getElementById('cv');
+    if(cv){cv.remove();return;}
+    // Also close search
+    Search.close();
+    document.getElementById('tb-search-input')?.blur();
+    return;
+  }
   const gateVisible=document.getElementById('gate')?.style.display!=='none';
   const pinVisible=document.getElementById('pin-screen')?.style.display!=='none';
   if(!gateVisible&&!pinVisible)return;
@@ -1703,7 +1714,7 @@ const V={
         <div class="cta-card">
           <div class="cta-title">Need clarification on something?</div>
           <div class="cta-sub">Submit a new RFI and the PM will be notified immediately.</div>
-          <button class="cta-btn" onclick="M.open('rfi')">+ Submit New RFI</button>
+          <button class="cta-btn" onclick="document.getElementById('tb-search-input')?.blur();Search.close();M.open('rfi')">+ Submit New RFI</button>
         </div>
         ${driveLink}`;
     }
@@ -1991,8 +2002,8 @@ const V={
     const attHtml=(item.attachments&&item.attachments.length)?`<div style="display:flex;flex-wrap:wrap;margin-bottom:${S.can('canEditAll')?'10':'0'}px">${item.attachments.map(a=>`<a href="${esc(a.url)}" target="_blank" rel="noopener" class="att-chip"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>${esc(a.name||a.url)}</a>`).join('')}</div>`:
     `<div style="font-size:0.8rem;color:var(--ink-4);font-style:italic;margin-bottom:${S.can('canEditAll')?'10':'0'}px">No attachments.</div>`;
     return`
-    <div class="dback" onclick="Nav.go('list-${item.type}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Back to ${td.full}</div>
-    <div class="dtrow"><h1>${td.label} ${esc(docNum(item))}</h1>${tPill(item.type)}${sBadge(item.status)}${od?`<span class="badge b-open">⚠ Overdue</span>`:''}</div>
+    <div class="dback" onclick="Nav.go('list-${item.type}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Back to ${td.full}s</div>
+    <div class="dtrow"><h1>${esc(docNum(item))}</h1>${tPill(item.type)}${sBadge(item.status)}${od?`<span class="badge b-open">⚠ Overdue</span>`:''}</div>
 
     <div class="dcard">
       <div class="dchead"><span class="sub">${esc(item.subject||item.description||td.full)}</span>${item.due_date?`<span style="font-size:0.75rem;color:${od?'var(--red)':'var(--ink-4)'}">Due ${item.due_date}</span>`:''}</div>
@@ -2330,7 +2341,7 @@ const M={
       const name=S.user?.name||'';
       const member=team.find(m=>m.name===name);
       const company=member?.company||'';
-      return company?`${name} — ${company}`:name;
+      return name; // Use name only — clean display, no company suffix
     })();
 
     const isNew=!item&&!ctr;
@@ -2875,6 +2886,8 @@ async function boot(){
         'KJ Caponpon':'Khimme Caponpon',
         'KJ CAPONPON —':'Khimme Caponpon',
         'KJ Caponpon —':'Khimme Caponpon',
+        'Khimme Caponpon — Project Site Engineer':'Khimme Caponpon',
+        'Khimme Caponpon — ALPA Exponential Builders':'Khimme Caponpon',
       };
       const fields=['submitted_by','issued_by','assigned_to','responsible_party','reported_by'];
       let dirty=false;
@@ -2883,7 +2896,7 @@ async function boot(){
         fields.forEach(f=>{
           if(item[f]){
             for(const[from,to]of Object.entries(nameMap)){
-              if(typeof item[f]==='string'&&item[f].startsWith(from)){
+              if(typeof item[f]==='string'&&(item[f]===from||item[f].startsWith(from+'\u2014')||item[f].startsWith(from+' \u2014'))){
                 item[f]=item[f].replace(from,to);
                 dirty=true;
               }
