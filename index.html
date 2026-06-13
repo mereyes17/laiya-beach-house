@@ -107,9 +107,9 @@ window._sendPMEmail=function(type,num,subject,submittedBy,description,attachment
   --pink:#c4a0ad;--pink-soft:#f5eeef;--pink-mid:#dfc8cc;--pink-deep:#7c4d5a;
   --pink-hot:#c4186c;--pink-hot-soft:#fce7f3;
   --ink:#2f3437;--ink-2:#4a5568;--ink-3:#718096;--ink-4:#a0aec0;
-  --line:#ede8e2;--line-soft:#f5f3f0;--white:#ffffff;--bg:#f5f3f0;
+  --line:#ede8e2;--line-soft:#fdf8f9;--white:#ffffff;--bg:#ffffff;
   --red:#ef4444;--red-soft:#fef2f2;--amber:#f59e0b;--amber-soft:#fff8f0;
-  --green:#22c55e;--green-soft:#f0fdf4;--zinc:#9a8f85;--zinc-soft:#f5f3f0;
+  --green:#22c55e;--green-soft:#f0fdf4;--zinc:#9a8f85;--zinc-soft:#fdf8f9;
   --terra:#e8a87c;--terra-soft:#fff3e8;--terra-deep:#9a4a20;
   --sidebar-w:196px;--r:8px;--r-lg:12px;
 }
@@ -176,7 +176,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Displ
 .pin-box .pin-who strong{color:var(--ink)}
 
 /* ── APP ── */
-#app{display:none;height:100vh;overflow:hidden}
+#app{display:none;height:100vh;overflow:hidden;background:#ffffff}
 #app.on{display:flex}
 
 /* ── SIDEBAR ── */
@@ -219,7 +219,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Displ
 
 /* ── TOPBAR ── */
 #main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-#topbar{background:var(--white);border-bottom:1px solid var(--line);padding:0 20px;min-height:54px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:12px}
+#topbar{background:#ffffff;border-bottom:1px solid var(--pink-mid);padding:0 20px;min-height:54px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:12px}
 .tb-left{display:flex;flex-direction:column;justify-content:center;gap:1px}
 .tb-date{font-size:0.68rem;font-weight:500;color:var(--ink-4);text-transform:uppercase;letter-spacing:0.04em}
 .tb-title{font-size:1rem;font-weight:700;color:var(--ink);letter-spacing:-0.03em;line-height:1.1}
@@ -235,7 +235,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Displ
 .tb-sr-item:hover{background:var(--line-soft)}
 .tb-sr-subj{flex:1;font-size:0.8rem;color:var(--ink);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tb-sr-meta{font-size:0.72rem;color:var(--ink-4)}
-#content{flex:1;overflow-y:auto;padding:22px 22px 40px}
+#content{flex:1;overflow-y:auto;padding:22px 22px 40px;background:#ffffff}
 
 /* ── BUTTONS ── */
 .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);border:none;cursor:pointer;font-size:0.8rem;font-weight:500;font-family:inherit;transition:all 0.12s;line-height:1;letter-spacing:-0.01em}
@@ -1269,10 +1269,11 @@ const Nav={
     this.render();
   },
   renderSidebar(){
-    const isPM=S.can('canSettings');
-    const isArch=S.role?.id==='arch'||(S.role?.canEditAll&&!isPM);
-    const isGC=S.role?.id==='gc'||(!S.can('canEditAll')&&S.can('canCreateRFI'));
-    const isSub=S.role?.id==='sub'||(!S.can('canEditAll')&&!S.can('canCreateVO'));
+    const _rn=(S.role?.name||'').toLowerCase();const _ri=S.role?.id||'';
+    const isPM=_ri==='pm'||_rn==='project manager'||(S.can('canSettings')&&!_rn.includes('contractor')&&!_rn.includes('engineer')&&!_rn.includes('arch')&&!_rn.includes('design')&&!_rn.includes('sub'));
+    const isArch=(!isPM)&&(_ri==='arch'||_rn.includes('arch')||_rn.includes('design'));
+    const isGC=(!isPM)&&(!isArch)&&(_ri==='gc'||_rn.includes('contractor')||_rn.includes('general')||_rn.includes('engineer'));
+    const isSub=(!isPM)&&(!isArch)&&(_ri==='sub'||_rn.includes('sub'));
     const isContractor=isGC||isSub;
     const nav=document.getElementById('sb-nav-dynamic');
     if(!nav)return;
@@ -1523,11 +1524,13 @@ const X={svg:{close:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none"
 const V={
   dashboard(items){
     if(!items||!Array.isArray(items))items=[];
-    const isPM=S.can('canSettings');
     const roleName=(S.role?.name||'').toLowerCase();
-    const isArch=S.role?.id==='arch'||roleName.includes('arch')||roleName.includes('design')||(S.role?.canEditAll&&!isPM);
-    const isGC=S.role?.id==='gc'||roleName.includes('contractor')||roleName.includes('general')||(!S.can('canEditAll')&&S.can('canCreateRFI')&&!isArch);
-    const isContractor=isGC||S.role?.id==='sub'||roleName.includes('sub')||(!isPM&&!isArch);
+    const roleId=S.role?.id||'';
+    // Use role.id as primary signal — canSettings alone is not reliable if Firebase data is corrupted
+    const isPM=roleId==='pm'||roleName==='project manager'||(S.can('canSettings')&&!roleName.includes('contractor')&&!roleName.includes('engineer')&&!roleName.includes('arch')&&!roleName.includes('design')&&!roleName.includes('sub'));
+    const isArch=(!isPM)&&(roleId==='arch'||roleName.includes('arch')||roleName.includes('design'));
+    const isGC=(!isPM)&&(!isArch)&&(roleId==='gc'||roleName.includes('contractor')||roleName.includes('general')||roleName.includes('engineer'));
+    const isContractor=isGC||(!isPM&&!isArch&&(roleId==='sub'||roleName.includes('sub')))||(!isPM&&!isArch);
     const active=items.filter(x=>!isTerminal(x));
     const ov=items.filter(overdue);
     const hr=new Date().getHours();
@@ -2852,6 +2855,19 @@ async function boot(){
       await Store.saveRoles(migrated);
       Store._cache['bh_roles']=migrated;
     }
+    // ── Sanitize roles — ensure non-PM roles don't have canSettings:true ──
+    const allRoles=await Store.roles();
+    let rolesDirty=false;
+    const sanitized=allRoles.map(r=>{
+      const nm=(r.name||'').toLowerCase();
+      const isActuallyPM=r.id==='pm'||nm==='project manager';
+      if(!isActuallyPM&&r.canSettings){
+        rolesDirty=true;
+        return{...r,canSettings:false,canDelete:false,canEditAll:r.id==='arch'||nm.includes('arch')||nm.includes('design')||false};
+      }
+      return r;
+    });
+    if(rolesDirty){await Store.saveRoles(sanitized);Store._cache['bh_roles']=sanitized;console.log('[boot] Sanitized role permissions');}
     // ── Normalize legacy names in items ──
     (async()=>{
       const nameMap={
