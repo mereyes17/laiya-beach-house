@@ -1379,7 +1379,7 @@ const Nav={
   async render(){
     const items=Store.items();
     const oc=items.filter(overdue).length;
-    const ob=document.getElementById('ob');ob.style.display=oc?'':'none';ob.textContent=oc;
+    const ob=document.getElementById('ob');if(ob){ob.style.display=oc?'':'none';ob.textContent=oc;}
     const t7=new Date();t7.setDate(t7.getDate()+7);const t7s=t7.toISOString().split('T')[0];
     const active=items.filter(x=>!isTerminal(x));
     const fcnt=oc+active.filter(x=>x.due_date&&x.due_date>=now()&&x.due_date<=t7s).length;
